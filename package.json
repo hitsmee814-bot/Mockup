@@ -5,7 +5,7 @@
   "homepage": "https://hitsmee814-bot.github.io/Mockup",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "cross-env NODE_ENV=production next build --turbopack",
+    "build": "cross-env NODE_ENV=production node -p \"'Building with NODE_ENV=' + process.env.NODE_ENV\" && next build --turbopack",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d out -b gh-pages"
   },
