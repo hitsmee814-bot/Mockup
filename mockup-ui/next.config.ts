@@ -5,8 +5,10 @@ const repoName = "Mockup";
 const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
+  output: "export", // ✅ always set this for static export
+
   images: {
-    unoptimized: true, // 👈 important for GitHub Pages
+    unoptimized: true, // ✅ required for GitHub Pages
     remotePatterns: [
       {
         protocol: "https",
@@ -18,10 +20,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  basePath: isProd ? `/${repoName}` : "",
+
+  // ✅ only set these when deploying to GitHub Pages
+  basePath: isProd ? `/${repoName}` : undefined,
   assetPrefix: isProd ? `/${repoName}/` : undefined,
+
   trailingSlash: true,
-  ...(isProd ? { output: "export" } : {}), // 👈 only export in prod
 };
 
 export default nextConfig;
