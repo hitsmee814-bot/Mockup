@@ -1,7 +1,19 @@
-To run project, open it in VS code
+# Bonhomiee ✈️
 
-Make sure latest node.js is installed.
-Open project in VS Code
-Open terminal
-Run 'npm i'
-Run 'npm run dev'
+A modern travel homepage built with **Next.js 13+, TailwindCSS, and Framer Motion**.  
+This project showcases a smooth landing experience with animated sections, gradients, and interactive UI.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (Latest LTS recommended)
+- npm (comes with Node.js)
+
+### Installation
+
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/hitsmee814-bot/Mockup.git
+   cd mockup-ui
