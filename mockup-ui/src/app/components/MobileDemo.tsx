@@ -37,7 +37,6 @@ const scenes = [
         icon: <HiOutlineBriefcase size={22} />,
         component: () => (
             <div className="w-[80%] space-y-4">
-                {/* Travel request card */}
                 <motion.div
                     className="h-16 bg-gray-50 border rounded-lg flex items-center px-4 text-gray-700 text-sm"
                     initial={{ x: -50, opacity: 0 }}
@@ -47,7 +46,6 @@ const scenes = [
                     ✈️ Flight Request · NYC → LON
                 </motion.div>
 
-                {/* Manager approval */}
                 <motion.div
                     className="h-12 bg-gray-100 rounded-md flex items-center justify-between px-4 text-sm text-gray-600"
                     initial={{ scale: 0.9, opacity: 0 }}
@@ -64,7 +62,6 @@ const scenes = [
                     </motion.span>
                 </motion.div>
 
-                {/* Savings badge */}
                 <motion.div
                     className="h-12 bg-gray-50 border rounded-md flex items-center justify-center text-sm text-indigo-600 font-medium"
                     initial={{ y: 20, opacity: 0 }}
@@ -91,34 +88,31 @@ export default function MobileDemo() {
 
     return (
         <div className="w-[900px] h-[480px] bg-white shadow-xl rounded-2xl border border-gray-200 flex flex-col overflow-hidden">
-            {/* Header */}
-{/* Header */}
-<div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-gray-50">
-  <AnimatePresence mode="wait">
-    <motion.div
-      key={scenes[active].id + "-header"}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="flex items-center gap-3"
-    >
-      <div className="p-2 rounded-md bg-white shadow text-gray-700">
-        {scenes[active].icon}
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900">
-          {scenes[active].title}
-        </h3>
-        <p className="text-sm text-gray-600">
-          {scenes[active].desc}
-        </p>
-      </div>
-    </motion.div>
-  </AnimatePresence>
-</div>
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={scenes[active].id + "-header"}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                        className="flex items-center gap-3"
+                    >
+                        <div className="p-2 rounded-md bg-white shadow text-gray-700">
+                            {scenes[active].icon}
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                {scenes[active].title}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                                {scenes[active].desc}
+                            </p>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
 
-            {/* Content */}
             <div className="flex-1 relative p-6">
                 <AnimatePresence mode="wait">
                     <motion.div

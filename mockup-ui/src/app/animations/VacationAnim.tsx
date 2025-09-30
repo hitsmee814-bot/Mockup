@@ -9,7 +9,6 @@ export default function VacationAnim() {
 
   const destinations = ["Rome · 3 Days", "Paris · 2 Days", "Santorini · 4 Days"];
 
-  // Simulate typing effect
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -17,7 +16,7 @@ export default function VacationAnim() {
       i++;
       if (i > query.length) {
         clearInterval(interval);
-        setTimeout(() => setShowResults(true), 400); // short pause before results
+        setTimeout(() => setShowResults(true), 400);
       }
     }, 60);
     return () => clearInterval(interval);
@@ -25,7 +24,6 @@ export default function VacationAnim() {
 
   return (
     <div className="w-[80%] space-y-5">
-      {/* Typing header */}
       <div className="h-10 bg-gray-100 rounded-md px-4 flex items-center text-sm text-gray-700 font-medium">
         🌍 {typed}
         {typed.length < query.length && (
@@ -39,9 +37,7 @@ export default function VacationAnim() {
         )}
       </div>
 
-      {/* Results container with reserved space */}
       <div className="min-h-[160px]">
-        {/* Loader shimmer while typing is done but before results */}
         {!showResults && typed.length === query.length && (
           <motion.div
             className="h-2 w-28 bg-gray-200 rounded-full mt-3"
@@ -50,7 +46,6 @@ export default function VacationAnim() {
           />
         )}
 
-        {/* Destinations animate in */}
         {showResults && (
           <motion.div
             initial="hidden"

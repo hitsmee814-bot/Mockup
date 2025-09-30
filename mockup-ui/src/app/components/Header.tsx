@@ -29,11 +29,9 @@ export default function Header() {
       className="fixed top-0 left-0 w-full z-50 shadow-md bg-white"
     >
       <div
-        className={`flex items-center justify-between px-8 md:px-16 lg:px-24 py-4 transition-all ${
-          scrolled ? "backdrop-blur-md" : ""
-        }`}
+        className={`flex items-center justify-between px-8 md:px-16 lg:px-24 py-4 transition-all ${scrolled ? "backdrop-blur-md" : ""
+          }`}
       >
-        {/* Logo */}
         <motion.a
           href="/"
           className="text-2xl font-bold tracking-tight text-gray-900"
@@ -42,7 +40,6 @@ export default function Header() {
           Travel<span className="text-indigo-600">X</span>
         </motion.a>
 
-        {/* Nav Links */}
         <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
           {navItems.map((item, i) => (
             <motion.a
@@ -59,7 +56,6 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Right Side */}
         <div className="flex items-center gap-4">
           <Menu as="div" className="relative">
             <MenuButton className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100">
@@ -80,9 +76,8 @@ export default function Header() {
                   {({ active }) => (
                     <a
                       href="#"
-                      className={`block px-4 py-2 text-sm ${
-                        active ? "bg-gray-100" : ""
-                      }`}
+                      className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""
+                        }`}
                     >
                       Traveller Dashboard
                     </a>
@@ -92,9 +87,8 @@ export default function Header() {
                   {({ active }) => (
                     <a
                       href="#"
-                      className={`block px-4 py-2 text-sm ${
-                        active ? "bg-gray-100" : ""
-                      }`}
+                      className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""
+                        }`}
                     >
                       Agent / Provider
                     </a>

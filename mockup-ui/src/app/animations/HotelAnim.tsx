@@ -13,7 +13,6 @@ export default function HotelAnim() {
     { name: "Skyline Suites", price: "$180" },
   ];
 
-  // Typing effect
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -21,7 +20,7 @@ export default function HotelAnim() {
       i++;
       if (i > query.length) {
         clearInterval(interval);
-        setTimeout(() => setShowResults(true), 500); // small pause
+        setTimeout(() => setShowResults(true), 500);
       }
     }, 50);
     return () => clearInterval(interval);
@@ -29,7 +28,6 @@ export default function HotelAnim() {
 
   return (
     <div className="w-[80%] space-y-5">
-      {/* Search/Filter bar */}
       <div className="h-10 bg-gray-100 rounded-md px-4 flex items-center text-sm text-gray-700 font-medium">
         🔍 {typed}
         {typed.length < query.length && (
@@ -43,9 +41,7 @@ export default function HotelAnim() {
         )}
       </div>
 
-      {/* Results container with fixed space to prevent jump */}
       <div className="min-h-[160px] space-y-3">
-        {/* Show shimmer until results */}
         {!showResults && typed.length === query.length && (
           <motion.div
             className="h-2 w-28 bg-gray-200 rounded-full mt-4"
@@ -54,7 +50,6 @@ export default function HotelAnim() {
           />
         )}
 
-        {/* Hotels appear one by one */}
         {showResults && (
           <motion.div
             initial="hidden"

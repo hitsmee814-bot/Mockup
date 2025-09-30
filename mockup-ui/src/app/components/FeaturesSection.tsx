@@ -14,7 +14,6 @@ export default function FeaturesSection() {
 
   return (
     <section className="w-full bg-white">
-      {/* A. Signature Apps Section */}
       <div className="max-w-7xl mx-auto px-6 py-20 space-y-32">
         <div>
           <motion.h2
@@ -25,7 +24,6 @@ export default function FeaturesSection() {
           >
             Signature Apps
           </motion.h2>
-          {/* Signature Apps grid with stagger */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -72,7 +70,6 @@ export default function FeaturesSection() {
         </div>
       </div>
 
-      {/* B. Full-width Emotion Carousel */}
       <div className="w-full">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -92,9 +89,6 @@ export default function FeaturesSection() {
           help you travel by how you want to feel.
         </motion.p>
 
-        {/* Literally full width */}
-        {/* Full-width Infinite Carousel */}
-        {/* Full-width Infinite Carousel */}
         <div className="relative w-full overflow-hidden">
           <motion.div
             className="flex gap-8"
@@ -114,16 +108,13 @@ export default function FeaturesSection() {
                 viewport={{ once: true }}
                 className="relative flex-shrink-0 w-[380px] h-[220px] rounded-2xl overflow-hidden shadow-lg"
               >
-                {/* Background Image */}
                 <Image
                   src={item.img}
                   alt={item.title}
                   fill
                   className="object-cover"
                 />
-                {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                {/* Text */}
                 <div className="absolute bottom-4 left-4 right-4 text-white font-semibold text-lg">
                   {item.title}
                 </div>
@@ -133,7 +124,6 @@ export default function FeaturesSection() {
         </div>
       </div>
 
-      {/* C. Trust Signals & Reviews */}
       <div className="max-w-7xl mx-auto px-6 py-20">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

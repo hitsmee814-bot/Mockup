@@ -7,7 +7,6 @@ export default function FlightAnim() {
   const [typed, setTyped] = useState("");
   const [showResults, setShowResults] = useState(false);
 
-  // Typing effect + trigger results
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -15,7 +14,7 @@ export default function FlightAnim() {
       i++;
       if (i > query.length) {
         clearInterval(interval);
-        setTimeout(() => setShowResults(true), 500); // small pause
+        setTimeout(() => setShowResults(true), 500);
       }
     }, 40);
     return () => clearInterval(interval);
@@ -29,7 +28,6 @@ export default function FlightAnim() {
 
   return (
     <div className="w-[80%] space-y-5">
-      {/* Search bar with typing */}
       <div className="h-12 rounded-md bg-gray-100 flex items-center px-4 text-sm text-gray-700 font-medium">
         ✈️ {typed}
         {typed.length < query.length && (
@@ -43,9 +41,7 @@ export default function FlightAnim() {
         )}
       </div>
 
-      {/* Results container with fixed space */}
       <div className="min-h-[200px] space-y-3">
-        {/* Shimmer while waiting */}
         {!showResults && typed.length === query.length && (
           <motion.div
             className="h-2 w-28 bg-gray-200 rounded-full mt-4"
@@ -54,7 +50,6 @@ export default function FlightAnim() {
           />
         )}
 
-        {/* Results appear staggered */}
         {showResults && (
           <motion.div
             initial="hidden"

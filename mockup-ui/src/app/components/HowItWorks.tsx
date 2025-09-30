@@ -8,7 +8,7 @@ function LoopingSequence({ children, interval = 5000 }) {
   useEffect(() => {
     const t = setInterval(() => {
       setShow(false);
-      setTimeout(() => setShow(true), 400); // restart
+      setTimeout(() => setShow(true), 400);
     }, interval);
     return () => clearInterval(t);
   }, [interval]);
