@@ -5,7 +5,7 @@
   "homepage": "https://hitsmee814-bot.github.io/Mockup",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "cross-env NODE_ENV=production next build --turbopack",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d out"
   },
@@ -24,6 +24,7 @@
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^10.1.0",
     "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4",
