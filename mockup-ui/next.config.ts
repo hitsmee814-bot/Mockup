@@ -6,6 +6,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true, // 👈 important for GitHub Pages
     remotePatterns: [
       {
         protocol: "https",
@@ -20,7 +21,7 @@ const nextConfig: NextConfig = {
   basePath: isProd ? `/${repoName}` : "",
   assetPrefix: isProd ? `/${repoName}/` : undefined,
   trailingSlash: true,
-  output: "export",
+  ...(isProd ? { output: "export" } : {}), // 👈 only export in prod
 };
 
 export default nextConfig;

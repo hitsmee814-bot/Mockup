@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { HiOutlineChevronDown } from "react-icons/hi";
-
-// ✅ Motion-enabled Headless UI MenuItems
-const MotionMenuItems = motion(MenuItems);
+import { motion } from "framer-motion";
 
 const navItems = [
   { label: "Plan Your Trip", href: "#plan" },
@@ -29,23 +26,18 @@ export default function Header() {
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed top-0 left-0 w-full z-50 shadow-md bg-white"
-    >
-      <div
-        className={`flex items-center justify-between px-8 md:px-16 lg:px-24 py-4 transition-all ${
-          scrolled ? "backdrop-blur-md" : ""
+      className={`fixed top-0 left-0 w-full z-50 shadow-md bg-white transition-all ${scrolled ? "backdrop-blur-md" : ""
         }`}
-      >
-        {/* Logo */}
+    >
+      <div className="flex items-center justify-between px-8 md:px-16 lg:px-24 py-4">
         <motion.a
           href="/"
-          className="text-2xl font-bold tracking-tight text-gray-900"
           whileHover={{ scale: 1.05 }}
+          className="text-2xl font-bold tracking-tight text-gray-900"
         >
           Bonho<span className="text-indigo-600">miee</span>
         </motion.a>
 
-        {/* Navigation */}
         <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
           {navItems.map((item, i) => (
             <motion.a
@@ -62,7 +54,6 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Right Section */}
         <div className="flex items-center gap-4">
           <Menu as="div" className="relative">
             <MenuButton className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100">
@@ -70,41 +61,30 @@ export default function Header() {
               <HiOutlineChevronDown size={16} />
             </MenuButton>
 
-            <AnimatePresence>
-              <MotionMenuItems
-                static
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="absolute right-0 mt-3 w-56 rounded-xl shadow-lg overflow-hidden border bg-white"
-              >
-                <MenuItem>
-                  {({ active }) => (
-                    <a
-                      href="#"
-                      className={`block px-4 py-2 text-sm ${
-                        active ? "bg-gray-100" : ""
+            <MenuItems className="absolute right-0 mt-3 w-56 rounded-xl shadow-lg overflow-hidden border bg-white">
+              <MenuItem>
+                {({ active }) => (
+                  <a
+                    href="#"
+                    className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""
                       }`}
-                    >
-                      Traveller Dashboard
-                    </a>
-                  )}
-                </MenuItem>
-                <MenuItem>
-                  {({ active }) => (
-                    <a
-                      href="#"
-                      className={`block px-4 py-2 text-sm ${
-                        active ? "bg-gray-100" : ""
+                  >
+                    Traveller Dashboard
+                  </a>
+                )}
+              </MenuItem>
+              <MenuItem>
+                {({ active }) => (
+                  <a
+                    href="#"
+                    className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""
                       }`}
-                    >
-                      Agent / Provider
-                    </a>
-                  )}
-                </MenuItem>
-              </MotionMenuItems>
-            </AnimatePresence>
+                  >
+                    Agent / Provider
+                  </a>
+                )}
+              </MenuItem>
+            </MenuItems>
           </Menu>
 
           <motion.a

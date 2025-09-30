@@ -1,8 +1,13 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 
-function LoopingSequence({ children, interval = 5000 }) {
+type LoopingSequenceProps = {
+  children: ReactNode;
+  interval?: number;
+};
+
+function LoopingSequence({ children, interval = 5000 }: LoopingSequenceProps) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
