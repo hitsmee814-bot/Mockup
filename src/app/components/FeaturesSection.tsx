@@ -1,6 +1,8 @@
 "use client";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import TestimonialsSection from "../ext/TestimonialsSection";
+import TestimonialsCleanGrid from "../ext/TestimonialsSection";
 
 export default function FeaturesSection() {
   const emotions = [
@@ -69,8 +71,7 @@ export default function FeaturesSection() {
 
         </div>
       </div>
-
-      <div className="w-full">
+      <div className="w-full bg-white py-14">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -79,6 +80,7 @@ export default function FeaturesSection() {
         >
           Where Will Your Emotions Take You?
         </motion.h2>
+
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -89,66 +91,62 @@ export default function FeaturesSection() {
           help you travel by how you want to feel.
         </motion.p>
 
-        <div className="relative w-full overflow-hidden">
+        <div className="relative w-full h-20 bg-gray-50 overflow-hidden flex items-center">
           <motion.div
-            className="flex gap-8"
-            animate={{ x: ["0%", "-100%"] }}
+            className="flex gap-16 text-xl italic font-semibold text-gray-500"
+            animate={{ x: ["0%", "-50%"] }}
             transition={{
               duration: 40,
               repeat: Infinity,
               ease: "linear",
             }}
+            style={{ width: "max-content" }}
           >
-            {[...emotions, ...emotions].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                viewport={{ once: true }}
-                className="relative flex-shrink-0 w-[380px] h-[220px] rounded-2xl overflow-hidden shadow-lg"
-              >
-                <Image
-                  src={item.img}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-white font-semibold text-lg">
-                  {item.title}
+            {[
+              { icon: "🌴", text: "Feel Revitalized in Bali" },
+              { icon: "⛰️", text: "Feel Challenged in Patagonia" },
+              { icon: "👨‍👩‍👧‍👦", text: "Family Adventures" },
+              { icon: "❤️", text: "Romantic Escapes" },
+              { icon: "🎭", text: "Cultural Immersions" },
+              { icon: "🦁", text: "Wildlife Encounters" },
+            ]
+              .concat([
+                { icon: "🌴", text: "Feel Revitalized in Bali" },
+                { icon: "⛰️", text: "Feel Challenged in Patagonia" },
+                { icon: "👨‍👩‍👧‍👦", text: "Family Adventures" },
+                { icon: "❤️", text: "Romantic Escapes" },
+                { icon: "🎭", text: "Cultural Immersions" },
+                { icon: "🦁", text: "Wildlife Encounters" },
+              ])
+              .map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 whitespace-nowrap px-2 group"
+                >
+                  <span className="text-2xl">{item.icon}</span>
+                  <span
+                    className="relative text-gray-500 group-hover:text-transparent bg-clip-text group-hover:animate-gradient"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(90deg, #0004f6ff, #000792ff, #00004bff)", // Indigo → Violet → Pink
+                      backgroundSize: "200%",
+                      backgroundPosition: "0% 50%",
+                    }}
+                  >
+                    {item.text}
+                  </span>
+
                 </div>
-              </motion.div>
-            ))}
+              ))}
           </motion.div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-20">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-2xl font-bold text-gray-900 text-center mb-12"
-        >
-          Travel with Confidence
-        </motion.h2>
 
-        <div className="flex justify-center gap-12 mb-12 flex-wrap">
-          {["Forbes", "CNBC", "NYT"].map((logo, i) => (
-            <motion.div
-              key={logo}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: i * 0.2 }}
-              className="text-gray-500 font-semibold text-lg opacity-70"
-            >
-              {logo}
-            </motion.div>
-          ))}
-        </div>
+        <TestimonialsSection></TestimonialsSection>
 
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6 }}
@@ -159,13 +157,8 @@ export default function FeaturesSection() {
             was seamless and stress-free.”
           </p>
           <p className="mt-4 text-sm font-medium text-gray-900">— Sarah, NYC</p>
-        </motion.div>
+        </motion.div> */}
 
-        <div className="text-center mt-8">
-          <button className="text-sm font-medium text-indigo-600 hover:underline">
-            Read All Reviews
-          </button>
-        </div>
       </div>
     </section>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function HotelAnim() {
@@ -28,7 +28,8 @@ export default function HotelAnim() {
 
   return (
     <div className="w-[80%] space-y-5">
-      <div className="h-10 bg-gray-100 rounded-md px-4 flex items-center text-sm text-gray-700 font-medium">
+      {/* Search input */}
+      <div className="h-13 bg-gray-100 rounded-md px-4 flex items-center text-sm text-gray-700 font-medium">
         🔍 {typed}
         {typed.length < query.length && (
           <motion.span
@@ -41,46 +42,61 @@ export default function HotelAnim() {
         )}
       </div>
 
-      <div className="min-h-[160px] space-y-3">
-        {!showResults && typed.length === query.length && (
-          <motion.div
-            className="h-2 w-28 bg-gray-200 rounded-full mt-4"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-        )}
+      <div className="min-h-[220px] space-y-3 relative">
+        <AnimatePresence mode="wait">
+          {!showResults && typed.length === query.length && (
+            <motion.div
+              key="loader"
+              className="absolute inset-0 flex items-start mt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="h-2 w-28 bg-gray-200 rounded-full" />
+            </motion.div>
+          )}
 
-        {showResults && (
-          <motion.div
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.3 } },
-            }}
-            className="space-y-3"
-          >
-            {hotels.map((hotel) => (
-              <motion.div
-                key={hotel.name}
-                className="h-16 rounded-lg bg-gray-50 border flex items-center px-3 text-gray-800 text-sm shadow-sm"
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  show: { opacity: 1, y: 0 },
-                }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              >
-                <div className="flex flex-col">
-                  <span className="font-semibold">{hotel.name}</span>
-                  <span className="text-xs text-gray-500">
-                    from {hotel.price}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+          {showResults && (
+            <motion.div
+              key="results"
+              initial="hidden"
+              animate="show"
+              exit="hidden"
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                show: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { staggerChildren: 0.25 },
+                },
+              }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="space-y-3"
+            >
+              {hotels.map((hotel) => (
+                <motion.div
+                  key={hotel.name}
+                  className="h-16 rounded-lg bg-gray-50 border flex items-center px-3 text-gray-800 text-sm shadow-sm"
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    show: { opacity: 1, y: 0 },
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{hotel.name}</span>
+                    <span className="text-xs text-gray-500">
+                      from {hotel.price}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
     </div>
   );
 }

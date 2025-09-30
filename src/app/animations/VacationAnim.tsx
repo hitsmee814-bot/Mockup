@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function VacationAnim() {
@@ -37,40 +37,54 @@ export default function VacationAnim() {
         )}
       </div>
 
-      <div className="min-h-[160px]">
-        {!showResults && typed.length === query.length && (
-          <motion.div
-            className="h-2 w-28 bg-gray-200 rounded-full mt-3"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-        )}
+      <div className="min-h-[180px]">
+        <AnimatePresence mode="wait">
+          {!showResults && typed.length === query.length && (
+            <motion.div
+              key="skeletons"
+              className="space-y-3 mt-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-12 rounded-md bg-gray-200 animate-pulse"
+                />
+              ))}
+            </motion.div>
+          )}
 
-        {showResults && (
-          <motion.div
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.25 } },
-            }}
-            className="space-y-3"
-          >
-            {destinations.map((d) => (
-              <motion.div
-                key={d}
-                className="h-12 rounded-md bg-gray-50 border flex items-center px-3 text-gray-700 text-sm shadow-sm"
-                variants={{
-                  hidden: { opacity: 0, x: -20 },
-                  show: { opacity: 1, x: 0 },
-                }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              >
-                {d}
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+          {showResults && (
+            <motion.div
+              key="results"
+              initial="hidden"
+              animate="show"
+              exit="hidden"
+              variants={{
+                hidden: { opacity: 0 },
+                show: { opacity: 1, transition: { staggerChildren: 0.25 } },
+              }}
+              className="space-y-3 mt-3"
+            >
+              {destinations.map((d) => (
+                <motion.div
+                  key={d}
+                  className="h-12 rounded-md bg-gray-50 border flex items-center px-3 text-gray-700 text-sm shadow-sm"
+                  variants={{
+                    hidden: { opacity: 0, x: -20 },
+                    show: { opacity: 1, x: 0 },
+                  }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                >
+                  {d}
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
