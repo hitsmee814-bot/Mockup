@@ -7,7 +7,7 @@ export default function Footer() {
         <footer className="w-full bg-gray-900 text-gray-300">
             <div className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-4 gap-10">
                 <div>
-                    <h3 className="text-xl font-bold text-white">TravelX</h3>
+                    <h3 className="text-xl font-bold text-white">Bonhomiee</h3>
                     <p className="text-sm text-gray-400 mt-3">
                         Curated journeys, powered by AI + human expertise.
                     </p>
@@ -42,7 +42,7 @@ export default function Footer() {
                 <div>
                     <h4 className="text-sm font-semibold text-white mb-3">Contact</h4>
                     <p className="text-sm">📞 +1 (800) 555-1234</p>
-                    <p className="text-sm">✉️ hello@travelx.com</p>
+                    <p className="text-sm">✉️ hello@Bonhomiee.com</p>
                     <div className="flex gap-4 mt-4">
                         <Link href="https://linkedin.com" target="_blank">
                             <FaLinkedin className="text-xl hover:text-white" />
@@ -73,7 +73,7 @@ export default function Footer() {
             </div>
 
             <div className="border-t border-gray-700 mt-10 py-6 text-center text-xs text-gray-500">
-                © {new Date().getFullYear()} TravelX. All rights reserved.
+                © {new Date().getFullYear()} Bonhomiee. All rights reserved.
             </div>
         </footer>
     );

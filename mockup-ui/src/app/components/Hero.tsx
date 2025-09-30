@@ -15,7 +15,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative h-screen bg-white text-gray-900 flex items-center overflow-hidden">
+    <section id="hero" className="relative h-screen bg-white text-gray-900 flex items-center overflow-hidden">
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 h-full items-center w-full max-w-6xl mx-auto px-8 gap-8">
         <div className="flex flex-col justify-center space-y-6">
           <AnimatePresence mode="wait">

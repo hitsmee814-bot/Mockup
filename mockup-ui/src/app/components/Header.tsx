@@ -37,7 +37,7 @@ export default function Header() {
           className="text-2xl font-bold tracking-tight text-gray-900"
           whileHover={{ scale: 1.05 }}
         >
-          Travel<span className="text-indigo-600">X</span>
+          Bonho<span className="text-indigo-600">miee</span>
         </motion.a>
 
         <nav className="hidden md:flex items-center gap-10 text-sm font-medium">

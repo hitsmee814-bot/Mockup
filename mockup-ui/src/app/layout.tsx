@@ -2,7 +2,7 @@ import Header from "./components/Header";
 import "./globals.css";
 
 export const metadata = {
-  title: "TravelX",
+  title: "Bonhomiee",
   description: "Next.js Travel Homepage",
 };
 
