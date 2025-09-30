@@ -1,5 +1,8 @@
-// next.config.js (or next.config.ts if using TS)
+// next.config.ts
 import type { NextConfig } from "next";
+
+const repoName = "Mockup";
+const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   images: {
@@ -14,6 +17,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  basePath: isProd ? `/${repoName}` : "",
+  assetPrefix: isProd ? `/${repoName}/` : undefined,
+  trailingSlash: true,
+  output: "export",
 };
 
 export default nextConfig;
