@@ -183,23 +183,36 @@ export default function HowItWorks() {
   return (
     <section className="w-full bg-white py-20">
       <div className="max-w-6xl mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-16">
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: false, amount: 0.3 }}
+          className="text-3xl font-bold text-center text-gray-900 mb-16"
+        >
           How Our AI + Human Touch Works <br />
           <span className="text-indigo-600">(The 3-Step Flow)</span>
-        </h2>
+        </motion.h2>
+
         <div className="grid md:grid-cols-3 gap-12">
-          {steps.map((step) => (
-            <div
-              key={step.id}
-              className="bg-white rounded-xl shadow-sm p-8 flex flex-col items-center text-center"
-            >
-              <div className="text-4xl mb-6">{step.icon}</div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                {step.title}
-              </h3>
-              <p className="text-sm text-gray-600 mb-6">{step.desc}</p>
-              <div className="mt-2">{step.animation}</div>
-            </div>
+          {steps.map((step, i) => (
+            <AnimatePresence key={step.id} mode="wait">
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                transition={{ duration: 0.6, delay: i * 0.2 }}
+                viewport={{ once: false, amount: 0.3 }}
+                className="bg-white rounded-xl shadow-sm p-8 flex flex-col items-center text-center"
+              >
+                <div className="text-4xl mb-6">{step.icon}</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">{step.desc}</p>
+                <div className="mt-2">{step.animation}</div>
+              </motion.div>
+            </AnimatePresence>
           ))}
         </div>
       </div>

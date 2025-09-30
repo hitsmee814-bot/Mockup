@@ -28,7 +28,7 @@ export default function Hero() {
                 exit="exit"
                 transition={{ duration: 0.6, ease: "easeInOut" }}
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.3 }} // 👈 re-trigger on scroll
+                viewport={{ once: false, amount: 0.3 }}
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   Design Your Dream Trip

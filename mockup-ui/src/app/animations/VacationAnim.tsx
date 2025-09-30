@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function VacationAnim() {
-  const query = "Add Destination"; // typed text
+  const query = "Add Destination";
   const [typed, setTyped] = useState("");
   const [showResults, setShowResults] = useState(false);
 

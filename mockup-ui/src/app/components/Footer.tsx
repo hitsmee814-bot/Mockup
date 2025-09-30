@@ -64,7 +64,7 @@ export default function Footer() {
                         Unlock access to our partnership tools and agent dashboard.
                     </p>
                     <Link
-                        href="/agent-login" // replace with actual G2 link
+                        href="/agent-login"
                         className="mt-4 inline-block px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow hover:bg-indigo-700 transition-colors"
                     >
                         Explore Partnership Tools
