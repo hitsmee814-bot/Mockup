@@ -1,5 +1,5 @@
 import Header from "./components/Header";
-import BackgroundBlobs from "./ext/BackgroundBlobs";
+import BackgroundCurve from "./ext/BackgroundCurve";
 import "./globals.css";
 
 export const metadata = {
@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="antialiased relative">
-        <BackgroundBlobs />
+        <BackgroundCurve />
         <Header />
         {children}
       </body>
