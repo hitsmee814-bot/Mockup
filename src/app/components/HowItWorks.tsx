@@ -160,7 +160,7 @@ export default function HowItWorks() {
               ✈️ NYC → LON
             </motion.div>
             <motion.div
-              className="bg-white shadow-sm border rounded-md px-3 py-2 text-xs text-gray-700"
+              className=" shadow-sm border rounded-md px-3 py-2 text-xs text-gray-700"
               variants={{
                 hidden: { opacity: 0, y: 10 },
                 visible: { opacity: 1, y: 0 },
@@ -186,7 +186,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="w-full bg-white py-20">
+    <section className="w-full  py-20">
       <div className="max-w-6xl mx-auto px-6">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
@@ -208,7 +208,7 @@ export default function HowItWorks() {
                 exit={{ opacity: 0, y: 50, scale: 0.95 }}
                 transition={{ duration: 0.6, delay: i * 0.2 }}
                 viewport={{ once: false, amount: 0.3 }}
-                className="bg-white rounded-xl shadow-sm p-8 flex flex-col items-center text-center"
+                className="bg-white rounded-xl border border-gray-200 shadow-md p-8 flex flex-col items-center text-center"
               >
                 <div className="text-4xl mb-6">{step.icon}</div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
@@ -217,6 +217,7 @@ export default function HowItWorks() {
                 <p className="text-sm text-gray-600 mb-6">{step.desc}</p>
                 <div className="mt-2">{step.animation}</div>
               </motion.div>
+
             </AnimatePresence>
           ))}
         </div>

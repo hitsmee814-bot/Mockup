@@ -61,7 +61,7 @@ export default function Header() {
               <HiOutlineChevronDown size={16} />
             </MenuButton>
 
-            <MenuItems className="absolute right-0 mt-3 w-56 rounded-xl shadow-lg overflow-hidden border bg-white">
+            <MenuItems className="absolute right-0 mt-3 w-56 rounded-xl shadow-lg overflow-hidden border ">
               <MenuItem>
                 {({ active }) => (
                   <a

@@ -98,7 +98,7 @@ export default function MobileDemo() {
                         transition={{ duration: 0.4, ease: "easeInOut" }}
                         className="flex items-center gap-3"
                     >
-                        <div className="p-2 rounded-md bg-white shadow text-gray-700">
+                        <div className="p-2 rounded-md  shadow text-gray-700">
                             {scenes[active].icon}
                         </div>
                         <div>

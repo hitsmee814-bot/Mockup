@@ -114,7 +114,7 @@ export default function TestimonialsCleanGrid() {
                         }}
                         onHoverStart={() => setHoveredIndex(index)}
                         onHoverEnd={() => setHoveredIndex(null)}
-                        className="relative bg-white border border-gray-100 rounded-2xl p-6 transition-transform duration-300 ease-out overflow-hidden"
+                        className="relative bg-white border border-gray-300 shadow-md rounded-xl p-8 transition-transform duration-300 ease-out overflow-hidden"
                     >
                         <motion.div
                             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 pointer-events-none"
