@@ -1,34 +1,98 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { HiOutlineBriefcase, HiOutlinePaperAirplane } from "react-icons/hi";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import {
+  HiOutlineBriefcase,
+  HiOutlinePaperAirplane,
+  HiX,
+} from "react-icons/hi";
 import MobileDemo from "./MobileDemo";
 
 export default function Hero() {
   const [mode, setMode] = useState<"leisure" | "corporate">("leisure");
+  const [showChat, setShowChat] = useState(false);
+  const scrollVariants: Variants = {
+    hidden: { y: 100, opacity: 0 },
+    visible: {
+      y: [100, 0],
+      opacity: [0, 1],
+      transition: {
+        duration: 0.45,
+        ease: "easeOut",
+      },
+    },
+    exit: {
+      y: [0, -120],
+      opacity: [1, 0],
+      transition: {
+        duration: 0.45,
+        ease: "easeIn",
+      },
+    },
+  };
 
-  const textVariants = {
-    hidden: { y: 40, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
-    exit: { y: -40, opacity: 0 },
+  const chatVariants = {
+    hidden: { scale: 0.9, opacity: 0 },
+    visible: { scale: 1, opacity: 1 },
+    exit: { scale: 0.9, opacity: 0 },
   };
 
   return (
-    <section id="hero" className="relative h-screen  text-gray-900 flex items-center overflow-hidden">
+    <section
+      id="hero"
+      className="relative h-screen text-gray-900 flex items-center overflow-hidden"
+    >
       <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 h-full items-center w-full max-w-6xl mx-auto px-8 gap-8">
-        <div className="flex flex-col justify-center space-y-6">
+        <div className="flex flex-col justify-center space-y-6 overflow-hidden">
           <AnimatePresence mode="wait">
-            {mode === "leisure" ? (
+            {showChat ? (
               <motion.div
-                key="leisure-text"
-                variants={textVariants}
+                key="chat-bot"
+                variants={chatVariants}
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                whileInView="visible"
-                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="relative bg-white rounded-xl shadow-lg p-6 border border-gray-200"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    AI Itinerary Builder
+                  </h2>
+                  <button
+                    onClick={() => setShowChat(false)}
+                    className="p-2 rounded-md hover:bg-gray-100"
+                  >
+                    <HiX size={20} />
+                  </button>
+                </div>
+
+                <div className="h-[330px] overflow-y-auto border border-gray-100 rounded-md p-4 bg-gray-50 mb-4">
+                  <div className="text-sm text-gray-600 italic">
+                    [Chatbot will appear here...]
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Type your trip ideas..."
+                    className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700">
+                    Send
+                  </button>
+                </div>
+              </motion.div>
+            ) : mode === "leisure" ? (
+              <motion.div
+                key="leisure-text"
+                variants={scrollVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                transition={{ duration: 0.4, ease: "easeInOut" }}
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   Design Your Dream Trip
@@ -37,7 +101,10 @@ export default function Hero() {
                   Powered by AI and guided by experts, craft journeys that are
                   truly one-of-a-kind.
                 </p>
-                <button className="px-5 py-2 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 transition mb-4 flex items-center gap-2">
+                <button
+                  onClick={() => setShowChat(true)}
+                  className="px-5 py-2 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 transition mb-4 flex items-center gap-2"
+                >
                   <HiOutlinePaperAirplane size={18} />
                   Start Itinerary
                 </button>
@@ -51,13 +118,11 @@ export default function Hero() {
             ) : (
               <motion.div
                 key="corporate-text"
-                variants={textVariants}
+                variants={scrollVariants}
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                whileInView="visible"
-                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
               >
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   Smarter Corporate Travel

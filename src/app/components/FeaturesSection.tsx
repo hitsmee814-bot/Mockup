@@ -48,7 +48,7 @@ export default function FeaturesSection() {
                   visible: { opacity: 1, y: 0 },
                 }}
                 transition={{ duration: 0.6 }}
-                className="bg-white rounded-xl p-8 shadow-sm flex flex-col items-start"
+                className="bg-white rounded-xl p-8 border border-gray-200 shadow-md flex flex-col items-start"
               >
                 <div className="text-3xl mb-6">{tile.icon}</div>
                 <h3 className="text-lg font-semibold text-gray-900">{tile.title}</h3>
@@ -91,7 +91,7 @@ export default function FeaturesSection() {
           help you travel by how you want to feel.
         </motion.p>
 
-        <div className="relative w-full h-20 bg-gray-50 overflow-hidden flex items-center">
+        <div className="relative w-full h-20  overflow-hidden flex items-center">
           <motion.div
             className="flex gap-16 text-xl italic font-semibold text-gray-500"
             animate={{ x: ["0%", "-50%"] }}
@@ -125,7 +125,7 @@ export default function FeaturesSection() {
                 >
                   <span className="text-2xl">{item.icon}</span>
                   <span
-                    className="relative text-gray-500 group-hover:text-transparent bg-clip-text group-hover:animate-gradient"
+                    className="relative pr-[2px] text-gray-500 group-hover:text-transparent bg-clip-text group-hover:animate-gradient"
                     style={{
                       backgroundImage:
                         "linear-gradient(90deg, #0004f6ff, #000792ff, #00004bff)", // Indigo → Violet → Pink
