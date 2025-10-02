@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { HiChevronDown } from "react-icons/hi";
 
 const faqs = [
   {
@@ -36,40 +37,40 @@ export default function FAQCompact() {
   const toggle = (i: number) => setActive(active === i ? null : i);
 
   return (
-    <section className="w-full max-w-6xl mx-auto py-12 px-4 sm:px-6">
-      <h2 className="text-2xl font-semibold text-center mb-8 text-gray-900">
+    <section className="w-full max-w-6xl mx-auto py-20 px-4 sm:px-6">
+      <h2 className="text-4xl font-bold text-center mb-16 text-gray-900 tracking-tight">
         Frequently Asked Questions
       </h2>
       <div className="divide-y divide-gray-200">
         {faqs.map((faq, i) => (
           <div
             key={i}
-            className="py-4 cursor-pointer"
+            className="py-6 cursor-pointer group"
             onClick={() => toggle(i)}
           >
             <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium text-gray-800">
+              <h3 className="text-lg sm:text-xl font-medium text-gray-900 group-hover:text-[#00AFEF] transition-colors">
                 {faq.question}
               </h3>
               <motion.span
-                animate={{ rotate: active === i ? 45 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-gray-500 text-xl select-none"
+                animate={{ rotate: active === i ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                className="text-gray-500 text-2xl"
               >
-                +
+                <HiChevronDown />
               </motion.span>
             </div>
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {active === i && (
                 <motion.div
                   key="answer"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="mt-2 overflow-hidden"
+                  transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
+                  className="overflow-hidden"
                 >
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="mt-3 text-gray-600 text-base leading-relaxed">
                     {faq.answer}
                   </p>
                 </motion.div>
