@@ -28,9 +28,10 @@ export default function Header() {
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`fixed top-0 left-0 w-full z-50 shadow-md bg-white transition-all ${scrolled ? "backdrop-blur-md" : ""
+      className={`sticky top-0 w-full z-50 shadow-md bg-white transition-all ${scrolled ? "backdrop-blur-md" : ""
         }`}
     >
+
       <div className="flex items-center justify-between px-8 md:px-16 lg:px-24 py-4">
         <motion.a
           href="/"
