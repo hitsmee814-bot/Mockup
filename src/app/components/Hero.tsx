@@ -80,7 +80,7 @@ export default function Hero() {
                     placeholder="Type your trip ideas..."
                     className="flex-1 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
-                  <button className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700">
+                  <button className="px-4 py-2 bg-[#00AFEF] text-white rounded-md text-sm hover:bg-[#0086b8]">
                     Send
                   </button>
                 </div>
@@ -103,7 +103,7 @@ export default function Hero() {
                 </p>
                 <button
                   onClick={() => setShowChat(true)}
-                  className="px-5 py-2 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 transition mb-4 flex items-center gap-2"
+                  className="px-5 py-2 bg-[#00AFEF] text-white rounded-md font-medium text-sm hover:bg-[#0086b8] transition mb-4 flex items-center gap-2"
                 >
                   <HiOutlinePaperAirplane size={18} />
                   Start Itinerary
@@ -131,7 +131,7 @@ export default function Hero() {
                   Book flights, hotels, and packages instantly while staying
                   compliant and saving on every trip.
                 </p>
-                <button className="px-5 py-2 bg-indigo-600 text-white rounded-md font-medium text-sm hover:bg-indigo-700 transition mb-4 flex items-center gap-2">
+                <button className="px-5 py-2 bg-[#00AFEF] text-white rounded-md font-medium text-sm hover:bg-[#0086b8] transition mb-4 flex items-center gap-2">
                   <HiOutlineBriefcase size={18} />
                   Request Demo
                 </button>

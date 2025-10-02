@@ -54,7 +54,7 @@ export default function FeaturesSection() {
                 <h3 className="text-lg font-semibold text-gray-900">{tile.title}</h3>
                 <p className="text-sm text-gray-600 mt-3">{tile.desc}</p>
 
-                <button className="mt-8 relative overflow-hidden px-5 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 group">
+                <button className="mt-8 relative overflow-hidden px-5 py-2 rounded-md text-sm font-medium text-white bg-[#00AFEF] group">
                   <span className="relative z-10">{tile.cta}</span>
                   <motion.span
                     initial={{ x: "-150%" }}

@@ -65,7 +65,7 @@ export default function Footer() {
                     </p>
                     <Link
                         href="/agent-login"
-                        className="mt-4 inline-block px-5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium shadow hover:bg-indigo-700 transition-colors"
+                        className="mt-4 inline-block px-5 py-2 rounded-lg bg-[#00AFEF] text-white text-sm font-medium shadow hover:bg-[#0086b8] transition-colors"
                     >
                         Explore Partnership Tools
                     </Link>

@@ -1,3 +1,4 @@
+import FAQ from "./components/Faq";
 import FeaturesSection from "./components/FeaturesSection";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
@@ -9,6 +10,7 @@ export default function HomePage() {
       <Hero />
       <FeaturesSection />
       <HowItWorks/>
+      <FAQ/>
       <Footer/>
     </>
   );

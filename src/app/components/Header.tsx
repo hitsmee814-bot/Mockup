@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { HiOutlineChevronDown } from "react-icons/hi";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import logoPrimary from "../assets/images/logoPrimary.png";
 
 const navItems = [
   { label: "Plan Your Trip", href: "#plan" },
@@ -33,9 +35,18 @@ export default function Header() {
         <motion.a
           href="/"
           whileHover={{ scale: 1.05 }}
-          className="text-2xl font-bold tracking-tight text-gray-900"
+          className="flex items-center gap-2"
         >
-          Bonho<span className="text-indigo-600">miee</span>
+          <Image
+            src={logoPrimary}
+            alt="Bonhomiee Logo"
+            width={32}
+            height={32}
+            priority
+          />
+          <span className="text-2xl font-bold tracking-tight text-[#00AFEF]">
+            Bonho<span className="text-[#00AFEF]">miee</span>
+          </span>
         </motion.a>
 
         <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
@@ -91,7 +102,7 @@ export default function Header() {
             href="#"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
-            className="px-4 py-2 rounded-md font-medium shadow-md bg-indigo-600 text-white hover:bg-indigo-700"
+            className="px-4 py-2 rounded-md font-medium shadow-md bg-[#00AFEF] text-white hover:bg-[#0086b8]"
           >
             Book Demo
           </motion.a>
