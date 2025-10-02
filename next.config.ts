@@ -5,10 +5,10 @@ const repoName = "Mockup";
 const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
-  output: "export", // required for static export
+  output: "export",
 
   images: {
-    unoptimized: true, // required for GitHub Pages
+    unoptimized: true,
   },
 
   basePath: isProd ? `/${repoName}` : "",
