@@ -82,7 +82,7 @@ export default function MobileDemo() {
     useEffect(() => {
         const t = setInterval(() => {
             setActive((prev) => (prev + 1) % scenes.length);
-        }, 4000);
+        }, 8000);
         return () => clearInterval(t);
     }, []);
 
@@ -95,7 +95,7 @@ export default function MobileDemo() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                        transition={{ duration: 1.2, ease: "easeInOut" }}
                         className="flex items-center gap-3"
                     >
                         <div className="p-2 rounded-md  shadow text-gray-700">
@@ -120,7 +120,7 @@ export default function MobileDemo() {
                         initial={{ opacity: 0, x: 60 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -60 }}
-                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                        transition={{ duration: 1.2, ease: "easeInOut" }}
                         className="absolute inset-0 flex items-center justify-center"
                     >
                         {React.createElement(scenes[active].component)}

@@ -28,13 +28,19 @@ export default function VideoMain() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const scrollToHero = () => {
+    const scrollToSection = () => {
+        const builder = document.getElementById("itinerary-builder");
         const hero = document.getElementById("hero");
-        if (hero) hero.scrollIntoView({ behavior: "smooth" });
+        if (builder) {
+            builder.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else if (hero) {
+            hero.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
     };
 
     const bgColor = `rgba(255,255,255,${scrollRatio})`;
-    const textColor = `rgba(${255 - scrollRatio * 255}, ${255 - scrollRatio * 255}, ${255 - scrollRatio * 255},1)`;
+    const textColor = `rgba(${255 - scrollRatio * 255}, ${255 - scrollRatio * 255}, ${255 - scrollRatio * 255
+        },1)`;
     const heroTextColor = "#ffffff";
     const headerShadow = scrollRatio > 0.5 ? "shadow-md border-b border-gray-100" : "";
 
@@ -57,7 +63,12 @@ export default function VideoMain() {
                 style={{ backgroundColor: bgColor }}
             >
                 <div className="flex items-center justify-between">
-                    <motion.a href="/" whileHover={{ scale: 1.05 }} className="flex items-center gap-2" style={{ color: textColor }}>
+                    <motion.a
+                        href="/"
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2"
+                        style={{ color: textColor }}
+                    >
                         <Image src={logoPrimary} alt="Bonhomiee Logo" width={32} height={32} priority />
                         <span className="text-2xl font-bold tracking-tight" style={{ color: textColor }}>
                             Bonho<span style={{ color: textColor }}>miee</span>
@@ -83,17 +94,34 @@ export default function VideoMain() {
 
                     <div className="flex items-center gap-4">
                         <Menu as="div" className="relative">
-                            <MenuButton className="flex items-center gap-1 px-3 py-1 text-sm font-medium rounded" style={{ color: textColor }}>
+                            <MenuButton
+                                className="flex items-center gap-1 px-3 py-1 text-sm font-medium rounded"
+                                style={{ color: textColor }}
+                            >
                                 <span>Login</span>
                                 <HiOutlineChevronDown size={16} />
                             </MenuButton>
 
                             <MenuItems className="absolute right-0 mt-3 w-56 rounded-xl shadow-lg overflow-hidden border bg-white">
                                 <MenuItem>
-                                    {({ active }) => <a href="#" className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}>Traveller Dashboard</a>}
+                                    {({ active }) => (
+                                        <a
+                                            href="#"
+                                            className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}
+                                        >
+                                            Traveller Dashboard
+                                        </a>
+                                    )}
                                 </MenuItem>
                                 <MenuItem>
-                                    {({ active }) => <a href="#" className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}>Agent / Provider</a>}
+                                    {({ active }) => (
+                                        <a
+                                            href="#"
+                                            className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}
+                                        >
+                                            Agent / Provider
+                                        </a>
+                                    )}
                                 </MenuItem>
                             </MenuItems>
                         </Menu>
@@ -103,7 +131,10 @@ export default function VideoMain() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.97 }}
                             className="px-4 py-2 rounded-md font-medium shadow-md transition-colors duration-300"
-                            style={{ backgroundColor: scrollRatio > 0.5 ? "#00AFEF" : "rgba(255,255,255,0.2)", color: "#fff" }}
+                            style={{
+                                backgroundColor: scrollRatio > 0.5 ? "#00AFEF" : "rgba(255,255,255,0.2)",
+                                color: "#fff",
+                            }}
                         >
                             Book Demo
                         </motion.a>
@@ -140,7 +171,7 @@ export default function VideoMain() {
                 >
                     <motion.button
                         whileHover={{ scale: 1.05 }}
-                        onClick={scrollToHero}
+                        onClick={scrollToSection}
                         className="relative px-8 py-3 rounded-full font-semibold text-white border border-white bg-transparent overflow-hidden transition-all duration-700 hover:shadow-lg"
                     >
                         <span className="absolute inset-0 bg-gradient-to-r from-white/10 via-blue-200/10 to-white/10 animate-gradientShift"></span>
@@ -150,14 +181,13 @@ export default function VideoMain() {
 
                     <motion.button
                         whileHover={{ scale: 1.05 }}
-                        onClick={scrollToHero}
+                        onClick={scrollToSection}
                         className="relative px-8 py-3 rounded-full font-semibold text-white border border-white bg-transparent overflow-hidden transition-all duration-700 hover:shadow-lg"
                     >
                         <span className="absolute inset-0 bg-gradient-to-r from-white/10 via-indigo-200/10 to-white/10 animate-gradientShift"></span>
                         <span className="absolute inset-0 bg-white/5 blur-lg"></span>
                         <span className="relative z-10">Request Ascendus Corporate Demo</span>
                     </motion.button>
-
                 </motion.div>
             </div>
 
@@ -165,7 +195,7 @@ export default function VideoMain() {
                 <motion.div
                     animate={{ y: [0, 6, 0] }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    onClick={scrollToHero}
+                    onClick={scrollToSection}
                 >
                     <ChevronDown size={24} strokeWidth={2} />
                 </motion.div>
