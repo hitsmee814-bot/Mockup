@@ -48,7 +48,7 @@ export default function VideoMain() {
         <section className="relative w-full h-screen overflow-hidden">
             <video
                 className="absolute top-0 left-0 w-full h-full object-cover -z-10"
-                src={`${repoPath}/video/DemoVideo.mp4`}
+                src={`${repoPath}/video/Video.mp4`}
                 autoPlay
                 loop
                 muted
