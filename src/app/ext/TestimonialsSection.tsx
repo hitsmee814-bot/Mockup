@@ -1,176 +1,115 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import { useState } from "react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 
 const reviews = [
-    {
-        name: "Sarah, NYC",
-        avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-        rating: 5,
-        quote:
-            "This platform made planning my family trip effortless — everything was seamless and stress-free.",
-    },
-    {
-        name: "Jason, LA",
-        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-        rating: 4,
-        quote:
-            "I loved the personalized suggestions. It felt like a travel concierge in my pocket.",
-    },
-    {
-        name: "Priya, London",
-        avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-        rating: 5,
-        quote:
-            "A beautifully designed app that actually understands how I want to travel.",
-    },
-    {
-        name: "Leo, Berlin",
-        avatar: "https://randomuser.me/api/portraits/men/56.jpg",
-        rating: 4,
-        quote: "Easy, fast, and intuitive. I booked an entire trip in minutes.",
-    },
-    {
-        name: "Mei, Singapore",
-        avatar: "https://randomuser.me/api/portraits/women/21.jpg",
-        rating: 5,
-        quote:
-            "The AI recommendations were spot-on. I discovered places I would've never thought of.",
-    },
-    {
-        name: "Mei, Singapore",
-        avatar: "https://randomuser.me/api/portraits/women/21.jpg",
-        rating: 5,
-        quote:
-            "The AI recommendations were spot-on. I discovered places I would've never thought of.",
-    },
+  {
+    name: "Sarah, NYC",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    rating: 5,
+    quote: `This platform made planning my family trip effortless. Everything was seamless and stress-free. The itinerary suggestions were perfectly tailored to our needs, and we discovered hidden gems that made our vacation unforgettable. Highly recommended for anyone who loves stress-free planning.`,
+  },
+  {
+    name: "Jason, LA",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    rating: 4,
+    quote: `I loved the personalized suggestions. It felt like a travel concierge in my pocket. Booking flights, hotels, and experiences was quick and intuitive. The app saved me hours of research and gave me confidence in planning complex trips.`,
+  },
+  {
+    name: "Priya, London",
+    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+    rating: 5,
+    quote: `A beautifully designed app that actually understands how I want to travel. From adventure trips to relaxing getaways, everything was curated just for me. The AI recommendations were spot-on and helped me explore destinations I would have otherwise missed.`,
+  },
 ];
 
-const letterVariants = {
-    hidden: { opacity: 0 },
-    visible: (i: number) => ({
-        opacity: 1,
-        transition: {
-            delay: i * 0.01,
-        },
+export default function TestimonialsSection() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
+
+  const prevReview = () => {
+    setDirection(-1);
+    setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
+  };
+
+  const nextReview = () => {
+    setDirection(1);
+    setCurrentIndex((prev) => (prev === reviews.length - 1 ? 0 : prev + 1));
+  };
+
+  const review = reviews[currentIndex];
+
+  const variants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? 300 : -300,
+      opacity: 0,
     }),
-};
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({
+      x: dir > 0 ? -300 : 300,
+      opacity: 0,
+    }),
+  };
 
-type TypedTextProps = {
-    text: string;
-    isActive: boolean;
-};
+  return (
+    <section className="max-w-4xl mx-auto px-6 py-24">
+      <h2 className="text-3xl font-semibold text-gray-900 text-center mb-16">
+        What Travelers Are Saying
+      </h2>
 
-
-function TypedText({ text, isActive }: TypedTextProps) {
-    const letters = text.split("");
-    return (
-        <p className="italic text-sm text-gray-700 leading-relaxed">
-            <AnimatePresence mode="wait">
-                {isActive ? (
-                    <motion.span
-                        key="typed"
-                        initial="hidden"
-                        animate="visible"
-                        exit="hidden"
-                    >
-                        {letters.map((char, i) => (
-                            <motion.span
-                                key={i}
-                                custom={i}
-                                variants={letterVariants}
-                                initial="hidden"
-                                animate="visible"
-                            >
-                                {char}
-                            </motion.span>
-                        ))}
-                    </motion.span>
-                ) : (
-                    <span>{text}</span>
-                )}
-            </AnimatePresence>
-        </p>
-    );
-}
-
-export default function TestimonialsCleanGrid() {
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-    return (
-        <section className="max-w-7xl mx-auto px-6 py-24">
-            <h2 className="text-3xl font-semibold text-gray-900 text-center mb-16">
-                What Travelers Are Saying
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {reviews.map((review, index) => (
-                    <motion.div
-                        key={index}
-                        whileHover={{
-                            scale: 1.03,
-                            boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.08)",
-                        }}
-                        onHoverStart={() => setHoveredIndex(index)}
-                        onHoverEnd={() => setHoveredIndex(null)}
-                        className="relative bg-white border border-gray-300 shadow-md rounded-xl p-8 transition-transform duration-300 ease-out overflow-hidden"
-                    >
-                        <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 pointer-events-none"
-                            whileHover={{ opacity: 1, x: ["-100%", "100%"] }}
-                            transition={{ duration: 0.8, ease: "easeInOut" }}
-                        />
-                        <div className="flex items-center space-x-4 mb-4">
-                            <motion.div
-                                animate={
-                                    hoveredIndex === index
-                                        ? { scale: [1, 1.1, 1] }
-                                        : { scale: 1 }
-                                }
-                                transition={{ duration: 0.4 }}
-                            >
-                                <Image
-                                    src={review.avatar}
-                                    alt={review.name}
-                                    width={48}
-                                    height={48}
-                                    className="rounded-full object-cover"
-                                />
-                            </motion.div>
-                            <p className="font-medium text-gray-900 text-sm">{review.name}</p>
-                        </div>
-
-                        <TypedText
-                            text={`“${review.quote}”`}
-                            isActive={hoveredIndex === index}
-                        />
-
-                        <div className="mt-4 text-yellow-400 text-xs flex">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                                <motion.span
-                                    key={i}
-                                    initial={{ opacity: 1, scale: 1 }}
-                                    animate={
-                                        hoveredIndex === index
-                                            ? {
-                                                opacity: i < review.rating ? 1 : 0.3,
-                                                scale: [0, 1.3, 1],
-                                            }
-                                            : { opacity: i < review.rating ? 1 : 0.3, scale: 1 }
-                                    }
-                                    transition={{
-                                        delay: hoveredIndex === index ? 0.3 + i * 0.15 : 0,
-                                        duration: 0.4,
-                                    }}
-                                >
-                                    ★
-                                </motion.span>
-                            ))}
-                        </div>
-                    </motion.div>
-                ))}
+      <div className="relative w-full flex flex-col items-center">
+        <AnimatePresence custom={direction} mode="wait">
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center mx-auto"
+            style={{ width: "42rem", height: "24rem" }}
+          >
+            <Image
+              src={review.avatar}
+              alt={review.name}
+              width={64}
+              height={64}
+              className="rounded-full mb-4 object-cover"
+            />
+            <div className="text-sm text-gray-700 leading-relaxed overflow-y-auto mb-4" style={{ maxHeight: "10rem" }}>
+              “{review.quote}”
             </div>
-        </section>
-    );
+            <p className="font-semibold text-gray-900 mb-2">{review.name}</p>
+            <div className="flex text-yellow-400 mb-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={i < review.rating ? "opacity-100" : "opacity-30"}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="flex justify-center gap-6 mt-6">
+          <button
+            onClick={prevReview}
+            className="px-5 py-2 bg-gray-200 rounded-full text-gray-700 hover:bg-gray-300 transition"
+          >
+            ←
+          </button>
+          <button
+            onClick={nextReview}
+            className="px-5 py-2 bg-gray-200 rounded-full text-gray-700 hover:bg-gray-300 transition"
+          >
+            →
+          </button>
+        </div>
+      </div>
+    </section>
+  );
 }

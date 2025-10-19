@@ -119,6 +119,7 @@ export default function Hero() {
               viewport={{ amount: 0.4 }}
             >
               <MobileDemo />
+
             </motion.div>
           </div>
         </motion.section>
