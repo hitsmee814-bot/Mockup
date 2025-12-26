@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   HiOutlineChat,
@@ -15,6 +15,8 @@ import {
   HiOutlineShieldCheck,
   HiOutlineDocumentText,
 } from "react-icons/hi";
+import { sendRasaMessage } from "../utils/rasaRestClient";
+
 
 export default function ItenaryBuilder({ onBack }: { onBack?: () => void }) {
   const [activeTab, setActiveTab] = useState("itenary");
@@ -22,21 +24,54 @@ export default function ItenaryBuilder({ onBack }: { onBack?: () => void }) {
     { from: "bot", text: "Hi there! Ready to plan your next amazing trip?" },
   ]);
   const [input, setInput] = useState("");
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
+  const [botTyping, setBotTyping] = useState(false);
 
-  const handleSend = () => {
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+
+  const handleSend = async () => {
     if (!input.trim()) return;
-    setMessages((prev) => [...prev, { from: "user", text: input }]);
+
+    const userMessage = input;
+    setMessages((prev) => [...prev, { from: "user", text: userMessage }]);
     setInput("");
-    setTimeout(() => {
+
+    setBotTyping(true);
+
+    try {
+      const rasaResponses = await sendRasaMessage("web-user", userMessage);
+
+      if (Array.isArray(rasaResponses)) {
+        setMessages((prev) => [
+          ...prev,
+          ...rasaResponses
+            .filter((msg) => msg.text)
+            .map((msg) => ({
+              from: "bot",
+              text: msg.text!,
+            })),
+        ]);
+      }
+    } catch (error) {
       setMessages((prev) => [
         ...prev,
         {
           from: "bot",
-          text: "Got it! Here’s a sample idea — a 5-day Bali escape 🌴",
+          text: "⚠️ Unable to reach the travel assistant right now.",
         },
       ]);
-    }, 700);
+    } finally {
+      setBotTyping(false);
+    }
   };
+
+
 
   const suggestions = [
     {
@@ -119,34 +154,56 @@ export default function ItenaryBuilder({ onBack }: { onBack?: () => void }) {
                 className="flex flex-col gap-6"
               >
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="flex flex-col bg-gray-50/60 border border-gray-200 rounded-lg p-4">
-                    <div className="flex-1 overflow-y-auto space-y-3 mb-4 scrollbar-thin scrollbar-thumb-gray-300">
+                  <div className="flex flex-col bg-gray-50/60 border border-gray-200 rounded-lg p-4 h-[500px]">
+                    <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 chat-scroll-overlay mb-4">
                       {messages.map((msg, i) => (
                         <div
                           key={i}
                           className={`p-3 text-sm rounded-lg max-w-[85%] ${msg.from === "bot"
                             ? "bg-white border border-gray-200 text-gray-800 self-start"
-                            : "bg-[#00AFEF] text-white self-end"
+                            : "bg-[#00AFEF] text-white self-end ml-auto"
                             }`}
                         >
                           {msg.text}
                         </div>
                       ))}
+
+                      {botTyping && (
+                        <div className="bg-white border border-gray-200 text-gray-800 p-3 rounded-lg w-16 self-start flex items-center justify-between animate-pulse">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-0"></span>
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+                        </div>
+                      )}
                     </div>
+
+
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && input.trim()) {
+                            handleSend();
+                          }
+                        }}
                         placeholder="Ask Bonhomiee AI..."
                         className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AFEF]"
                       />
+
                       <button
                         onClick={handleSend}
-                        className="px-4 py-2 bg-[#00AFEF] text-white rounded-md text-sm hover:bg-[#0095cb] transition"
+                        disabled={!input.trim()}
+                        className={`px-4 py-2 rounded-md text-sm transition
+    ${input.trim()
+                            ? "bg-[#00AFEF] text-white hover:bg-[#0095cb]"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          }`}
                       >
                         Send
                       </button>
+
                     </div>
                   </div>
 
