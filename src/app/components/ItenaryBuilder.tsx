@@ -241,13 +241,17 @@ export default function ItenaryBuilder({ onBack }: { onBack?: () => void }) {
                     {travelInsights.map((item) => (
                       <button
                         key={item.name}
-                        className="flex flex-col items-center justify-center w-full px-4 py-3 bg-white border border-gray-100 rounded-lg text-sm text-gray-700 hover:bg-blue-50/40 hover:border-[#00AFEF] transition"
+                        className="flex flex-col items-center justify-center w-full px-4 py-3 bg-white border border-gray-100 rounded-lg text-sm text-gray-700 
+                 hover:bg-blue-50 hover:border-[#00AFEF] transition-all duration-300 group"
                       >
-                        {item.icon}
+                        <span className="transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12">
+                          {item.icon}
+                        </span>
                         <span className="mt-1 text-xs font-medium">{item.name}</span>
                       </button>
                     ))}
                   </div>
+
                 </div>
               </motion.div>
             )}
