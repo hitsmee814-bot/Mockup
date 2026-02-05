@@ -8,7 +8,11 @@ import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import logoPrimary from "../assets/images/logoPrimary.png";
 
+import { useRouter } from 'next/navigation' //for routing
+
 const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : "";
+
+
 
 const navItems = [
     { label: "Plan Your Trip", href: "#plan" },
@@ -19,7 +23,7 @@ const navItems = [
 
 export default function VideoMain() {
     const [scrollRatio, setScrollRatio] = useState(0);
-
+    const router = useRouter();//for routing
     useEffect(() => {
         const threshold = 200;
         const handleScroll = () => setScrollRatio(Math.min(window.scrollY / threshold, 1));
@@ -92,7 +96,7 @@ export default function VideoMain() {
                         ))}
                     </nav>
 
-                    <div className="flex items-center gap-4">
+                    {/* <div className="flex items-center gap-4">
                         <Menu as="div" className="relative">
                             <MenuButton
                                 className="flex items-center gap-1 px-3 py-1 text-sm font-medium rounded"
@@ -138,7 +142,82 @@ export default function VideoMain() {
                         >
                             Book Demo
                         </motion.a>
-                    </div>
+                    </div> */}
+    <div className="flex items-center gap-4">
+    {/* Login / Signup Hover Menu */}
+    <div className="relative group">
+        {/* Login / Signup Button — Styled Like Book Demo */}
+        <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            className="px-6 py-2 rounded-full font-medium shadow-md transition-colors duration-300"
+            style={{
+                backgroundColor:
+                    scrollRatio > 0.5 ? "#00AFEF" : "rgba(255,255,255,0.2)",
+                color: "#fff",
+            }}
+        >
+            Login / Signup
+        </motion.button>
+
+        {/* Hover Menu */}
+        <div
+            className="absolute right-0 mt-3 w-56 rounded-xl shadow-lg border bg-white
+                       opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                       transition-all duration-200"
+        >
+           {["Customer", "Corporate", "Agent", "Supplier"].map((item) => (
+
+                
+
+                
+                 <button
+    key={item}
+    onClick={() => {
+      if (item === "Supplier") {
+        router.push("/signup/supplier");
+      }
+      if (item === "Customer") {
+        router.push("/signup/customer");
+      }
+      if (item === "Agent") {
+        router.push("/signup/agent");
+      }
+      if (item === "Corporate") {
+        router.push("/signup/corporate");
+      }
+
+    }}
+    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+  >
+    {item}
+  </button>
+            ))}
+        </div>
+    </div>
+
+    {/* Book Demo Button */}
+    <motion.a
+        href="#"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.97 }}
+        className="px-6 py-2 rounded-full font-medium shadow-md transition-colors duration-300"
+        style={{
+            backgroundColor:
+                scrollRatio > 0.5 ? "#00AFEF" : "rgba(255,255,255,0.2)",
+            color: "#fff",
+        }}
+    >
+        Book Demo
+    </motion.a>
+</div>
+
+
+
+
+
+
+
                 </div>
             </motion.header>
 
