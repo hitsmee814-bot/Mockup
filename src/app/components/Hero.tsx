@@ -7,7 +7,7 @@ import {
   HiOutlinePaperAirplane,
 } from "react-icons/hi";
 import MobileDemo from "./MobileDemo";
-import ItenaryBuilder from "./ItenaryBuilder";
+import ItenaryBuilder from "./itinerary/ItenaryBuilder";
 
 export default function Hero() {
   const [mode, setMode] = useState<"leisure" | "corporate">("leisure");
