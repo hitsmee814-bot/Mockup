@@ -125,6 +125,70 @@ export default function VideoMain() {
                                 </MenuItem>
                             </MenuItems>
                         </Menu>
+                        {/* SIGNUP MENU */}
+                        <Menu as="div" className="relative">
+                            <MenuButton
+                                className="flex items-center gap-1 px-3 py-1 text-sm font-medium rounded"
+                                style={{ color: textColor }}
+                            >
+                                <span>Sign Up</span>
+                                <HiOutlineChevronDown size={16} />
+                            </MenuButton>
+
+                            <MenuItems className="absolute right-0 mt-3 w-64 rounded-xl shadow-lg overflow-hidden border bg-white">
+                                <MenuItem>
+                                    {({ active }) => (
+                                        <a
+                                            href="/signup/customer"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}
+                                        >
+                                            Customer / Traveler
+                                        </a>
+                                    )}
+            </MenuItem>
+
+            <MenuItem>
+                {({ active }) => (
+                    <a
+                        href="/signup/agent"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}
+                    >
+                        Agent
+                    </a>
+                )}
+            </MenuItem>
+
+            <MenuItem>
+                {({ active }) => (
+                    <a
+                        href="/signup/supplier"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}
+                    >
+                        Supplier
+                    </a>
+                )}
+            </MenuItem>
+
+            <MenuItem>
+                {({ active }) => (
+                    <a
+                        href="/signup/corporate"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block px-4 py-2 text-sm ${active ? "bg-gray-100" : ""}`}
+                    >
+                        Corporate User
+                    </a>
+                )}
+            </MenuItem>
+        </MenuItems>
+    </Menu>
 
                         <motion.a
                             href="#"
