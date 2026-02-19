@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
 import { passwordStrength } from 'check-password-strength'
+import Image from "next/image";
+import logo from "../../assets/images/logoPrimary.png"
+import supplierPic from "../../assets/images/traveling-concept-with-landmarks.jpg"
 
 
 import {
@@ -543,8 +546,8 @@ const validatePhoneNumber = () => {
     <main className="min-h-screen bg-blue-50 flex items-center justify-center px-4 pt-20">
 
        <div className="fixed top-0 left-0 w-full h-[70px] bg-white z-50 px-6 pt-4 border-b border-[#e5e7eb]">
-      <img
-        src="/images/final logo Bonhomiee.png"
+      <Image
+        src={logo}
         alt="Bonhomiee"
         className="h-[32px] w-auto"
       />
@@ -554,7 +557,7 @@ const validatePhoneNumber = () => {
         <div className="bg-white rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 max-w-4xl w-full h-[85vh]">
           <div
             className="bg-cover bg-center h-full"
-            style={{ backgroundImage: "url('/images/traveling-concept-with-landmarks.jpg.jpeg')" }}
+            style={{ backgroundImage: `url(${supplierPic.src})` }}
           />
             <div className="h-full">
             <form className="p-6 text-sm flex flex-col h-[85vh]" >
