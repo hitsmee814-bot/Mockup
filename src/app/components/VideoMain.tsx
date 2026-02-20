@@ -1,57 +1,70 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { HiOutlineChevronDown } from "react-icons/hi";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import { ChevronDown } from "lucide-react";
-import logoPrimary from "../assets/images/logoPrimary.png";
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
+import { ChevronDown, Menu, X } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-import { useRouter } from 'next/navigation' //for routing
+import logoPrimary from "../assets/images/logoPrimary.png"
 
-const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : "";
-
-
+const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
 
 const navItems = [
     { label: "Plan Your Trip", href: "#plan" },
     { label: "Inspiration & Expertise", href: "#inspiration" },
     { label: "Why Us", href: "#why" },
     { label: "Support", href: "#support" },
-];
+]
+
+const wordVariant = {
+    hidden: { opacity: 0, y: 32 },
+    visible: { opacity: 1, y: 0 },
+}
 
 export default function VideoMain() {
-    const [scrollRatio, setScrollRatio] = useState(0);
-    const router = useRouter();//for routing
+    const [scrollRatio, setScrollRatio] = useState(0)
+    const [menuOpen, setMenuOpen] = useState(false)
+    const router = useRouter()
+
     useEffect(() => {
-        const threshold = 200;
-        const handleScroll = () => setScrollRatio(Math.min(window.scrollY / threshold, 1));
-        window.addEventListener("scroll", handleScroll);
-        handleScroll();
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    const scrollToSection = () => {
-        const builder = document.getElementById("itinerary-builder");
-        const hero = document.getElementById("hero");
-        if (builder) {
-            builder.scrollIntoView({ behavior: "smooth", block: "start" });
-        } else if (hero) {
-            hero.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (menuOpen) {
+            document.body.style.overflow = "hidden"
+        } else {
+            document.body.style.overflow = ""
         }
-    };
+    }, [menuOpen])
 
-    const bgColor = `rgba(255,255,255,${scrollRatio})`;
-    const textColor = `rgba(${255 - scrollRatio * 255}, ${255 - scrollRatio * 255}, ${255 - scrollRatio * 255
-        },1)`;
-    const heroTextColor = "#ffffff";
-    const headerShadow = scrollRatio > 0.5 ? "shadow-md border-b border-gray-100" : "";
+    useEffect(() => {
+        const threshold = 200
+        const handleScroll = () =>
+            setScrollRatio(Math.min(window.scrollY / threshold, 1))
+
+        window.addEventListener("scroll", handleScroll)
+        handleScroll()
+        return () => window.removeEventListener("scroll", handleScroll)
+    }, [])
+    const scrollToSection = () => {
+        window.scrollTo({
+            top: window.innerHeight,
+            behavior: "smooth",
+        })
+        setMenuOpen(false)
+    }
+    const bgColor = `rgba(
+    ${Math.round(scrollRatio * 5)},
+    ${Math.round(scrollRatio * 32)},
+    ${Math.round(scrollRatio * 29)},
+    ${0.14 + scrollRatio * 0.86}
+  )`
+
+    const headerShadow =
+        scrollRatio > 0.5 ? "shadow-md border-b border-white/10" : ""
 
     return (
-        <section className="relative w-full h-screen overflow-hidden">
+        <section className="relative w-full min-h-[100svh]">
             <video
-                className="absolute top-0 left-0 w-full h-full object-cover -z-10"
+                className="absolute top-0 left-0 w-screen h-full object-cover -z-10"
                 src={`${repoPath}/video/Video.mp4`}
                 autoPlay
                 loop
@@ -62,177 +75,175 @@ export default function VideoMain() {
             <motion.header
                 initial={{ y: -80, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 px-8 md:px-16 lg:px-24 py-4 ${headerShadow}`}
+                transition={{ duration: 0.6 }}
                 style={{ backgroundColor: bgColor }}
+                className={`fixed top-0 left-0 w-full z-50 px-4 md:px-10 py-4 transition-all ${headerShadow}`}
             >
                 <div className="flex items-center justify-between">
-                    <motion.a
-                        href="/"
-                        whileHover={{ scale: 1.05 }}
-                        className="flex items-center gap-2"
-                        style={{ color: textColor }}
-                    >
-                        <Image src={logoPrimary} alt="Bonhomiee Logo" width={32} height={32} priority />
-                        <span className="text-2xl font-bold tracking-tight" style={{ color: textColor }}>
-                            Bonho<span style={{ color: textColor }}>miee</span>
-                        </span>
-                    </motion.a>
+                    <a href="/" className="flex items-center gap-2 text-white">
+                        <Image src={logoPrimary} alt="Logo" width={32} height={32} priority />
+                        <span className="text-xl font-bold">Bonhomiee</span>
+                    </a>
 
-                    <nav className="hidden md:flex items-center gap-10 text-sm font-medium">
-                        {navItems.map((item, i) => (
-                            <motion.a
-                                key={item.label}
-                                href={item.href}
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 + 0.3, duration: 0.4 }}
-                                className="relative group"
-                                style={{ color: textColor }}
-                            >
-                                {item.label}
-                                <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-indigo-500 transition-all group-hover:w-full"></span>
-                            </motion.a>
-                        ))}
+                    <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-white">                        {navItems.map((item) => (
+                        <a
+                            key={item.label}
+                            href={item.href}
+                            className="relative group"
+                        >
+                            {item.label}
+                            <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-[#00AFEF] transition-all group-hover:w-full" />
+                        </a>
+                    ))}
                     </nav>
 
-                   
-    <div className="flex items-center gap-4">
-    {/* Login / Signup Hover Menu */}
-    <div className="relative group">
-        {/* Login / Signup Button — Styled Like Book Demo */}
-        <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-            className="px-6 py-2 rounded-full font-medium shadow-md transition-colors duration-300"
-            style={{
-                backgroundColor:
-                    scrollRatio > 0.5 ? "#00AFEF" : "rgba(255,255,255,0.2)",
-                color: "#fff",
-            }}
-        >
-            Login / Signup
-        </motion.button>
-
-        {/* Hover Menu */}
-        <div
-            className="absolute right-0 mt-3 w-56 rounded-xl shadow-lg border bg-white
-                       opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                       transition-all duration-200"
-        >
-           {["Customer", "Corporate", "Agent", "Supplier"].map((item) => (
-
-                
-
-                
-                 <button
-    key={item}
-    onClick={() => {
-      if (item === "Supplier") {
-        router.push("/signup/supplier");
-      }
-      if (item === "Customer") {
-        router.push("/signup/customer");
-      }
-      if (item === "Agent") {
-        router.push("/signup/agent");
-      }
-      if (item === "Corporate") {
-        router.push("/signup/corporate");
-      }
-
-    }}
-    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-  >
-    {item}
-  </button>
-            ))}
-        </div>
-    </div>
-
-    {/* Book Demo Button */}
-    <motion.a
-        href="#"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.97 }}
-        className="px-6 py-2 rounded-full font-medium shadow-md transition-colors duration-300"
-        style={{
-            backgroundColor:
-                scrollRatio > 0.5 ? "#00AFEF" : "rgba(255,255,255,0.2)",
-            color: "#fff",
-        }}
-    >
-        Book Demo
-    </motion.a>
-</div>
-
-
-
-
-
-
-
+                    <div className="hidden lg:flex">
+                        <button
+                            className="px-6 py-2 rounded-full text-white font-medium"
+                            style={{
+                                background:
+                                    scrollRatio > 0.5
+                                        ? "#00AFEF"
+                                        : "rgba(255,255,255,0.2)",
+                            }}
+                        >
+                            Login / Signup
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => setMenuOpen(true)}
+                        className="md:hidden text-white"
+                    >
+                        <Menu size={28} />
+                    </button>
                 </div>
             </motion.header>
 
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-10 px-4 md:px-0">
+            <AnimatePresence>
+                {menuOpen && (
+                    <>
+                        <motion.div
+                            className="fixed inset-0 bg-black/50 z-40"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setMenuOpen(false)}
+                        />
+
+                        <motion.aside
+                            initial={{ x: "100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "100%" }}
+                            transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                            className="fixed right-0 top-0 h-full w-72 bg-[#051F1D] z-50 p-6 text-white"
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <span className="font-bold text-lg">Menu</span>
+                                <button onClick={() => setMenuOpen(false)}>
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <nav className="flex flex-col gap-6">
+                                {navItems.map((item) => (
+                                    <a
+                                        key={item.label}
+                                        href={item.href}
+                                        onClick={() => setMenuOpen(false)}
+                                        className="text-lg"
+                                    >
+                                        {item.label}
+                                    </a>
+                                ))}
+                            </nav>
+
+                            <button
+                                onClick={() => router.push("/signup/customer")}
+                                className="mt-10 w-full py-3 rounded-full bg-[#00AFEF] font-medium"
+                            >
+                                Login / Signup
+                            </button>
+                        </motion.aside>
+                    </>
+                )}
+            </AnimatePresence>
+
+            <div
+                id="hero"
+                className="relative z-10 flex flex-col items-center justify-center
+             min-h-[100svh] text-center px-4"
+            >
                 <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="text-4xl md:text-6xl font-bold mb-4 leading-tight"
-                    style={{ color: heroTextColor }}
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                        visible: { transition: { staggerChildren: 0.25 } },
+                    }}
+                    className="text-4xl sm:text-5xl md:text-7xl font-bold text-white flex flex-wrap items-center justify-center gap-4"
                 >
-                    The Future of Travel is Personalized.
+                    <motion.span variants={wordVariant}>Plan.</motion.span>
+                    <motion.span variants={wordVariant}>Tap.</motion.span>
+                    <motion.span variants={wordVariant}>
+                        <motion.button
+                            onClick={scrollToSection}
+                            whileTap={{ scale: 0.97 }}
+                            className="relative inline-flex items-center px-5 py-2 rounded-full
+               font-semibold text-white bg-[#00AFEF]
+               overflow-hidden"
+                        >
+                            <motion.span
+                                aria-hidden
+                                className="pointer-events-none absolute inset-0
+                 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                                animate={{ x: ["-150%", "150%"] }}
+                                transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                }}
+                            />
+                            <motion.span
+                                aria-hidden
+                                className="pointer-events-none absolute inset-0
+                 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                                initial={{ opacity: 0 }}
+                                whileHover={{ opacity: 1 }}
+                                animate={{ x: ["-150%", "150%"] }}
+                                transition={{
+                                    duration: 1.4,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                }}
+                            />
+                            <span className="relative z-10 flex items-center gap-2">
+                                Go
+                            </span>
+                        </motion.button>
+                    </motion.span>
                 </motion.h1>
 
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    className="text-lg md:text-2xl mb-8 max-w-xl"
-                    style={{ color: heroTextColor }}
+                    transition={{ delay: 0.8 }}
+                    className="mt-6 text-base sm:text-lg md:text-xl max-w-xl text-white/90"
                 >
-                    Bonhomiee: AI-Powered Travel Solutions for the Global Explorer and the Modern Enterprise.
+                    Thoughtfully crafted stays and travel experiences — powered by
+                    Bonhomiee.
                 </motion.p>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                    className="flex flex-col md:flex-row gap-4"
-                >
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        onClick={scrollToSection}
-                        className="relative px-8 py-3 rounded-full font-semibold text-white border border-white bg-transparent overflow-hidden transition-all duration-700 hover:shadow-lg"
-                    >
-                        <span className="absolute inset-0 bg-gradient-to-r from-white/10 via-blue-200/10 to-white/10 animate-gradientShift"></span>
-                        <span className="absolute inset-0 bg-white/5 blur-lg"></span>
-                        <span className="relative z-10">Start My Bespoke Discovery</span>
-                    </motion.button>
-
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        onClick={scrollToSection}
-                        className="relative px-8 py-3 rounded-full font-semibold text-white border border-white bg-transparent overflow-hidden transition-all duration-700 hover:shadow-lg"
-                    >
-                        <span className="absolute inset-0 bg-gradient-to-r from-white/10 via-indigo-200/10 to-white/10 animate-gradientShift"></span>
-                        <span className="absolute inset-0 bg-white/5 blur-lg"></span>
-                        <span className="relative z-10">Request Ascendus Corporate Demo</span>
-                    </motion.button>
-                </motion.div>
             </div>
 
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 text-white cursor-pointer">
+            {/* Scroll Indicator */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-white">
                 <motion.div
                     animate={{ y: [0, 6, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
                     onClick={scrollToSection}
+                    className="cursor-pointer"
                 >
-                    <ChevronDown size={24} strokeWidth={2} />
+                    <ChevronDown size={26} />
                 </motion.div>
             </div>
         </section>
-    );
+    )
 }
