@@ -116,7 +116,7 @@ export default function VideoMain() {
   )`
 
     const headerShadow =
-        scrollRatio > 0.5 ? "shadow-md border-b border-white/10" : ""
+        scrollRatio > 0.5 ? "shadow-md" : ""
 
     return (
         <section className="relative w-full min-h-[100svh]">
