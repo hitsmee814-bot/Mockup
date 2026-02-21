@@ -5,8 +5,19 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { ChevronDown, Menu, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import logoPrimary from "../assets/images/logoPrimary.png"
+import {
+    User,
+    Briefcase,
+    Building2,
+    Truck,
+} from "lucide-react"
 
 const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
 
@@ -22,11 +33,38 @@ const wordVariant = {
     visible: { opacity: 1, y: 0 },
 }
 
+const roles = [
+    {
+        label: "Customer",
+        icon: User,
+        route: "/signup/customer",
+        description: "Book and manage trips",
+    },
+    {
+        label: "Agent",
+        icon: Briefcase,
+        route: "/signup/agent",
+        description: "Create and sell itineraries",
+    },
+    {
+        label: "Supplier",
+        icon: Truck,
+        route: "/signup/supplier",
+        description: "Hotels, transport & services",
+    },
+    {
+        label: "Corporate",
+        icon: Building2,
+        route: "/signup/corporate",
+        description: "Business travel solutions",
+    },
+]
+
 export default function VideoMain() {
     const [scrollRatio, setScrollRatio] = useState(0)
     const [menuOpen, setMenuOpen] = useState(false)
     const router = useRouter()
-
+    const [authOpen, setAuthOpen] = useState(false)
     useEffect(() => {
         if (menuOpen) {
             document.body.style.overflow = "hidden"
@@ -98,17 +136,22 @@ export default function VideoMain() {
                     </nav>
 
                     <div className="hidden lg:flex">
-                        <button
-                            className="px-6 py-2 rounded-full text-white font-medium"
+                        <motion.button
+                            onClick={() => setAuthOpen(true)}
+                            whileTap={{ scale: 0.97 }}
+                            transition={{ duration: 0.15, ease: "easeOut" }}
+                            className="
+    relative px-6 py-2
+    rounded-lg
+    font-medium text-white
+    tracking-wide
+  "
                             style={{
-                                background:
-                                    scrollRatio > 0.5
-                                        ? "#00AFEF"
-                                        : "rgba(255,255,255,0.2)",
+                                backgroundColor: "#00AFEF",
                             }}
                         >
                             Login / Signup
-                        </button>
+                        </motion.button>
                     </div>
                     <button
                         onClick={() => setMenuOpen(true)}
@@ -156,9 +199,11 @@ export default function VideoMain() {
                                     </a>
                                 ))}
                             </nav>
-
                             <button
-                                onClick={() => router.push("/signup/customer")}
+                                onClick={() => {
+                                    setMenuOpen(false)
+                                    setAuthOpen(true)
+                                }}
                                 className="mt-10 w-full py-3 rounded-full bg-[#00AFEF] font-medium"
                             >
                                 Login / Signup
@@ -233,7 +278,6 @@ export default function VideoMain() {
                 </motion.p>
             </div>
 
-            {/* Scroll Indicator */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-white">
                 <motion.div
                     animate={{ y: [0, 6, 0] }}
@@ -243,7 +287,54 @@ export default function VideoMain() {
                 >
                     <ChevronDown size={26} />
                 </motion.div>
-            </div>
+            </div><Dialog open={authOpen} onOpenChange={setAuthOpen}>
+                <DialogContent className="sm:max-w-lg rounded-2xl p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-2xl font-semibold">
+                            Choose your role
+                        </DialogTitle>
+                        <p className="text-center text-sm text-muted-foreground mt-1">
+                            Select how you want to continue
+                        </p>
+                    </DialogHeader>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                        {roles.map(({ label, icon: Icon, route, description }) => (
+                            <button
+                                key={label}
+                                onClick={() => {
+                                    setAuthOpen(false)
+                                    router.push(route)
+                                }}
+                                className="
+            group flex items-center gap-4 rounded-xl border p-4 text-left
+            transition-all duration-200
+            hover:border-[#00AFEF]
+            hover:bg-[#00AFEF]/10
+          "
+                            >
+                                <div
+                                    className="
+              flex h-12 w-12 items-center justify-center rounded-lg
+              bg-muted transition-colors
+              group-hover:bg-[#00AFEF]
+            "
+                                >
+                                    <Icon className="h-6 w-6 text-muted-foreground group-hover:text-white" />
+                                </div>
+
+                                <div className="flex flex-col">
+                                    <span className="font-medium text-base">{label}</span>
+                                    <span className="text-sm text-muted-foreground">
+                                        {description}
+                                    </span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </section>
+
     )
 }
