@@ -186,7 +186,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="w-full  py-20">
+    <section className="w-full  py-20" id="how-it-works">
       <div className="max-w-6xl mx-auto px-6">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}

@@ -22,10 +22,10 @@ import {
 const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
 
 const navItems = [
-    { label: "Plan Your Trip", href: "#plan" },
-    { label: "Inspiration & Expertise", href: "#inspiration" },
-    { label: "Why Us", href: "#why" },
-    { label: "Support", href: "#support" },
+    { label: "Getting Started", id: "hero-sub" },
+    { label: "Features", id: "features" },
+    { label: "How it works", id: "how-it-works" },
+    { label: "FAQs", id: "faqs" },
 ]
 
 const wordVariant = {
@@ -82,6 +82,7 @@ export default function VideoMain() {
         handleScroll()
         return () => window.removeEventListener("scroll", handleScroll)
     }, [])
+
     const scrollToSection = () => {
         window.scrollTo({
             top: window.innerHeight,
@@ -89,6 +90,24 @@ export default function VideoMain() {
         })
         setMenuOpen(false)
     }
+
+    const handleNavClick = (id: string) => {
+        const el = document.getElementById(id)
+
+        if (el) {
+            const headerOffset = 0
+            const elementPosition = el.getBoundingClientRect().top + window.scrollY
+            const offsetPosition = elementPosition - headerOffset
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth",
+            })
+        }
+
+        setMenuOpen(false)
+    }
+
     const bgColor = `rgba(
     ${Math.round(scrollRatio * 5)},
     ${Math.round(scrollRatio * 32)},
@@ -122,17 +141,17 @@ export default function VideoMain() {
                         <Image src={logoPrimary} alt="Logo" width={32} height={32} priority />
                         <span className="text-xl font-bold">Bonhomiee</span>
                     </a>
-
-                    <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-white">                        {navItems.map((item) => (
-                        <a
-                            key={item.label}
-                            href={item.href}
-                            className="relative group"
-                        >
-                            {item.label}
-                            <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-[#00AFEF] transition-all group-hover:w-full" />
-                        </a>
-                    ))}
+                    <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-white">
+                        {navItems.map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => handleNavClick(item.id)}
+                                className="relative group"
+                            >
+                                {item.label}
+                                <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-[#00AFEF] transition-all group-hover:w-full" />
+                            </button>
+                        ))}
                     </nav>
 
                     <div className="hidden lg:flex">
@@ -189,14 +208,14 @@ export default function VideoMain() {
 
                             <nav className="flex flex-col gap-6">
                                 {navItems.map((item) => (
-                                    <a
-                                        key={item.label}
-                                        href={item.href}
-                                        onClick={() => setMenuOpen(false)}
-                                        className="text-lg"
+                                    <button
+                                        key={item.id}
+                                        onClick={() => handleNavClick(item.id)}
+                                        className="relative group text-left"
                                     >
                                         {item.label}
-                                    </a>
+                                        <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-[#00AFEF] transition-all group-hover:w-full" />
+                                    </button>
                                 ))}
                             </nav>
                             <button

@@ -41,7 +41,7 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section className="w-full ">
+    <section className="w-full " id="features">
       <div className="max-w-7xl mx-auto px-6 py-20 space-y-32">
         <div>
           <motion.h2

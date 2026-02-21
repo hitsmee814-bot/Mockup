@@ -28,6 +28,7 @@ export default function Hero() {
   };
 
   return (
+    <section id="hero-sub">
     <AnimatePresence mode="wait">
       {showBuilder ? (
         <motion.div
@@ -125,5 +126,6 @@ export default function Hero() {
         </motion.section>
       )}
     </AnimatePresence>
+    </section>
   );
 }

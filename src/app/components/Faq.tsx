@@ -37,7 +37,7 @@ export default function FAQCompact() {
   const toggle = (i: number) => setActive(active === i ? null : i);
 
   return (
-    <section className="w-full max-w-6xl mx-auto py-20 px-4 sm:px-6">
+    <section className="w-full max-w-6xl mx-auto py-20 px-4 sm:px-6" id="faqs">
       <h2 className="text-4xl font-bold text-center mb-16 text-gray-900 tracking-tight">
         Frequently Asked Questions
       </h2>
