@@ -8,6 +8,7 @@ import {
 } from "react-icons/hi";
 import MobileDemo from "./MobileDemo";
 import ItenaryBuilder from "./itinerary/ItenaryBuilder";
+import HeroStepperCard from "./HeroStepperCard";
 
 export default function Hero() {
   const [mode, setMode] = useState<"leisure" | "corporate">("leisure");
@@ -119,7 +120,7 @@ export default function Hero() {
               transition={{ duration: 0.8, ease: "easeOut" }}
               viewport={{ amount: 0.4 }}
             >
-              <MobileDemo />
+            <HeroStepperCard />
 
             </motion.div>
           </div>

@@ -160,8 +160,9 @@ export default function VideoMain() {
                             whileTap={{ scale: 0.97 }}
                             transition={{ duration: 0.15, ease: "easeOut" }}
                             className="
-    relative px-6 py-2
-    rounded-lg
+    relative px-4 py-2
+    rounded-sm
+    text-sm
     font-medium text-white
     tracking-wide
   "
@@ -326,18 +327,21 @@ export default function VideoMain() {
                                     router.push(route)
                                 }}
                                 className="
-            group flex items-center gap-4 rounded-xl border p-4 text-left
-            transition-all duration-200
-            hover:border-[#00AFEF]
-            hover:bg-[#00AFEF]/10
-          "
+        group flex items-center gap-4 rounded-xl border p-4 text-left
+        bg-background
+        transition-all duration-200 ease-out
+        hover:-translate-y-1
+        hover:shadow-lg
+        focus:outline-none
+      "
                             >
                                 <div
                                     className="
-              flex h-12 w-12 items-center justify-center rounded-lg
-              bg-muted transition-colors
-              group-hover:bg-[#00AFEF]
-            "
+          flex h-12 w-12 items-center justify-center rounded-lg
+          bg-muted
+          transition-colors duration-200
+          group-hover:bg-[#00AFEF]
+        "
                                 >
                                     <Icon className="h-6 w-6 text-muted-foreground group-hover:text-white" />
                                 </div>
