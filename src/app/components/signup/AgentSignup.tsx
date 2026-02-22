@@ -8,7 +8,7 @@ import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
 import logovar from "../../assets/images/logoPrimary.png"
 import UIpic from "../../assets/images/agent-signup.jpg"
-
+import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
 /* ---------------- TYPES ---------------- */
 
 interface FormState {
@@ -102,15 +102,18 @@ export default function AgentSignup(): JSX.Element {
     return containsName || isSequential || startsTrivial;
   };
 
+  const passwordValidCriteria = (p: string) =>
+    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(p);
+
   /* PASSWORD STRENGTH LOGIC */
   useEffect(() => {
-    if (!form.password) {
+    if (!form.password || !passwordValidCriteria(form.password) || isTrivialPassword(form.password)) {
       setStrengthLabel("");
       setStrengthColor("");
       return;
     }
     const assessment = passwordStrength(form.password);
-    if (assessment.id <= 1 || isTrivialPassword(form.password)) {
+    if (assessment.id <= 1) {
       setStrengthLabel("weak password");
       setStrengthColor("text-red-600");
     } else if (assessment.id === 2) {
@@ -122,11 +125,50 @@ export default function AgentSignup(): JSX.Element {
     }
   }, [form.password, form.agencyName, form.firstName, form.lastName]);
 
-  const emailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-  const phoneValid = (p: string) => /^[0-9]{10}$/.test(p);
+  /* UPDATED EMAIL VALIDATION: Checks if domain part is lowercase */
+  const emailValid = (e: string) => {
+    const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!basicRegex.test(e)) return false;
+    
+    const parts = e.split('@');
+    if (parts.length !== 2) return false;
+    
+    const domainPart = parts[1].split('.')[0];
+    return domainPart === domainPart.toLowerCase();
+  };
+
+
+  const validatePhoneNumber = (p: string, country: CountryCode) => {
+  if (!p) return "";
+
+  if (!/^[0-9]{10}$/.test(p)) {
+    return "Phone number must be exactly 10 digits.";
+  }
+
+  const countryMap: Record<string, CountryCode> = {
+    "+91": "IN",
+    "+1": "US",
+    "+44": "GB"
+  };
+
+  const isoCountry = countryMap[country as unknown as string] || country;
+
+  if (isoCountry === "IN") {
+    if (!/^[6-9]\d{9}$/.test(p)) {
+      return "Enter valid phone number";
+    }
+  }
+
+  const phoneNumber = parsePhoneNumberFromString(p, isoCountry);
+
+  if (!phoneNumber || !phoneNumber.isValid()) {
+    return "Enter valid phone number";
+  }
+
+  return "";
+};
+
   const usernameValid = (u: string) => /^[a-zA-Z0-9@_.-]{4,30}$/.test(u);
-  const passwordValidCriteria = (p: string) =>
-    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(p);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -137,10 +179,21 @@ export default function AgentSignup(): JSX.Element {
       setUsernameStatus(null);
     }
 
+    if (name === "confirmPassword" && value.length > 0) {
+      setShowPassword(false);
+    }
+
     let fieldError = "";
     if (name === "email" && value && !emailValid(value)) fieldError = "Please enter a valid email address.";
-    if (name === "phone" && value && !phoneValid(value)) fieldError = "Phone number must be exactly 10 digits.";
-    if (name === "password" && value && (!passwordValidCriteria(value) || isTrivialPassword(value))) fieldError = "Password criteria not fulfilled yet.";
+    //if (name === "phone" && value && !phoneValid(value)) fieldError = "Phone number must be exactly 10 digits.";
+    if (name === "phone") {
+    fieldError = validatePhoneNumber(value, form.countryCode as CountryCode);
+    }
+
+    if (name === "password" && value && (!passwordValidCriteria(value) || isTrivialPassword(value))) {
+        fieldError = "Password criteria not fulfilled yet.";
+    }
+    
     if (name === "confirmPassword" && value !== form.password) fieldError = "The passwords you entered do not match.";
 
     setErrors(prev => ({ ...prev, [name]: fieldError }));
@@ -149,7 +202,7 @@ export default function AgentSignup(): JSX.Element {
   const generateUsername = () => {
     if (!form.agencyName) return;
     const cleanAgency = form.agencyName.replace(/\s+/g, "").slice(0, 10);
-    const timestamp = Date.now();
+    const timestamp = Date.now().toString().slice(-6); // Shortened to 6 digits
     const newUsername = `${cleanAgency}@${timestamp}`;
     setForm(prev => ({ ...prev, username: newUsername }));
     setUsernameStatus(null);
@@ -182,7 +235,7 @@ export default function AgentSignup(): JSX.Element {
     }
 
     let newErrors: ErrorState = {};
-    if (strengthLabel === "weak password") {
+    if (strengthLabel === "weak password" || !passwordValidCriteria(form.password)) {
         newErrors.password = "A Medium or Strong password is required to continue.";
     }
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = "The passwords you entered do not match.";
@@ -192,6 +245,12 @@ export default function AgentSignup(): JSX.Element {
       return;
     }
 
+    const phoneError = validatePhoneNumber(form.phone,form.countryCode as CountryCode);
+
+    if (phoneError) {
+      setErrors(prev => ({ ...prev, phone: phoneError }));
+      return;
+    }    
     alert("Registration successful!");
     router.push("/");
   };
@@ -206,7 +265,6 @@ export default function AgentSignup(): JSX.Element {
       </div>
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
-        {/* GUIDELINE 10, 11, 12: Form radius 4px, border 1px solid #f1f1f1, No shadow */}
         <div className="bg-white w-full max-w-4xl h-full max-h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 overflow-hidden">
 
           <div className="hidden md:block relative">
@@ -215,9 +273,11 @@ export default function AgentSignup(): JSX.Element {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden bg-white">
-            {/* GUIDELINE 6: Heading color #00AFEF */}
-            <div className="px-8 py-5 shrink-0 bg-white">
-              <h2 className="text-2xl font-extrabold text-[#00AFEF] tracking-tight">Agent / Agency Signup</h2>
+            {/* UPDATED: Centered text and 16px font size */}
+            <div className="px-8 py-5 shrink-0 bg-white flex justify-center">
+              <h2 className="text-[16px] font-extrabold text-[#00AFEF] tracking-tight text-center">
+                Agent / Agency Signup
+              </h2>
             </div>
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
@@ -237,15 +297,12 @@ export default function AgentSignup(): JSX.Element {
               )}
 
               <div className="mb-4">
-                {/* GUIDELINE 1 & 2: Font size 12px, color #1A1A1A */}
                 <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
                   Agency Name<span className="text-red-500 ml-1">*</span>
                 </label>
                 <div className="flex gap-2 mt-1">
-                  {/* GUIDELINE 3 & 8: Border radius 4px, border color #00AFEF */}
                   <input name="agencyName" value={form.agencyName} onChange={handleChange} placeholder="Enter agency name"
                     className="flex-grow border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF]"/>
-                  {/* GUIDELINE 4: Generate button Primary color #00AFEF */}
                   <button type="button" onClick={generateUsername} disabled={!form.agencyName}
                     className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider">
                     Generate
@@ -254,7 +311,7 @@ export default function AgentSignup(): JSX.Element {
               </div>
 
               <InputField label="First Name" name="firstName" placeholder="Enter first name" required form={form} handleChange={handleChange}/>
-              <InputField label="Middle Name" name="middleName" placeholder="Enter middle name" form={form} handleChange={handleChange}/>
+              <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} handleChange={handleChange}/>
               <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} handleChange={handleChange}/>
 
               <div className="mb-4">
@@ -283,12 +340,11 @@ export default function AgentSignup(): JSX.Element {
               <div className="mb-4">
                 <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
                   Username<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Must start with a letter, followed by underscores or numbers. 6–16 characters allowed.Check availability after generating or typing"/>
+                  <Tooltip text="Must start with alphabet only. 6-16 characters allowed.No special characters allowed.Check availability after generating or typing"/>
                 </label>
                 <div className="flex gap-2 mt-1">
                   <input name="username" value={form.username} onChange={handleChange} placeholder="Enter or generate username"
                     className="flex-grow border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF]"/>
-                  {/* GUIDELINE 4: Check button Primary color #00AFEF */}
                   <button type="button" onClick={checkUsername} disabled={!form.username || isChecking}
                     className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1">
                     {isChecking ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
@@ -309,7 +365,7 @@ export default function AgentSignup(): JSX.Element {
               <div className="mb-4">
                 <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
                   Password<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character"/>
+                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character."/>
                 </label>
                 <div className="relative mt-1">
                   <input type={showPassword ? "text" : "password"} name="password"
@@ -321,6 +377,7 @@ export default function AgentSignup(): JSX.Element {
                     {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
                   </button>
                 </div>
+                
                 {strengthLabel && (
                   <div className="mt-2.5 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
                     <div className="h-1.5 flex-grow bg-gray-100 rounded-full overflow-hidden">
@@ -355,12 +412,10 @@ export default function AgentSignup(): JSX.Element {
 
             <div className="px-8 py-6 shrink-0 bg-white">
               <div className="grid grid-cols-2 gap-4">
-                {/* GUIDELINE 9: Tertiary color #E62800, white text */}
                 <button type="button" onClick={()=>router.push("/")} 
                   className="w-full bg-[#E62800] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
                   Cancel
                 </button>
-                {/* GUIDELINE 4: Register Primary action color #00AFEF */}
                 <button type="submit" 
                   className="w-full bg-[#00AFEF] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
                   Register
@@ -387,11 +442,9 @@ interface InputFieldProps {
 
 const InputField = ({label,name,required,placeholder,form,handleChange}:InputFieldProps) => (
   <div className="mb-4">
-    {/* GUIDELINE 1 & 2: Font size 12px, color #1A1A1A */}
     <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
       {label}{required && <span className="text-red-500 ml-1">*</span>}
     </label>
-    {/* GUIDELINE 3 & 8: Border radius 4px, border color #00AFEF */}
     <input name={name} value={form[name as keyof FormState]} onChange={handleChange} placeholder={placeholder}
       className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1"/>
   </div>
@@ -406,7 +459,6 @@ const InputWithError = ({label,name,required,placeholder,tooltip,form,handleChan
   <div>
     <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
       {label}{required && <span className="text-red-500 ml-1">*</span>}
-      {/* GUIDELINE 5: Tooltip icon color #00AFEF */}
       {tooltip && <Tooltip text={tooltip}/>}
     </label>
     <input name={name} value={form[name as keyof FormState]} onChange={handleChange} placeholder={placeholder}
