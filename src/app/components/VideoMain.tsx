@@ -141,37 +141,39 @@ export default function VideoMain() {
                         <Image src={logoPrimary} alt="Logo" width={32} height={32} priority />
                         <span className="text-xl font-bold">Bonhomiee</span>
                     </a>
-                    <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-white">
-                        {navItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => handleNavClick(item.id)}
-                                className="relative group"
-                            >
-                                {item.label}
-                                <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-[#00AFEF] transition-all group-hover:w-full" />
-                            </button>
-                        ))}
+                    <nav className="hidden md:flex items-center gap-4 lg:gap-10 text-sm font-medium text-white">
+                    {navItems.map((item) => (
+                        <button
+                        key={item.id}
+                        onClick={() => handleNavClick(item.id)}
+                        className="relative group"
+                        >
+                        {item.label}
+                        <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-[#00AFEF] transition-all group-hover:w-full" />
+                        </button>
+                    ))}
                     </nav>
 
-                    <div className="hidden lg:flex">
-                        <motion.button
-                            onClick={() => setAuthOpen(true)}
-                            whileTap={{ scale: 0.97 }}
-                            transition={{ duration: 0.15, ease: "easeOut" }}
-                            className="
-    relative px-4 py-2
-    rounded-sm
-    text-sm
-    font-medium text-white
-    tracking-wide
-  "
-                            style={{
-                                backgroundColor: "#00AFEF",
-                            }}
-                        >
-                            Login / Signup
-                        </motion.button>
+                    <div className="hidden md:flex gap-1 lg:gap-2">
+                    <motion.button
+                        onClick={() => setAuthOpen(true)}
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="relative px-4 py-2 rounded-sm text-sm font-medium text-white tracking-wide"
+                        style={{ backgroundColor: "#00AFEF" }}
+                    >
+                        Login / Signup
+                    </motion.button>
+
+                    <motion.button
+                        onClick={() => setAuthOpen(true)}
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="relative px-4 py-2 rounded-sm text-sm font-medium text-white tracking-wide"
+                        style={{ backgroundColor: "#FBAE30" }}
+                    >
+                        Book Demo
+                    </motion.button>
                     </div>
                     <button
                         onClick={() => setMenuOpen(true)}
@@ -224,7 +226,17 @@ export default function VideoMain() {
                                     setMenuOpen(false)
                                     setAuthOpen(true)
                                 }}
-                                className="mt-10 w-full py-3 rounded-full bg-[#00AFEF] font-medium"
+                                className="mt-10 w-full py-3 rounded-sm bg-[#00AFEF] font-medium"
+                            >
+                                Login / Signup
+                            </button>
+
+                                                   <button
+                                onClick={() => {
+                                    setMenuOpen(false)
+                                    setAuthOpen(true)
+                                }}
+                                className="mt-10 w-full py-3 rounded-sm bg-[#FBAE30] font-medium"
                             >
                                 Login / Signup
                             </button>
