@@ -6,6 +6,9 @@ import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
+import logovar from "../../assets/images/logoPrimary.png"
+import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg"
+
 /* Using the full metadata version to ensure strict national rules are applied */
 //import { isValidPhoneNumber, CountryCode } from 'libphonenumber-js';
 /* Using full metadata for strict validation */
@@ -264,7 +267,7 @@ export default function CustomerSignup(): JSX.Element {
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden">
       <div className="bg-white shadow-sm px-6 py-3 flex items-center shrink-0 z-20">
         <div onClick={() => router.push("/")} className="flex items-center gap-2 cursor-pointer">
-          <Image src="/images/logoPrimary.png" alt="logo" width={32} height={32} />
+          <Image src={logovar} alt="logo" width={32} height={32} />
           <h1 className="text-lg font-bold text-[#00AFEF]">Bonhomiee</h1>
         </div>
       </div>
@@ -273,7 +276,7 @@ export default function CustomerSignup(): JSX.Element {
         <div className="bg-white w-full max-w-4xl h-full max-h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 overflow-hidden">
           
           <div className="hidden md:block relative">
-            <Image src="/images/traveling-concept-with-landmarks.jpg" alt="Signup" fill className="object-cover" />
+            <Image src={UIpic} alt="Signup" fill className="object-cover" />
             <div className="absolute inset-0 bg-blue-900/10"></div>
           </div>
 
