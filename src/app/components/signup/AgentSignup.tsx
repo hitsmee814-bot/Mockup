@@ -283,10 +283,10 @@ export default function AgentSignup(): JSX.Element {
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
 
             <div className="flex-grow overflow-y-auto px-8 py-6 
-              scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent
+              scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent
               [&::-webkit-scrollbar]:w-1.5
               [&::-webkit-scrollbar-track]:bg-transparent
-              [&::-webkit-scrollbar-thumb]:bg-blue-300
+              [&::-webkit-scrollbar-thumb]:bg-[#00AFEF]
               [&::-webkit-scrollbar-thumb]:rounded-full">
 
               {mandatoryError && (
