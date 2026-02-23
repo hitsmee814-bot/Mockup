@@ -5,6 +5,29 @@ import { useScroll } from "framer-motion"
 import AnimatedColumn from "./AnimatedColumn"
 import TallCard from "./cards/TallCard"
 import SquareCard from "./cards/SquareCard"
+import { useEffect, useState } from "react"
+import MobileStepper from "./MobileStepper"
+import { mobileSteps } from "./card-content"
+
+type TallStep = {
+  type: "tall"
+  props: {
+    title: string
+    description: string
+    image: string
+  }
+}
+
+type SquareStep = {
+  type: "square"
+  props: {
+    title: string
+    items: string[]
+    image: string
+  }
+}
+
+type Step = TallStep | SquareStep
 
 export default function FloatingCardsSection() {
     const sectionRef = useRef<HTMLElement | null>(null)
@@ -13,6 +36,15 @@ export default function FloatingCardsSection() {
         target: sectionRef,
         offset: ["start end", "end start"],
     })
+
+    const [isMobile, setIsMobile] = useState(false)
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768)
+        check()
+        window.addEventListener("resize", check)
+        return () => window.removeEventListener("resize", check)
+    }, [])
 
     return (
         <section
@@ -29,7 +61,14 @@ export default function FloatingCardsSection() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-6 gap-6 w-[120vw] -ml-[10vw]">
+            {isMobile ? (  <MobileStepper steps={mobileSteps} />) : 
+            
+            <div className="grid gap-6"
+                style={{
+                    gridTemplateColumns: "repeat(6, 360px)",
+                    width: "max-content",
+                }}
+            >
                 <AnimatedColumn scrollYProgress={scrollYProgress} range={100}>
                     <TallCard
                         title="Business Travel"
@@ -105,6 +144,7 @@ export default function FloatingCardsSection() {
                     />
                 </AnimatedColumn>
             </div>
+            }
         </section>
     )
 }
