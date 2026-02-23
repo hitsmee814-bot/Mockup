@@ -1,7 +1,8 @@
 'use client'
 
+
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
-import { useEffect, useRef, useState } from 'react'
+import React,{ useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
@@ -9,6 +10,7 @@ import { passwordStrength } from 'check-password-strength'
 import Image from "next/image";
 import logo from "../../assets/images/logoPrimary.png"
 import supplierPic from "../../assets/images/traveling-concept-with-landmarks.jpg"
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 
 
 import {
@@ -75,19 +77,19 @@ type FormData = {
       label: 'GST Number',
       placeholder: 'Enter GST Number',
       regex: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-      error: 'Invalid GST number format',
+      error: 'Please enter valid GST number',
     },
      PAN: {
       label: 'PAN Number',
       placeholder: 'Enter PAN Number',
       regex: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-      error: 'Invalid PAN number format',
+      error: 'Please enter valid PAN number',
     },
       VAT: {
       label: 'VAT Number',
       placeholder: 'Enter VAT Number',
       regex: /^[A-Z0-9]{8,12}$/,
-      error: 'Invalid VAT number format',
+      error: 'Please enter valid VAT number',
     },
   }
 
@@ -161,6 +163,46 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
     </div>
   )
 }
+function ErrorMessage({ message }: { message?: string }) {
+  const ref = React.useRef<HTMLParagraphElement>(null)
+  const fieldRef = React.useRef<HTMLElement | null>(null)
+
+  React.useEffect(() => {
+    if (!ref.current) return
+
+    // Locate related field
+    const container = ref.current.previousElementSibling
+    const field =
+      container?.querySelector?.('input, select, textarea') ||
+      (container as HTMLElement)
+
+    if (!(field instanceof HTMLElement)) return
+
+    fieldRef.current = field
+
+    if (message) {
+      // Apply error style
+      field.classList.add('border-red-500')
+      field.classList.remove('border-[#00AFEF]')
+    } else {
+      // Restore normal style
+      field.classList.remove('border-red-500')
+      field.classList.add('border-[#00AFEF]')
+    }
+  }, [message])
+
+  return (
+    <p
+      ref={ref}
+      className={`mt-1 flex items-center gap-1 text-[11px] font-semibold
+        ${message ? 'text-red-600' : 'hidden'}`}
+    >
+      <AlertCircle size={12} className="shrink-0" />
+      <span>{message}</span>
+    </p>
+  )
+}
+
 
 function PasswordStrengthMeter({
   strength,
@@ -215,21 +257,21 @@ function PasswordStrengthMeter({
   )
 }
 
-
 export function TooltipIcon({ id, content }: TooltipIconProps) {
   return (
     <>
       <span
         data-tooltip-id={id}
         data-tooltip-content={content}
-        className="text-[#00AFEF] text-[11px] font-semibold cursor-pointer"
+        className="text-[#00AFEF] text-[11px]  cursor-pointer"
       >
         ⓘ
       </span>
+
       <Tooltip
-          id={id}
-          place="top"
-          style={{
+        id={id}
+        place="top"
+        style={{
           fontSize: '11px',
           padding: '6px 10px',
           borderRadius: '6px',
@@ -248,6 +290,9 @@ export default function SupplierSignup() {
       const [step, setStep] = useState<1 | 2 | 3>(1)
       const [error, setError] = useState('')
       const [passwordError, setPasswordError] = useState('')
+      const [usernameError, setUsernameError] = useState('')
+      const usernameValid = (u: string) =>  /^[a-zA-Z][a-zA-Z0-9_]{5,15}$/.test(u)
+      const [step1Submitted, setStep1Submitted] = useState(false)
       const [passwordStrengthInfo, setPasswordStrengthInfo] = useState<{
               id: number
               value: string
@@ -304,33 +349,55 @@ export default function SupplierSignup() {
   return () => document.removeEventListener('mousedown', handleClickOutside)}, [])
 
   const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> ) => {
-  const { name, value } = e.target
-  setForm(prev => ({ ...prev, [name]: value }))
+      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> ) => {
+      const { name, value } = e.target
+      setForm(prev => ({ ...prev, [name]: value }))
 
-  if (name === 'email') {
-                  
-      setEmailError('')
+        // USERNAME  VALIDATION
+      if (name === 'username') {
+        // Clear error if empty
+        if (!value) {
+          setUsernameError('')
+          return
+        }
+
+        // Validate format
+        if (!usernameValid(value)) {
+          setUsernameError(
+            'Username must be 6-16 characters and start with a letter.'
+          )
+        } else {
+          setUsernameError('')
+        }
   }
 
-  if (name === 'phone') {
-    setPhoneError('')
-  }
- //  Clear confirm password error as soon as user types
-  if (name === 'confirmPassword') {
-    setConfirmPasswordError('')
-  }
-  if (name === 'password') {
-    // Reset state
-    setConfirmPasswordError('')
-  setPasswordStrengthInfo(null)
-  setPasswordError('')
+     if (name === 'email') {
+          validateEmailLive(value)
+      }
+
+      if (name === 'phone') {
+      validatePhoneLive(value, form.countryCode)
+        }
+
+        if (name === 'countryCode') {
+        validatePhoneLive(form.phone, value)
+        }
+
+    //  Clear confirm password error as soon as user types
+      if (name === 'confirmPassword') {
+        setConfirmPasswordError('')
+      }
+    if (name === 'password') {
+      // Reset state
+      setConfirmPasswordError('')
+      setPasswordStrengthInfo(null)
+      setPasswordError('')
 
   if (!value) return
       // 1Pattern validation FIRST
       if (!STRONG_PASSWORD.test(value)) {
         setPasswordError(
-          'Password must be at least 8 characters with uppercase, lowercase, number & symbol'
+         'The password does not yet meet the required criteria.'
         )
         return
       }
@@ -339,10 +406,11 @@ export default function SupplierSignup() {
       const result = passwordStrength(value)
       setPasswordStrengthInfo(result)
     }
+    if (name === 'confirmPassword') {
+  validateConfirmPasswordLive(value)
+}
 
   }
-
-
 
     const getStrengthColor = (id: number) => {
       switch (id) {
@@ -359,47 +427,51 @@ export default function SupplierSignup() {
       }
     }
 
+    const handleUsernameBlur = () => {
+  if (!form.username) return
 
-    const handlePasswordBlur = () => {
-          if (!form.password) return
+  if (!usernameValid(form.username)) {
+    setUsernameError(
+      'Username must be 6–16 characters and start with a letter.'
+    )
+  } else {
+    setUsernameError('')
+  }
+}
 
-          // Pattern validation FIRST
-          if (!STRONG_PASSWORD.test(form.password)) {
-            setPasswordError(
-              'Password must be at least 8 characters with uppercase, lowercase, number & symbol'
-            )
-            setPasswordStrengthInfo(null)
-            return
-          }
-
-          //  Strength validation SECOND
-          const result = passwordStrength(form.password)
-          setPasswordStrengthInfo(result)
-
-          if (result.id < 2) {
-            setPasswordError('Password is too weak')
-          } else {
-            setPasswordError('')
-          }
-        }
-
-    
-
-  const handlePhoneBlur = () => {
-  if (!form.phone) {
-    setPhoneError('')
+const validateConfirmPasswordLive = (value: string) => {
+  // If field is empty → no error
+  if (!value) {
+    setConfirmPasswordError('')
     return
   }
 
-  const fullNumber = `${form.countryCode}${form.phone}`
-  const phoneNumber = parsePhoneNumberFromString(fullNumber)
-
-  if (!phoneNumber || !phoneNumber.isValid()) {
-    setPhoneError('Please enter a valid phone number')
+  // If password exists and doesn't match
+  if (form.password && value !== form.password) {
+    setConfirmPasswordError('Passwords do not match')
   } else {
-    setPhoneError('')
+    setConfirmPasswordError('')
   }
 }
+  
+        const validatePhoneLive = (phone: string, countryCode: string) => {
+          // Empty → no error (wait until user types)
+          if (!phone) {
+            setPhoneError('')
+            return
+          }
+
+          const fullNumber = `${countryCode}${phone}`
+          const phoneNumber = parsePhoneNumberFromString(fullNumber)
+
+          if (!phoneNumber || !phoneNumber.isValid()) {
+            setPhoneError('Please enter a valid phone number')
+          } else {
+            setPhoneError('')
+          }
+        }
+
+
 
   const handleConfirmPasswordBlur = () => {
   if (!form.confirmPassword) {
@@ -429,36 +501,49 @@ const handleWebsiteBlur = () => {
 }
 
 
-  const handleEmailBlur = () => {
-  if (!form.email) {
+const validateEmailLive = (value: string) => {
+  // 1️ Clear error if empty
+  if (!value) {
     setEmailError('')
     return
   }
 
-  
-
-  if (!EMAIL_REGEX.test(form.email)) {
+  // 2️ Basic format check
+  if (!EMAIL_REGEX.test(value)) {
     setEmailError('Please enter a valid email address')
-  } else {
-    setEmailError('')
+    return
   }
+
+  // 3 Lowercase domain validation
+  const domain = value.split('@')[1]
+
+  if (domain && domain !== domain.toLowerCase()) {
+    setEmailError('Email domain must be lowercase')
+    return
+  }
+
+  //  Valid email
+  setEmailError('')
 }
 
-const handleTaxIdBlur = () => {
-  if (!form.taxDocType || !form.panTaxId) {
+const validateTaxIdLive = (value: string, docType: string) => {
+  // If either is missing → no error yet
+  if (!docType || !value) {
     setTaxIdError('')
     return
   }
 
-  const rule = TAX_FORMATS[form.taxDocType]
+  const rule = TAX_FORMATS[docType]
   if (!rule) return
 
-  if (!rule.regex.test(form.panTaxId.toUpperCase())) {
+  if (!rule.regex.test(value.toUpperCase())) {
     setTaxIdError(rule.error)
   } else {
     setTaxIdError('')
   }
 }
+
+
 const validatePhoneNumber = () => {
   const fullNumber = `${form.countryCode}${form.phone}`
 
@@ -496,7 +581,7 @@ const validatePhoneNumber = () => {
     if (!EMAIL_REGEX.test(form.email)) {
     setEmailError('Please enter a valid email address')
     return 'Invalid email address'
-  }
+     }
 
   const phoneErr = validatePhoneNumber()
   if (phoneErr) {
@@ -508,20 +593,24 @@ const validatePhoneNumber = () => {
   setConfirmPasswordError('Passwords do not match')
   return 'Passwords do not match'
   }
+    if (!usernameValid(form.username)) {
+  setUsernameError(
+    'Username must be 6–16 characters and start with a letter.'
+  )
+  return 'Invalid username'
+}
+
     return ''
   }
 
   const hasFieldErrorsStep1 = () => {
-  return Boolean(
-    emailError ||
-    phoneError ||
-    passwordError ||
-    confirmPasswordError
+  return (
+    !!emailError ||
+    !!phoneError ||
+    !!usernameError ||
+    !!passwordError ||
+    !!confirmPasswordError
   )
-
-  if (hasFieldErrorsStep1()) {
-  return // silently block, no top error
-}
 }
 
   const validateStep2 = () => {
@@ -545,256 +634,291 @@ const validatePhoneNumber = () => {
   return (
     <main className="min-h-screen bg-blue-50 flex items-center justify-center px-4 pt-20">
 
-       <div className="fixed top-0 left-0 w-full h-[70px] bg-white z-50 px-6 pt-4 border-b border-[#e5e7eb]">
-      <Image
-        src={logo}
-        alt="Bonhomiee"
-        className="h-[32px] w-auto"
-      />
+     <div className="fixed top-0 left-0 w-full h-[70px] bg-white z-50 px-6 pt-4 border-b border-[#e5e7eb]">
+      <div className="flex items-center gap-3">
+        <Image
+          src={logo}
+          alt="Bonhomiee"
+          className="h-[32px] w-auto"
+        />
+        <h1 className="text-lg font-bold text-[#00AFEF]">
+          Bonhomiee
+        </h1>
+      </div>
     </div>
         
 
         <div className="bg-white rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 max-w-4xl w-full h-[85vh]">
-          <div
+          {/* <div
             className="bg-cover bg-center h-full"
             style={{ backgroundImage: `url(${supplierPic.src})` }}
-          />
-            <div className="h-full">
-            <form className="p-6 text-sm flex flex-col h-[85vh]" >
-                  {/* HEADER – FIXED */}
+          /> */}
+
+          {/* LEFT IMAGE SECTION */}
+          <div className="hidden md:block relative">
+            <Image src={supplierPic} alt="Signup" fill className="object-cover" />
+            <div className="absolute inset-0 bg-blue-900/10"></div>          
+          </div>
+
+             {/* RIGHT FORM SECTION */}
+             <div className="h-full">
+                  <form className="p-6 flex flex-col h-[85vh]" >
+                    {/* HEADER – FIXED */}
                       <div className="shrink-0">
-                        <h2 className="text-base font-semibold text-center mb-1 text-[#00AFEF]">
-                          Supplier Registration
-                        </h2>
+                            <h2 className="text-base font-semibold text-center mb-1 text-[#00AFEF]">
+                              Supplier Signup
+                            </h2>
 
-                      <StepIndicator step={step} />
-
-                      {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-3">
-                          {error}
-                        </div>
-                      )}
+                          <StepIndicator step={step} />
+                            {error && (
+                              <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-3">
+                                {error}
+                              </div>
+                            )}
                     </div>
-
+                    
+                    {/* divider */}
+                     <div className="mx-12 mb-5 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>   
 
             {/* body*/}
-        <div className="flex-1 overflow-y-auto form-scroll overscroll-contain  pr-1 pb-2 space-y-3 " >
-
-            {step === 1 && (
-              <>
-                <Input label="First Name" required placeholder="Enter first name" name="firstName" value={form.firstName} onChange={handleChange} />
-                <Input label="Middle Name" placeholder="Enter middle name" name="middleName"   value={form.middleName} onChange={handleChange} />
-                <Input label="Last Name" required placeholder="Enter last name" name="lastName"  value={form.lastName} onChange={handleChange} />
-
-                <Input
-                    label="Email"
-                    required
-                    placeholder="name@company.com"
-                    name="email"
-                    //autoComplete="off"
-                    value={form.email}
-                    onChange={handleChange}
-                    onBlur={handleEmailBlur}
-                    tooltip="Enter a valid email address"
-                  />
-                  {emailError && (
-                      <p className={errorTextClass}>ⓘ  {emailError}</p>
-                  )}
-
-                {/* PHONE */}
-                <div className="flex flex-col gap-1">
-                <label className={labelClass}>
-                    Phone Number <span className="text-red-500">*</span>
-                </label>
-                <div className="flex h-[38px] rounded border border-[#00AFEF] bg-white">
-
-                    <select
-                      name="countryCode"
-                      value={form.countryCode}
-                      onChange={handleChange}
-                       className="h-full px-3 text-[12px] bg-transparent border-r border-[#9ec5e5] outline-none"
-                    >
-                      {COUNTRY_CODES.map(c => (
-                        <option key={c.code} value={c.code}>
-                          {c.label} {c.code}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      name="phone"                      
-                      value={form.phone}
-                      onChange={handleChange}
-                      onBlur={handlePhoneBlur}
-                      placeholder="Enter phone number"
-                      className="flex-1 h-full px-3 text-[12px] text-black caret-black outline-none"
-                      inputMode="numeric"
+       <div  className="flex-1  overflow-y-auto form-scroll overscroll-contain  pr-1 pb-2 " >
+         
+              <div className="space-y-3">            
+                {step === 1 && (
+                  <>
+                    <Input label="First Name" required placeholder="Enter first name" name="firstName" value={form.firstName} onChange={handleChange} />
+                    <ErrorMessage
+                      message={
+                        step1Submitted && !form.firstName ? '' : undefined
+                      }
                     />
-                  </div>
-                </div>
-                  {phoneError && (
-                <p className={errorTextClass}>ⓘ  {phoneError}</p>
-                  )}    
-                <Input label="Username" required placeholder="Choose a username" name="username"  value={form.username} onChange={handleChange} />
+                    <Input label="Middle Name (optional)" placeholder="Enter middle name" name="middleName"   value={form.middleName} onChange={handleChange} />
+                    
+                    <Input label="Last Name" required placeholder="Enter last name" name="lastName"  value={form.lastName} onChange={handleChange} />
+                    <ErrorMessage
+                      message={
+                        step1Submitted && !form.lastName ? '' : undefined
+                      }
+                    />
+                    <Input
+                        label="Email"
+                        required
+                        placeholder="name@company.com"
+                        name="email"
+                        //autoComplete="off"
+                        value={form.email}
+                        onChange={handleChange}
+                        tooltip="Enter a valid email \n address like name@example.com"
+                      />
+                     <ErrorMessage
+                        message={
+                          step1Submitted && (!!emailError || !form.email) ? '' : undefined
+                        }
+                      />
 
-                <Input
-                   label="Password"
-                    required
-                    placeholder="Enter strong password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={form.password}
-                    onChange={handleChange}
-                    onBlur={handlePasswordBlur}
-                    onCopy={blockClipboard}
-                    onCut={blockClipboard}
-                    onPaste={blockClipboard}
-                    onContextMenu={blockContextMenu}
-                    showEye
-                    tooltip="Password must be at least 8 characters with uppercase, lowercase, number & symbol"
-                  />
+                      {/* PHONE */}
+                      <div className="flex flex-col gap-1">
+                          <label className={`${labelClass} flex items-center gap-1`}>
+                            Phone Number <span className="text-red-500">*</span>
 
+                            <TooltipIcon
+                          id="tooltip-phone"
+                          content="Please enter valid phone number"
+                        />
+                          </label>
+                          <div className="flex h-[38px] rounded border border-[#00AFEF] bg-white">
 
-                {passwordError && (
-                  <p className={errorTextClass}>ⓘ {passwordError}</p>
-                )}
-                
-                {form.password && !passwordError && (
-                 <PasswordStrengthMeter strength={passwordStrengthInfo} />
-                )}
+                            <select
+                              name="countryCode"
+                              value={form.countryCode}
+                              onChange={handleChange}
+                              className="h-full px-3 text-[12px] bg-transparent border-r border-[#9ec5e5] outline-none">
+                              {COUNTRY_CODES.map(c => (
+                                <option key={c.code} value={c.code}>
+                                  {c.label} {c.code}
+                                </option>
+                              ))}
+                              </select>
+                              <input
+                                name="phone"                      
+                                value={form.phone}
+                                onChange={handleChange}                                
+                                placeholder="Enter phone number"
+                                className="flex-1 h-full px-3 text-[12px] text-black caret-black outline-none"
+                                inputMode="numeric"/>
+                          </div>
+                      </div>
+                      <ErrorMessage
+                      message={
+                        step1Submitted && (!!phoneError || !form.phone) ? '' : undefined
+                      }
+                    />                                                    
+                       
+                        <Input
+                          label="Username"
+                          required
+                          name="username"
+                          value={form.username}
+                          onChange={handleChange}
+                          onBlur={handleUsernameBlur}
+                          tooltip="Must start with a letter, followed by underscores or numbers. 6–16 characters allowed."
+                        />                       
+                        <ErrorMessage message={usernameError} />
+                        <ErrorMessage
+                          message={
+                            step1Submitted && (!!usernameError || !form.username) ? '' : undefined
+                          }
+                        />
+                           <Input
+                            label="Password"
+                            required
+                            placeholder="Enter strong password"
+                            name="password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={form.password}
+                            onChange={handleChange}                            
+                            onCopy={blockClipboard}
+                            onCut={blockClipboard}
+                            onPaste={blockClipboard}
+                            onContextMenu={blockContextMenu}
+                            showEye
+                            tooltip="Password must be at least 8 characters with uppercase, lowercase, number & symbol"
+                          />
+                          <ErrorMessage
+                            message={
+                              step1Submitted && (!!passwordError || !form.password) ? '' : undefined
+                            }
+                          />
+                             <ErrorMessage message={passwordError} />    
+                          
+                          {form.password && !passwordError && (
+                          <PasswordStrengthMeter strength={passwordStrengthInfo} />
+                          )}
 
                     
 
-                  <Input
-                      label="Re-Type Password"
-                      required
-                      placeholder="Re-enter password"
-                      name="confirmPassword"
-                      type="password"
-                      autoComplete="new-password"
-                      value={form.confirmPassword}
-                      onChange={handleChange}
-                      onBlur={handleConfirmPasswordBlur}
-                      onCopy={blockClipboard}
-                      onCut={blockClipboard}
-                      onPaste={blockClipboard}
-                      onContextMenu={blockContextMenu}
-                    />
+                        <Input
+                            label="Re-Type Password"
+                            required
+                            placeholder="Re-enter password"
+                            name="confirmPassword"
+                            type="password"
+                            autoComplete="new-password"
+                            value={form.confirmPassword}
+                            onChange={handleChange}
+                            onBlur={handleConfirmPasswordBlur}
+                            onCopy={blockClipboard}
+                            onCut={blockClipboard}
+                            onPaste={blockClipboard}
+                            onContextMenu={blockContextMenu}
+                          />
+                          <ErrorMessage message={confirmPasswordError} />   
+                                        
+                        </>
+                      )}
 
-                  {confirmPasswordError && (
-                    <p className={errorTextClass}>ⓘ {confirmPasswordError}</p>
-                  )}
+                {step === 2 && (
+                  <>
+                    <Input label="Supplier Legal Name" required placeholder="Registered legal name" name="supplierLegalName" value={form.supplierLegalName} onChange={handleChange} />
+                    <Input label="Trade Name" required placeholder="Business / brand name" name="tradeName" value={form.tradeName} onChange={handleChange} />
 
+                    {/* SERVICE TYPE */}
+                    <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
+                    <label className={labelClass}>
+                    Service Type <span className="text-red-500">*</span>
+                    </label>
 
-                
-                  </>
-                )}
+                    {/* INPUT AREA WITH CHIPS */}
+                  <div
+                      ref={serviceTriggerRef}
+                      className={`${inputClass} flex flex-wrap items-center gap-1 cursor-pointer`}
+                      onClick={() => setServiceOpen(prev => !prev)}>
 
-              {step === 2 && (
-              <>
-                <Input label="Supplier Legal Name" required placeholder="Registered legal name" name="supplierLegalName" value={form.supplierLegalName} onChange={handleChange} />
-                <Input label="Trade Name" required placeholder="Business / brand name" name="tradeName" value={form.tradeName} onChange={handleChange} />
+                    {form.serviceTypes.length === 0 && (
+                      <span className="text-gray-400 text-[12px]">
+                        Select service types
+                      </span>
+                    )}
 
-                {/* SERVICE TYPE */}
-                <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
-                <label className={labelClass}>
-                Service Type <span className="text-red-500">*</span>
-                </label>
-
-              {/* INPUT AREA WITH CHIPS */}
-             <div
-                ref={serviceTriggerRef}
-                className={`${inputClass} flex flex-wrap items-center gap-1 cursor-pointer`}
-                onClick={() => setServiceOpen(prev => !prev)}
-              >
-
-                {form.serviceTypes.length === 0 && (
-                  <span className="text-gray-400 text-[12px]">
-                    Select service types
-                  </span>
-                )}
-
-              {form.serviceTypes.map(type => (
-                <span
-                  key={type}
-                  className="flex items-center gap-1 bg-white-100 text-gray-700 px-2 py-[2px] rounded-full text-[12px]"
-                  onClick={e => e.stopPropagation()}
-                >
-                  {type}
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation()
-                      toggleService(type)
-                    }}
-                   className="text-red-500 hover:text-red-700 hover:scale-110 transition font-bold"
-                    aria-label="Remove service type"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-
-            <span className="ml-auto text-xs text-gray-500">▾</span>
-          </div>
-
-            {/* DROPDOWN LIST */}
-          {serviceOpen && (
-           <div
-             ref={serviceDropdownRef}          
-            className="mt-1 rounded border border-[#00AFEF] bg-white max-h-40 overflow-y-auto">
-                {SERVICE_OPTIONS.map(option => {
-                  const active = form.serviceTypes.includes(option)
-                  return (
-                    <div
-                      key={option}
-                      onClick={() => toggleService(option)}
-                      className={`px-3 py-2 text-xs cursor-pointer transition-colors
-                        ${
-                          active
-                            ? 'bg-blue-200 font-medium text-gray-900'
-                            : 'bg-white'
-                        }
-                        hover:bg-blue-100`}
+                    {form.serviceTypes.map(type => (
+                      <span
+                        key={type}
+                        className="flex items-center gap-1 bg-white-100 text-gray-700 px-2 py-[2px] rounded-full text-[12px]"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {type}
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation()
+                            toggleService(type)
+                          }}
+                        className="text-red-500 hover:text-red-700 hover:scale-110 transition font-bold"
+                          aria-label="Remove service type"
                         >
-                        {option}
-                    </div>
-                      )
-                    })}
-              </div>
+                          ×
+                        </button>
+                      </span>
+                    ))}
+
+                     <span className="ml-auto text-xs text-gray-500">▾</span>
+                </div>
+
+             {/* DROPDOWN LIST */}
+            {serviceOpen && (
+               <div
+                    ref={serviceDropdownRef}          
+                    className="mt-1 rounded border border-[#00AFEF] bg-white max-h-40 overflow-y-auto">
+                    {SERVICE_OPTIONS.map(option => {
+                      const active = form.serviceTypes.includes(option)
+                      return (
+                        <div
+                            key={option}
+                            onClick={() => toggleService(option)}
+                            className={`px-3 py-2 text-xs cursor-pointer transition-colors
+                            ${
+                              active
+                                ? 'bg-blue-200 font-medium text-gray-900'
+                                : 'bg-white'
+                            }
+                            hover:bg-blue-100`}
+                            >
+                            {option}
+                      </div>
+                            )
+                          })}
+                </div>
                   )}
-                 </div>
+            </div>
 
                 {/* COUNTRY */}
                 <div className="flex flex-col gap-1">
-                    <label className={labelClass}>
-                      Country of Registration <span className="text-red-500">*</span>
-                    </label>
-                   <div className="relative">
-                     <select
-                        name="countryOfRegistration"
-                        value={form.countryOfRegistration}
-                        onChange={handleChange}
-                        className={`${inputClass} appearance-none bg-white cursor-pointer pr-8 focus:outline-none`}
-                    >
-                        <option value="" disabled hidden>Select country</option>
-                        {REG_COUNTRIES.map(c => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
+                      <label className={labelClass}>
+                        Country of Registration <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                            name="countryOfRegistration"
+                            value={form.countryOfRegistration}
+                            onChange={handleChange}
+                            className={`${inputClass} appearance-none bg-white cursor-pointer pr-8 focus:outline-none`}>
+                            <option value="" disabled hidden>Select country</option>
+                            {REG_COUNTRIES.map(c => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                        </select>
 
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
-                        ▾
-                      </span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                          ▾
+                        </span>
                     </div>
 
                 </div>
 
-               
-
-                <Input
+                 <Input
                   label="Website URL"
                   required
                   placeholder="Company website"
@@ -805,8 +929,7 @@ const validatePhoneNumber = () => {
                     setWebsiteError('')
                   }}
                   onBlur={handleWebsiteBlur}
-                  tooltip="Example: www.company.com"
-                />
+                  tooltip="Example: www.company.com"/>
 
                 {websiteError && (
                 <p className={errorTextClass}>ⓘ  {websiteError}</p>
@@ -814,164 +937,161 @@ const validatePhoneNumber = () => {
                 )}
              
               </>
-            )}
-           {step === 3 && (
+           )}
+            {step === 3 && (
             <>
-              <FileInput
-                label="Company Trade License"
-                required
-                file={form.tradeLicense}
-                onChange={file =>
-                  setForm(prev => ({ ...prev, tradeLicense: file }))
-                }
-              />
+                <FileInput
+                  label="Company Trade License"
+                  required
+                  file={form.tradeLicense}
+                  onChange={file =>
+                    setForm(prev => ({ ...prev, tradeLicense: file }))
+                  }
+                />
 
-              <FileInput
-                label="Company Registration Certificate"
-                required
-                file={form.registrationCert}
-                onChange={file =>
-                  setForm(prev => ({ ...prev, registrationCert: file }))
-                }
-              />
+                <FileInput
+                  label="Company Registration Certificate"
+                  required
+                  file={form.registrationCert}
+                  onChange={file =>
+                    setForm(prev => ({ ...prev, registrationCert: file }))
+                  }
+                />
 
-            {/* PANEL TITLE */}
-            <label className={labelClass}>
-              Tax Document Details <span className="text-red-500">*</span>
-            </label>
-
-            <div className="border-2 border-dashed border-[#00AFEF] rounded bg-white p-4 flex flex-col gap-4">
-
-            {/* TAX DOCUMENT TYPE */}
-            <div className="flex flex-col gap-1">
-              <label className={labelClass}>
-                  Tax Document Type
+                {/* PANEL TITLE */}
+                <label className={labelClass}>
+                  Tax Document Details <span className="text-red-500">*</span>
                 </label>
 
-              <div className="relative">
-            <select
-                name="taxDocType"
-                value={form.taxDocType}
-                onChange={e => {
-                  const value = e.target.value
+                <div className="border-2 border-dashed border-[#00AFEF] rounded bg-white p-4 flex flex-col gap-4">
 
-                  setForm(prev => ({
-                    ...prev,
-                    taxDocType: value,
-                    panTaxId: '',                 
-                    taxRegistrationDoc: null,     
-                  }))
+                {/* TAX DOCUMENT TYPE */}
+                <div className="flex flex-col gap-1">
+                    <label className={labelClass}>
+                      Tax Document Type
+                    </label>
 
-                  setTaxIdError('')               
-                }}
-                className={`${inputClass} appearance-none bg-white cursor-pointer pr-8 focus:outline-none`}>
-                <option value="" disabled hidden>
-                  Select document type
-                </option>
-                <option value="GST">GST</option>
-                <option value="PAN">PAN</option>
-                <option value="VAT">VAT</option>
-                </select>
+                      <div className="relative">
+                            <select
+                              name="taxDocType"
+                              value={form.taxDocType}
+                              onChange={e => {
+                                const value = e.target.value
 
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
-                  ▾
-                </span>
-              </div>
+                                setForm(prev => ({
+                                  ...prev,
+                                  taxDocType: value,
+                                  panTaxId: '',                 
+                                  taxRegistrationDoc: null,     
+                                }))
 
+                              setTaxIdError('')               
+                            }}
+                            className={`${inputClass} appearance-none bg-white cursor-pointer pr-8 focus:outline-none`}>
+                            <option value="" disabled hidden>
+                              Select document type
+                            </option>
+                            <option value="GST">GST</option>
+                            <option value="PAN">PAN</option>
+                            <option value="VAT">VAT</option>
+                            </select>
 
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                              ▾
+                            </span>
+                      </div>
+                </div>
+
+                    {/* TAX NUMBER + UPLOAD (ONLY WHEN TYPE SELECTED) */}
+                    {form.taxDocType && (
+                      <>
+                        {/* TAX NUMBER */}
+                        <Input
+                          label={`${form.taxDocType} Number`}
+                          required
+                          placeholder={`Enter ${form.taxDocType} Number`}
+                          name="panTaxId"
+                          value={form.panTaxId}
+                          onChange={e => {
+                            const value = e.target.value.toUpperCase()
+                            setForm(prev => ({
+                              ...prev,
+                              panTaxId:value,
+                            }))
+                            validateTaxIdLive(value, form.taxDocType)
+                          }}
+
+                        
+                        />
+
+                        {taxIdError && (
+                          <p className={errorTextClass}>ⓘ {taxIdError}</p>                      
+                        )}
+
+                        {/* FILE UPLOAD */}
+                        <FileInput
+                          label={`Upload ${form.taxDocType} Document`}
+                          required
+                          file={form.taxRegistrationDoc}
+                          onChange={file =>
+                            setForm(prev => ({ ...prev, taxRegistrationDoc: file }))
+                          }
+                        />
+                      </>
+                    )}
+
+             </div>
+                  <MultiFileInput
+                    label="Other Documents"
+                    files={form.otherDocs}
+                    onChange={files =>
+                      setForm(prev => ({ ...prev, otherDocs: files }))
+                    }
+                  />
+                  <p className="text-[11px] text-gray-500 mt-0.5 font-semibold">
+                  You can upload up to five documents.
+                </p>
+                  </>
+                )}
+                
             </div>
-
-          {/* TAX NUMBER + UPLOAD (ONLY WHEN TYPE SELECTED) */}
-          {form.taxDocType && (
-            <>
-              {/* TAX NUMBER */}
-              <Input
-                label={`${form.taxDocType} Number`}
-                required
-                placeholder={`Enter ${form.taxDocType} Number`}
-                name="panTaxId"
-                value={form.panTaxId}
-                onChange={e => {
-                  setForm(prev => ({
-                    ...prev,
-                    panTaxId: e.target.value.toUpperCase(),
-                  }))
-                  setTaxIdError('')
-                }}
-                onBlur={handleTaxIdBlur}
-              />
-
-              {taxIdError && (
-                <p className={errorTextClass}>ⓘ {taxIdError}</p>
-             
-              )}
-
-              {/* FILE UPLOAD */}
-              <FileInput
-                label={`Upload ${form.taxDocType} Document`}
-                required
-                file={form.taxRegistrationDoc}
-                onChange={file =>
-                  setForm(prev => ({ ...prev, taxRegistrationDoc: file }))
-                }
-              />
-            </>
-          )}
-
-      </div>
-
-
-        <MultiFileInput
-          label="Other Documents"
-          files={form.otherDocs}
-          onChange={files =>
-            setForm(prev => ({ ...prev, otherDocs: files }))
-          }
-        />   
-      </>
-      )}
-
           </div>
         
 
-          {/* FOOTER – FIXED */}
-      <div className="shrink-0 pt-4  border-gray-200">
-            {step === 1 && (
-            <div className="flex justify-between gap-4 pt-4">
+            {/* FOOTER – FIXED */}
+        <div className="shrink-0 pt-4  border-gray-200">
+              {step === 1 && (
+              <div className="flex justify-between gap-4 pt-4">
 
-                  <button
-                    type="button"
-                    onClick={() => router.push('/')}
-                    className={`${footerButtonClass} bg-[#E62800]`}
-                  >
-                    Cancel
+                    <button
+                      type="button"
+                      onClick={() => router.push('/')}
+                      className={`${footerButtonClass} bg-[#E62800]`}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep1Submitted(true)
+
+                        const err = validateStep1()
+                        if (err || hasFieldErrorsStep1()) {
+                          setError('Please fill all mandatory fields correctly')
+                          return
+                        }
+
+                        setError('')
+                        setStep(2)
+                      }}
+                    className={`${footerButtonClass} bg-[#00afef]` }
+                    >
+                      Next
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                    // 1. Mandatory fields only
-                    const err = validateStep1()
-                    if (err) {
-                      setError(err)
-                      return
-                    }
-
-                    // 2. Block if any field-level error exists
-                    if (hasFieldErrorsStep1()) {
-                      return // silently block, no top error
-                    }
-
-                    setError('')
-                    setStep(2)
-                  }}
-                  className={`${footerButtonClass} bg-[#00afef]` }
-                  >
-                    Next
-                </button>
-                                
-                </div>
-                 )}
+                                  
+                  </div>
+                  )}
 
               {step === 2 && (
               <div className="flex justify-between gap-4 pt-4">
@@ -981,6 +1101,7 @@ const validatePhoneNumber = () => {
                     onClick={() => {
                      
                       setPasswordError('')
+                       setUsernameError('') 
                       setError('')
                       setStep(1)
                     }}
@@ -1027,7 +1148,7 @@ const validatePhoneNumber = () => {
                     taxIdError ||
                     !form.taxRegistrationDoc
                   ) {
-               return setError('Please complete all tax details correctly')
+               return setError('Please fill in all required fields.')
               }
 
               setError('')
@@ -1115,9 +1236,10 @@ const validatePhoneNumber = () => {
               <button
                 type="button"
                 onClick={() => setShow(!show)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition"
+                aria-label={show ? "Hide password" : "Show password"}
               >
-                👁
+                {show ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             )}
           </div>
@@ -1204,7 +1326,7 @@ const validatePhoneNumber = () => {
                 <button
               type="button"
               onClick={() => handleFileChange(null)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-red-600 transition-colors"
               aria-label="Remove file"
               >
               <X className="h-4 w-4" />
@@ -1244,6 +1366,9 @@ const validatePhoneNumber = () => {
       const [popupError, setPopupError] = useState('')
       const [documentName, setDocumentName] = useState('')
       const documentNameRef = useRef<HTMLInputElement>(null)
+      
+      
+      
 
       const handlePopupFileChange = (
       e: React.ChangeEvent<HTMLInputElement>
@@ -1386,8 +1511,8 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
 
   <span
     data-tooltip-id={tooltipId}
-    data-tooltip-content="You can upload maximum five documents"
-    className="text-blue-500 text-[11px] font-semibold cursor-pointer"
+    data-tooltip-content="A maximum of five documents can be uploaded."
+    className="text-blue-500 text-[11px] cursor-pointer"
   >
     ⓘ
   </span>
@@ -1406,16 +1531,14 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
 />
 
         <button
-          type="button"
-          onClick={() => 
-          {
-            setPopupError('')
-            setOpen(true)}
-          }
+        onClick={() => {
+      setPopupError('')
+      setOpen(true)
+    }}
           disabled={files.length >= maxFiles}
-          className="px-3 py-1.5 rounded border border--[#00AFEF] text-[#00AFEF] text-sm hover:bg-blue-50 disabled:opacity-50"
+          className="px-3 py-1.5 rounded border border--[#00AFEF] text-white text-sm bg-[#00afef] disabled:opacity-50"
         >
-          Upload
+           Upload
         </button>
       </div>
 
@@ -1502,74 +1625,77 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
 </div>
 
 {/* BODY – Upload box */}
-<div
-  className="border-2 border-dashed border-[#00AFEF] rounded bg-white p-4 hover:border-blue-400 transition cursor-pointer"
-  onClick={() => {
-  if (!documentName.trim()) {
-    setPopupError('Please enter document name first')
-    documentNameRef.current?.focus()
-    return
-  }
+<div className="border-2 border-dashed border-[#00AFEF] rounded bg-white p-4 transition">
+  {/* CLICK AREA (only when no file) */}
+  {tempFiles.length === 0 && (
+    <div
+      className="flex items-center gap-3 cursor-pointer hover:border-blue-400"
+      onClick={() => {
+        if (!documentName.trim()) {
+          setPopupError('Please enter document name first')
+          documentNameRef.current?.focus()
+          return
+        }
 
-  setPopupError('')
-  fileInputRef.current?.click()
-}}
-
->
-  <div className="flex items-center gap-3">
-    <UploadIcon
-      className="h-6 w-6 text-blue-500"
-      strokeWidth={1.5}
-    />
-
-    <div className="flex flex-col text-left">
-      <span className="text-sm font-medium text-gray-800">
-        Click to upload documents
-      </span>
-      <span className="text-xs text-gray-500">
-        PDF / JPG up to 15MB (Max {maxFiles})
-      </span>
+        setPopupError('')
+        fileInputRef.current?.click()
+      }}
+    >
+      <UploadIcon className="h-6 w-6 text-blue-500" strokeWidth={1.5} />
+      <div className="flex flex-col">
+        <span className="text-sm font-medium text-gray-800">
+          Click to upload documents
+        </span>
+        <span className="text-xs text-gray-500">
+          PDF / JPG up to 15MB
+        </span>
+      </div>
     </div>
-  </div>
+  )}
 
-  {/* Hidden file input */}
-
-<input
-  ref={fileInputRef}
-  type="file"
-  hidden
-  multiple
-  accept=".pdf,.jpg,.jpeg"
-  onChange={handlePopupFileChange}
-/>
-
-</div>
-
-
-{/* FILE LIST PREVIEW (inside popup) */}
-{tempFiles.length > 0 && (
-  <div className="mt-3 space-y-2">
-    {tempFiles.map((file, index) => (
-      <div
-        key={index}
-        className="flex items-start justify-between bg-gray-50 rounded px-3 py-2 text-sm"
-      >
-        <div className="flex gap-2 truncate">
-          <Paperclip className="h-4 w-4 text-gray-500 mt-1 shrink-0" />
-
-          <div className="flex flex-col truncate">
-            <span className="font-medium text-gray-800 truncate max-w-[220px]">
-              {documentName}
-            </span>
-            <span className="text-[11px] text-gray-500 truncate max-w-[220px]">
-              {file.name}
-            </span>
-          </div>
+  {/* FILE PREVIEW (same dashed box) */}
+  {tempFiles.map((file, index) => (
+    <div
+      key={index}
+      className="flex items-center justify-between bg-gray-50 rounded px-3 py-2 text-sm"
+    >
+      <div className="flex gap-2 truncate">
+        <Paperclip className="h-4 w-4 text-gray-500 shrink-0" />
+        <div className="flex flex-col truncate">
+          <span className="font-medium text-gray-800 truncate max-w-[220px]">
+            {documentName}
+          </span>
+          <span className="text-[11px] text-gray-500 truncate max-w-[220px]">
+            {file.name}
+          </span>
         </div>
       </div>
-    ))}
-  </div>
-)}
+
+      {/* ❌ REMOVE FILE */}
+      <button
+        type="button"
+        onClick={() =>
+          setTempFiles(prev => prev.filter((_, i) => i !== index))
+        }
+        className="text-gray-400 hover:text-red-600 transition-colors"
+        aria-label="Remove file"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  ))}
+
+  {/* HIDDEN INPUT */}
+  <input
+    ref={fileInputRef}
+    type="file"
+    hidden
+    multiple
+    accept=".pdf,.jpg,.jpeg"
+    onChange={handlePopupFileChange}
+  />
+</div>
+
 
 
 {popupError && (
@@ -1613,6 +1739,7 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
 />
 
         </div>
+          
       )}
     </>
   )
