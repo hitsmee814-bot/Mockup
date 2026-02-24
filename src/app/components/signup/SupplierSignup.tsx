@@ -1,5 +1,6 @@
 'use client'
 
+    /* ================= IMPORTS ================= */
 
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import React,{ useEffect, useRef, useState } from 'react'
@@ -11,7 +12,6 @@ import Image from "next/image";
 import logo from "../../assets/images/logoPrimary.png"
 import supplierPic from "../../assets/images/traveling-concept-with-landmarks.jpg"
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-
 
 import {
   Upload as UploadIcon,
@@ -55,12 +55,11 @@ type FormData = {
   otherDocs: NamedDocument[]
 
 }
-/* ================= CONSTANTS ================= */ 
 
 
-
-
-  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/* ================= CONSTANTS ================= */   
+  
+   const EMAIL_REGEX =/^[^\s@]+@[a-z0-9.-]+\.[a-z]{2,}$/
   const WEBSITE_REGEX =  /^([\w-]+\.)+[\w-]{2,}(\/.*)?$/i
   const STRONG_PASSWORD =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
 
@@ -311,7 +310,7 @@ export default function SupplierSignup() {
           middleName: '',
           lastName: '',
           email: '',
-          countryCode: '+1',
+          countryCode: '+91',
           phone: '',
           username: '',
           password: '',
@@ -371,45 +370,47 @@ export default function SupplierSignup() {
         }
   }
 
-     if (name === 'email') {
-          validateEmailLive(value)
+          if (name === 'email') {
+        validateEmailLive(value)
       }
 
       if (name === 'phone') {
-      validatePhoneLive(value, form.countryCode)
-        }
+        validatePhoneLive(value, form.countryCode)
+      }
 
-        if (name === 'countryCode') {
+      if (name === 'countryCode') {
         validatePhoneLive(form.phone, value)
-        }
-
-    //  Clear confirm password error as soon as user types
-      if (name === 'confirmPassword') {
-        setConfirmPasswordError('')
-      }
-    if (name === 'password') {
-      // Reset state
-      setConfirmPasswordError('')
-      setPasswordStrengthInfo(null)
-      setPasswordError('')
-
-  if (!value) return
-      // 1Pattern validation FIRST
-      if (!STRONG_PASSWORD.test(value)) {
-        setPasswordError(
-         'The password does not yet meet the required criteria.'
-        )
-        return
       }
 
-      //  Strength validation SECOND
-      const result = passwordStrength(value)
-      setPasswordStrengthInfo(result)
-    }
-    if (name === 'confirmPassword') {
-  validateConfirmPasswordLive(value)
+   if (name === 'password') {
+  // existing password logic (keep this)
+  setConfirmPasswordError('')
+  setPasswordStrengthInfo(null)
+  setPasswordError('')
+
+  if (!value) {
+    validateConfirmPasswordLive('', form.confirmPassword)
+    return
+  }
+
+  if (!STRONG_PASSWORD.test(value)) {
+    setPasswordError(
+      'The password does not yet meet the required criteria.'
+    )
+    validateConfirmPasswordLive(value, form.confirmPassword)
+    return
+  }
+
+  const result = passwordStrength(value)
+  setPasswordStrengthInfo(result)
+
+  //  ADD THIS
+  validateConfirmPasswordLive(value, form.confirmPassword)
 }
 
+if (name === 'confirmPassword') {
+  validateConfirmPasswordLive(form.password, value)
+}
   }
 
     const getStrengthColor = (id: number) => {
@@ -439,15 +440,24 @@ export default function SupplierSignup() {
   }
 }
 
-const validateConfirmPasswordLive = (value: string) => {
-  // If field is empty → no error
-  if (!value) {
+        const validateConfirmPasswordLive = (
+  password: string,
+  confirmPassword: string
+) => {
+  // If both empty → no error
+  if (!password && !confirmPassword) {
     setConfirmPasswordError('')
     return
   }
 
-  // If password exists and doesn't match
-  if (form.password && value !== form.password) {
+  // If confirm empty → no error yet
+  if (!confirmPassword) {
+    setConfirmPasswordError('')
+    return
+  }
+
+  // Mismatch
+  if (password !== confirmPassword) {
     setConfirmPasswordError('Passwords do not match')
   } else {
     setConfirmPasswordError('')
@@ -455,21 +465,27 @@ const validateConfirmPasswordLive = (value: string) => {
 }
   
         const validatePhoneLive = (phone: string, countryCode: string) => {
-          // Empty → no error (wait until user types)
-          if (!phone) {
-            setPhoneError('')
-            return
-          }
-
-          const fullNumber = `${countryCode}${phone}`
-          const phoneNumber = parsePhoneNumberFromString(fullNumber)
-
-          if (!phoneNumber || !phoneNumber.isValid()) {
-            setPhoneError('Please enter a valid phone number')
-          } else {
-            setPhoneError('')
-          }
+        // Empty → no error
+        if (!phone) {
+          setPhoneError('')
+          return
         }
+
+        // Allow typing (minimum digits safeguard)
+        if (phone.replace(/\D/g, '').length < 6) {
+          setPhoneError('')
+          return
+        }
+
+        const fullNumber = `${countryCode}${phone}`
+        const phoneNumber = parsePhoneNumberFromString(fullNumber)
+
+        if (!phoneNumber || !phoneNumber.isValid()) {
+          setPhoneError('Please enter a valid phone number')
+        } else {
+          setPhoneError('')
+        }
+      }
 
 
 
@@ -502,28 +518,18 @@ const handleWebsiteBlur = () => {
 
 
 const validateEmailLive = (value: string) => {
-  // 1️ Clear error if empty
+  // If field is cleared → clear error
   if (!value) {
     setEmailError('')
     return
   }
 
-  // 2️ Basic format check
+  // Live aggressive validation (same as username)
   if (!EMAIL_REGEX.test(value)) {
-    setEmailError('Please enter a valid email address')
-    return
+    setEmailError('Please enter valid email address')
+  } else {
+    setEmailError('')
   }
-
-  // 3 Lowercase domain validation
-  const domain = value.split('@')[1]
-
-  if (domain && domain !== domain.toLowerCase()) {
-    setEmailError('Email domain must be lowercase')
-    return
-  }
-
-  //  Valid email
-  setEmailError('')
 }
 
 const validateTaxIdLive = (value: string, docType: string) => {
@@ -578,10 +584,20 @@ const validatePhoneNumber = () => {
     ) {
       return 'All mandatory fields must be filled'
     }
-    if (!EMAIL_REGEX.test(form.email)) {
-    setEmailError('Please enter a valid email address')
-    return 'Invalid email address'
-     }
+    if (!form.email) {
+  setEmailError('Email is required')
+  return 'Email is required'
+}
+
+if (!form.email) {
+  setEmailError('Email is required')
+  return 'Email is required'
+}
+
+if (!EMAIL_REGEX.test(form.email)) {
+  setEmailError('Please enter a valid email address')
+  return 'Invalid email address'
+}
 
   const phoneErr = validatePhoneNumber()
   if (phoneErr) {
@@ -671,7 +687,7 @@ const validatePhoneNumber = () => {
 
                           <StepIndicator step={step} />
                             {error && (
-                              <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-3">
+                              <div className="bg-red-100 border  text-red-700 px-3 py-2 rounded mb-3 text-xs">
                                 {error}
                               </div>
                             )}
@@ -708,13 +724,9 @@ const validatePhoneNumber = () => {
                         //autoComplete="off"
                         value={form.email}
                         onChange={handleChange}
-                        tooltip="Enter a valid email \n address like name@example.com"
+                        tooltip="Enter a valid email address like name@example.com"
                       />
-                     <ErrorMessage
-                        message={
-                          step1Submitted && (!!emailError || !form.email) ? '' : undefined
-                        }
-                      />
+                     <ErrorMessage message={emailError} />
 
                       {/* PHONE */}
                       <div className="flex flex-col gap-1">
@@ -748,6 +760,7 @@ const validatePhoneNumber = () => {
                                 inputMode="numeric"/>
                           </div>
                       </div>
+                      <ErrorMessage message={phoneError} />
                       <ErrorMessage
                       message={
                         step1Submitted && (!!phoneError || !form.phone) ? '' : undefined
@@ -1531,6 +1544,7 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
 />
 
         <button
+        type='button'
         onClick={() => {
       setPopupError('')
       setOpen(true)
