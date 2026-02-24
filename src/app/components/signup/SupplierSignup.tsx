@@ -465,27 +465,29 @@ if (name === 'confirmPassword') {
 }
   
         const validatePhoneLive = (phone: string, countryCode: string) => {
-        // Empty → no error
-        if (!phone) {
-          setPhoneError('')
-          return
-        }
+  // Clear error when empty
+  if (!phone) {
+    setPhoneError('')
+    return
+  }
 
-        // Allow typing (minimum digits safeguard)
-        if (phone.replace(/\D/g, '').length < 6) {
-          setPhoneError('')
-          return
-        }
+  const digitsOnly = phone.replace(/\D/g, '')
 
-        const fullNumber = `${countryCode}${phone}`
-        const phoneNumber = parsePhoneNumberFromString(fullNumber)
+  //  Start validation immediately
+  if (digitsOnly.length < 10) {
+    setPhoneError('Please enter a valid phone number')
+    return
+  }
 
-        if (!phoneNumber || !phoneNumber.isValid()) {
-          setPhoneError('Please enter a valid phone number')
-        } else {
-          setPhoneError('')
-        }
-      }
+  const fullNumber = `${countryCode}${digitsOnly}`
+  const phoneNumber = parsePhoneNumberFromString(fullNumber)
+
+  if (!phoneNumber || !phoneNumber.isValid()) {
+    setPhoneError('Please enter a valid phone number')
+  } else {
+    setPhoneError('')
+  }
+}
 
 
 
@@ -756,16 +758,13 @@ if (!EMAIL_REGEX.test(form.email)) {
                                 value={form.phone}
                                 onChange={handleChange}                                
                                 placeholder="Enter phone number"
+                                maxLength={10}
                                 className="flex-1 h-full px-3 text-[12px] text-black caret-black outline-none"
                                 inputMode="numeric"/>
                           </div>
                       </div>
                       <ErrorMessage message={phoneError} />
-                      <ErrorMessage
-                      message={
-                        step1Submitted && (!!phoneError || !form.phone) ? '' : undefined
-                      }
-                    />                                                    
+                                                               
                        
                         <Input
                           label="Username"
@@ -1180,28 +1179,24 @@ if (!EMAIL_REGEX.test(form.email)) {
       </div>
 
       <style jsx>{`
-          .form-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: #cfddeb transparent;
-          }
+  .form-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #00AFEF transparent;
+}
 
-          .form-scroll::-webkit-scrollbar {
-            width: 6px;
-          }
+.form-scroll::-webkit-scrollbar {
+  width: 6px;
+}
 
-          .form-scroll::-webkit-scrollbar-track {
-            background: transparent;
-          }
+.form-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-          .form-scroll::-webkit-scrollbar-thumb {
-            background-color: #00AFEF ;
-            border-radius: 10px;
-          }
-
-          .form-scroll::-webkit-scrollbar-thumb:hover {
-            background-color: #00AFEF ;
-          }
-`}</style> 
+.form-scroll::-webkit-scrollbar-thumb {
+  background-color: #00AFEF;
+  border-radius: 9999px;
+}
+`}</style>
     </main>
   )
 }
@@ -1238,24 +1233,31 @@ if (!EMAIL_REGEX.test(form.email)) {
           </label>
 
           <div className="relative">
-            <input
-              {...props}
-              name={name}  
-              
-              type={showEye && show ? 'text' : type}
-              className={`${inputClass} pr-9`} 
-            />
-            {showEye && (
-              <button
-                type="button"
-                onClick={() => setShow(!show)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition"
-                aria-label={show ? "Hide password" : "Show password"}
-              >
-                {show ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            )}
-          </div>
+      <input
+        {...props}
+        name={name}
+        type={showEye && show ? 'text' : type}
+        className={`${inputClass} pr-9`}
+        onChange={e => {
+          //  Hide password as soon as user types
+          if (show) setShow(false)
+
+          // Call original onChange (important)
+          props.onChange?.(e)
+        }}
+      />
+
+      {showEye && (
+        <button
+          type="button"
+          onClick={() => setShow(prev => !prev)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition"
+          aria-label={show ? 'Hide password' : 'Show password'}
+        >
+          {show ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
+      )}
+    </div>
         </div>
       )
     }
