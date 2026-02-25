@@ -8,7 +8,7 @@
 @tailwind utilities;
 
 html {
-  font-family: Cocon, "Helvetica Neue", Arial, sans-serif;
+  font-family: Poppins, "Helvetica Neue", Arial, sans-serif;
   scroll-behavior: smooth;
 }
 
@@ -100,42 +100,55 @@ html {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
-
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  --radius: 0.75rem;
 
+  --background: #FFFFFF;
+  --foreground: #1B120B;
+
+  --card: #FFFFFF;
+  --card-foreground: #1B120B;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #1B120B;
+
+  --primary: #3FB8FF;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #FBAB18;
+  --secondary-foreground: #1B120B;
+
+  --muted: #CAD8FF;
+  --muted-foreground: #04257E;
+
+  --accent: #7B9FFF;
+  --accent-foreground: #1B120B;
+
+  --destructive: #E05048;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #CAD8FF;
+  --input: #CAD8FF;
+  --ring: #3FB8FF;
+
+  --chart-1: #3769F1;
+  --chart-2: #59C3C4;
+  --chart-3: #6DC872; 
+  --chart-4: #6060E9;
+  --chart-5: #E97B37;
+
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1B120B;
+
+  --sidebar-primary: #3FB8FF;
+  --sidebar-primary-foreground: #FFFFFF;
+
+  --sidebar-accent: #CAD8FF;
+  --sidebar-accent-foreground: #04257E;
+
+  --sidebar-border: #CAD8FF;
+  --sidebar-ring: #3FB8FF;
+}
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -189,4 +202,23 @@ html,
 body {
   width: 100%;
   overflow-x: hidden;
+}
+
+[data-state="active"].tabs-trigger,
+[data-state="active"] {
+  background-color: #fbae30;
+  border-radius: 9999px;
+  color: black;
+}
+
+.tabs-trigger {
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tabs-trigger:hover {
+  background-color: rgba(251, 174, 48, 0.15);
 }

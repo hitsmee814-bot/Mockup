@@ -1,8 +1,29 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { HiChevronDown } from "react-icons/hi";
+import { useState, useMemo } from "react"
+import Image from "next/image"
+import { Search } from "lucide-react"
+import FaqImage from "../assets/images/faq.png"
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 const faqs = [
   {
@@ -32,53 +53,134 @@ const faqs = [
   },
 ];
 
-export default function FAQCompact() {
-  const [active, setActive] = useState<number | null>(null);
-  const toggle = (i: number) => setActive(active === i ? null : i);
+export default function FaqSection() {
+  const [search, setSearch] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  const filteredFaqs = useMemo(() => {
+    return faqs.filter(
+      (faq) =>
+        faq.question.toLowerCase().includes(search.toLowerCase()) ||
+        faq.answer.toLowerCase().includes(search.toLowerCase())
+    )
+  }, [search])
 
   return (
-    <section className="w-full max-w-6xl mx-auto py-20 px-4 sm:px-6" id="faqs">
-      <h2 className="text-4xl font-bold text-center mb-16 text-gray-900 tracking-tight">
-        Frequently Asked Questions
-      </h2>
-      <div className="divide-y divide-gray-200">
-        {faqs.map((faq, i) => (
-          <div
-            key={i}
-            className="py-6 cursor-pointer group"
-            onClick={() => toggle(i)}
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg sm:text-xl font-medium text-gray-900 group-hover:text-[#00AFEF] transition-colors">
-                {faq.question}
+    <section className="py-28 bg-none" id="faq">
+
+      <div className="max-w-7xl mx-auto px-6">
+
+        <div className="text-center mb-16">
+          <h2 className="text-5xl text-[#0E40C7] font-bold">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-[#306F7D] mt-4">
+            Everything you need to know about our services.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-16 items-stretch lg:min-h-[700px]">
+          <div className="flex flex-col gap-8 h-full">
+            <Card className="px-6 pb-6 pt-0 md:p-8 md:pt-0 rounded-3x border-none shadow-none relative overflow-hidden bg-gradient-to-br from-[#EEF3FF]/20 to-[#B0F3F4]/10">
+
+              <div className="relative w-full h-40 mb-6 rounded-2xl overflow-hidden">
+                <Image
+                  src={FaqImage}
+                  alt="FAQ"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+
+              <h3 className="text-2xl font-bold mb-3 text-[#306F7D]">
+                Still have questions?
               </h3>
-              <motion.span
-                animate={{ rotate: active === i ? 180 : 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                className="text-gray-500 text-2xl"
-              >
-                <HiChevronDown />
-              </motion.span>
-            </div>
-            <AnimatePresence initial={false}>
-              {active === i && (
-                <motion.div
-                  key="answer"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-                  className="overflow-hidden"
-                >
-                  <p className="mt-3 text-gray-600 text-base leading-relaxed">
-                    {faq.answer}
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+
+              <p className="text-[#479EA8] mb-6">
+                Contact our support team anytime, we’re happy to help!
+              </p>
+
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[#0E40C7]">📧 Email:</span>
+                  <span className="text-[#306F7D]">support@bonhomiee.com</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[#0E40C7]">📞 Phone:</span>
+                  <span className="text-[#306F7D]">+91 98765 43210</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-[#3769F1] mb-4">
+                Can’t find an answer? Ask us directly:
+              </p>
+
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="text-white bg-[#306F7D] px-6 py-3 rounded-full transition-all duration-300 hover:bg-[#479EA8]">
+                    Chat with us
+                  </Button>
+                </DialogTrigger>
+
+                <DialogContent className="rounded-2xl p-6 md:p-8">
+                  <DialogHeader>
+                    <DialogTitle className="text-[#0E40C7]">Ask Your Question</DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-4 mt-4">
+                    <Input placeholder="Your Name" />
+                    <Input placeholder="Your Email" type="email" />
+                    <Textarea placeholder="Type your question..." />
+                    <Button className="w-full text-white bg-[#306F7D] px-6 py-3 rounded-full transition-all duration-300 hover:bg-[#479EA8]">
+                      Submit Question
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </Card>
           </div>
-        ))}
+
+          <div className="flex flex-col h-full max-h-[700px]">
+            <div className="relative mb-10">
+              <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search questions..."
+                className="pl-10 h-12 rounded-xl"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            {filteredFaqs.length > 0 ? (
+              <Accordion
+                type="single"
+                collapsible
+                className="border-none rounded-2xl divide-y flex-1 overflow-y-auto"
+              >
+                {filteredFaqs.map((faq, index) => (
+                  <AccordionItem
+                    key={index}
+                    value={`item-${index}`}
+                    className="px-6"
+                  >
+                    <AccordionTrigger>
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground pb-4 text-black">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <p className="text-muted-foreground">
+                No matching questions found.
+              </p>
+            )}
+          </div>
+
+        </div>
       </div>
     </section>
-  );
+  )
 }
