@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import React, { useState, useEffect, ChangeEvent, FormEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -9,6 +9,7 @@ import { passwordStrength } from "check-password-strength";
 import logovar from "../../assets/images/logoPrimary.png"
 import UIpic from "../../assets/images/agent-signup.jpg"
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
+
 /* ---------------- TYPES ---------------- */
 
 interface FormState {
@@ -60,6 +61,7 @@ const ErrorMessage = ({ message }: { message?: string }) => {
 
 export default function AgentSignup(): JSX.Element {
   const router = useRouter();
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState<FormState>({
@@ -89,17 +91,33 @@ export default function AgentSignup(): JSX.Element {
     e.preventDefault();
   };
 
-  /* TRIVIAL PASSWORD CHECKER */
-  const isTrivialPassword = (p: string) => {
+  /* NAME IN PASSWORD CHECK */
+  const isNameInPassword = (p: string, currentForm: FormState) => {
     const lowerP = p.toLowerCase();
-    const commonSequences = ["12345678", "abcdefgh", "qwerty"];
-    const nameParts = [form.agencyName, form.firstName, form.lastName].filter(Boolean).map(n => n.toLowerCase());
-    
-    const containsName = nameParts.some(name => lowerP.includes(name));
-    const isSequential = commonSequences.some(seq => lowerP.includes(seq));
-    const startsTrivial = lowerP.startsWith("aa@");
+    const nameParts = [currentForm.firstName, currentForm.middleName, currentForm.lastName, currentForm.agencyName]
+      .filter(Boolean)
+      .map(n => n.toLowerCase());
+    return nameParts.some(name => name.length > 0 && lowerP.includes(name));
+  };
 
-    return containsName || isSequential || startsTrivial;
+  /* REFINED TRIVIAL SEQUENCE DETECTION */
+  const isTrivialPassword = (p: string) => {
+    if (p.length < 3) return false;
+    const lowerP = p.toLowerCase();
+
+    for (let i = 0; i <= lowerP.length - 3; i++) {
+      const char1 = lowerP.charCodeAt(i);
+      const char2 = lowerP.charCodeAt(i + 1);
+      const char3 = lowerP.charCodeAt(i + 2);
+
+      if (char1 === char2 && char2 === char3) return true;
+      if (char2 === char1 + 1 && char3 === char2 + 1) return true;
+      if (char2 === char1 - 1 && char3 === char2 - 1) return true;
+
+      const specials = lowerP.substring(i, i + 3);
+      if (/^[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{3}$/.test(specials)) return true;
+    }
+    return false;
   };
 
   const passwordValidCriteria = (p: string) =>
@@ -107,11 +125,18 @@ export default function AgentSignup(): JSX.Element {
 
   /* PASSWORD STRENGTH LOGIC */
   useEffect(() => {
-    if (!form.password || !passwordValidCriteria(form.password) || isTrivialPassword(form.password)) {
+    if (!form.password || !passwordValidCriteria(form.password) || isNameInPassword(form.password, form)) {
       setStrengthLabel("");
       setStrengthColor("");
       return;
     }
+    
+    if (isTrivialPassword(form.password)) {
+      setStrengthLabel("weak password");
+      setStrengthColor("text-red-600");
+      return;
+    }
+
     const assessment = passwordStrength(form.password);
     if (assessment.id <= 1) {
       setStrengthLabel("weak password");
@@ -123,136 +148,159 @@ export default function AgentSignup(): JSX.Element {
       setStrengthLabel("strong password");
       setStrengthColor("text-green-600");
     }
-  }, [form.password, form.agencyName, form.firstName, form.lastName]);
+  }, [form.password, form.agencyName, form.firstName, form.middleName, form.lastName]);
 
-  /* UPDATED EMAIL VALIDATION: Checks if domain part is lowercase */
   const emailValid = (e: string) => {
     const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!basicRegex.test(e)) return false;
-    
     const parts = e.split('@');
     if (parts.length !== 2) return false;
-    
     const domainPart = parts[1].split('.')[0];
-    return domainPart === domainPart.toLowerCase();
+    return /^[a-z0-9]+$/.test(domainPart);
   };
 
-
-  const validatePhoneNumber = (p: string, country: CountryCode) => {
-  if (!p) return "";
-
-  if (!/^[0-9]{10}$/.test(p)) {
-    return "Phone number must be exactly 10 digits.";
-  }
-
-  const countryMap: Record<string, CountryCode> = {
-    "+91": "IN",
-    "+1": "US",
-    "+44": "GB"
+  const validatePhoneNumber = (p: string, country: string) => {
+    if (!p) return "";
+    if (!/^[0-9]{10}$/.test(p)) return "Phone number must be exactly 10 digits.";
+    const countryMap: Record<string, CountryCode> = { "+91": "IN", "+1": "US", "+44": "GB" };
+    const isoCountry = countryMap[country] || (country as CountryCode);
+    if (isoCountry === "IN" && !/^[6-9]\d{9}$/.test(p)) return "Enter valid phone number";
+    const phoneNumber = parsePhoneNumberFromString(p, isoCountry);
+    if (!phoneNumber || !phoneNumber.isValid()) return "Enter valid phone number";
+    return "";
   };
-
-  const isoCountry = countryMap[country as unknown as string] || country;
-
-  if (isoCountry === "IN") {
-    if (!/^[6-9]\d{9}$/.test(p)) {
-      return "Enter valid phone number";
-    }
-  }
-
-  const phoneNumber = parsePhoneNumberFromString(p, isoCountry);
-
-  if (!phoneNumber || !phoneNumber.isValid()) {
-    return "Enter valid phone number";
-  }
-
-  return "";
-};
-
-  const usernameValid = (u: string) => /^[a-zA-Z0-9@_.-]{4,30}$/.test(u);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    setMandatoryError("");
+    const updatedForm = { ...form, [name]: value };
+    setForm(updatedForm);
     
-    if (name === "username") {
-      setUsernameStatus(null);
-    }
-
-    if (name === "confirmPassword" && value.length > 0) {
-      setShowPassword(false);
-    }
+    setMandatoryError("");
+    if (name === "username") setUsernameStatus(null);
+    if (name === "confirmPassword" && value.length > 0) setShowPassword(false);
 
     let fieldError = "";
-    if (name === "email" && value && !emailValid(value)) fieldError = "Please enter a valid email address.";
-    //if (name === "phone" && value && !phoneValid(value)) fieldError = "Phone number must be exactly 10 digits.";
-    if (name === "phone") {
-    fieldError = validatePhoneNumber(value, form.countryCode as CountryCode);
+
+    // Dynamic Validation (Only if value is not empty)
+    if (value) {
+        if (name === "username") {
+            const usernameRegex = /^[A-Za-z][A-Za-z0-9]{5,15}$/;
+            if (!usernameRegex.test(value)) {
+                fieldError = "Must start with alphabet, 6-16 characters, no special characters.";
+            }
+        }
+        if (name === "email" && !emailValid(value)) {
+            fieldError = "Please enter a valid email address.";
+        }
+        if (name === "phone") {
+            fieldError = validatePhoneNumber(value, updatedForm.countryCode);
+        }
+        if (name === "password") {
+            if (!passwordValidCriteria(value)) {
+                fieldError = "Password criteria not fulfilled yet.";
+            } else if (isNameInPassword(value, updatedForm)) {
+                fieldError = " Agency name or First name or Middle name or Last name cannot be used in password setting ";
+            }
+        }
+        if (name === "confirmPassword") {
+            if (value !== updatedForm.password) {
+                fieldError = "The passwords you entered do not match.";
+            }
+        }
     }
 
-    if (name === "password" && value && (!passwordValidCriteria(value) || isTrivialPassword(value))) {
-        fieldError = "Password criteria not fulfilled yet.";
-    }
-    
-    if (name === "confirmPassword" && value !== form.password) fieldError = "The passwords you entered do not match.";
+    setErrors(prev => {
+        const newErrs = { ...prev };
+        // If field is cleared, remove any "Required" or dynamic error immediately
+        if (!value) {
+            delete newErrs[name];
+        } else if (fieldError) {
+            newErrs[name] = fieldError;
+        } else {
+            delete newErrs[name];
+        }
 
-    setErrors(prev => ({ ...prev, [name]: fieldError }));
+        // Re-validate confirm password match dynamically if main password changes
+        if (name === "password" && updatedForm.confirmPassword) {
+            if (updatedForm.confirmPassword !== value) {
+                newErrs.confirmPassword = "The passwords you entered do not match.";
+            } else {
+                delete newErrs.confirmPassword;
+            }
+        }
+        return newErrs;
+    });
   };
 
   const generateUsername = () => {
     if (!form.agencyName) return;
-    const cleanAgency = form.agencyName.replace(/\s+/g, "").slice(0, 10);
-    const timestamp = Date.now().toString().slice(-6); // Shortened to 6 digits
-    const newUsername = `${cleanAgency}@${timestamp}`;
+    const cleanAgency = form.agencyName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 9);
+    const timestamp = Date.now().toString().slice(-6);
+    const newUsername = `${cleanAgency}${timestamp}`;
+    
     setForm(prev => ({ ...prev, username: newUsername }));
+    setErrors(prev => {
+        const newErrs = { ...prev };
+        delete newErrs.username;
+        return newErrs;
+    });
     setUsernameStatus(null);
   };
 
   const checkUsername = () => {
-    if (!form.username) return;
+    if (!form.username || errors.username) return;
     setIsChecking(true);
-    setTimeout(() => {
-      setIsChecking(false);
-      if (form.username.toLowerCase().includes("taken")) {
-        setUsernameStatus("unavailable");
-      } else {
-        setUsernameStatus("available");
-      }
-    }, 1200);
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            setIsChecking(false);
+            const status = form.username.toLowerCase().includes("taken") ? "unavailable" : "available";
+            setUsernameStatus(status);
+            resolve(status);
+        }, 1200);
+    });
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!form.agencyName || !form.firstName || !form.lastName || !form.email || !form.phone || !form.username || !form.password || !form.confirmPassword) {
-      setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) for a successful registration");
+    const mandatoryFields: (keyof FormState)[] = ["agencyName", "firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
+    const emptyFields = mandatoryFields.filter(f => !form[f]);
+    // Check if there are any errors that are NOT "Required" (i.e. dynamic logic errors)
+    const hasInvalidFields = Object.values(errors).some(error => error !== "" && error !== "Required");
+
+    if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
+      setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) correctly for a successful registration");
+      
+      const newFieldErrors: ErrorState = { ...errors };
+      // Set "Required" only on submission for empty fields
+      emptyFields.forEach(f => { 
+        newFieldErrors[f] = "Required"; 
+      });
+      
+      if (strengthLabel === "weak password" && !newFieldErrors.password) {
+        newFieldErrors.password = "A Medium or Strong password is required to continue.";
+      }
+      
+      setErrors(newFieldErrors);
+      if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    if (usernameStatus !== "available") {
+    let currentStatus = usernameStatus;
+    if (currentStatus === null) {
+      currentStatus = await checkUsername() as "available" | "unavailable";
+    }
+
+    if (currentStatus !== "available") {
       setMandatoryError("Please check and verify a unique username before registering.");
+      if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    let newErrors: ErrorState = {};
-    if (strengthLabel === "weak password" || !passwordValidCriteria(form.password)) {
-        newErrors.password = "A Medium or Strong password is required to continue.";
-    }
-    if (form.password !== form.confirmPassword) newErrors.confirmPassword = "The passwords you entered do not match.";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    const phoneError = validatePhoneNumber(form.phone,form.countryCode as CountryCode);
-
-    if (phoneError) {
-      setErrors(prev => ({ ...prev, phone: phoneError }));
-      return;
-    }    
-    alert("Registration successful!");
-    router.push("/");
+    setTimeout(() => {
+      alert("Registered successfully");
+      router.push("/");
+    }, 2000);
   };
 
   return (
@@ -273,7 +321,6 @@ export default function AgentSignup(): JSX.Element {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden bg-white">
-            {/* UPDATED: Centered text and 16px font size */}
             <div className="px-8 py-5 shrink-0 bg-white flex justify-center">
               <h2 className="text-[16px] font-extrabold text-[#00AFEF] tracking-tight text-center">
                 Agent / Agency Signup
@@ -282,7 +329,7 @@ export default function AgentSignup(): JSX.Element {
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
 
-            <div className="flex-grow overflow-y-auto px-8 py-6 
+            <div ref={scrollRef} className="flex-grow overflow-y-auto px-8 py-6 
               scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent
               [&::-webkit-scrollbar]:w-1.5
               [&::-webkit-scrollbar-track]:bg-transparent
@@ -302,17 +349,18 @@ export default function AgentSignup(): JSX.Element {
                 </label>
                 <div className="flex gap-2 mt-1">
                   <input name="agencyName" value={form.agencyName} onChange={handleChange} placeholder="Enter agency name"
-                    className="flex-grow border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF]"/>
+                    className={`flex-grow border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] ${errors.agencyName ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
                   <button type="button" onClick={generateUsername} disabled={!form.agencyName}
                     className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider">
                     Generate
                   </button>
                 </div>
+                <ErrorMessage message={errors.agencyName} />
               </div>
 
-              <InputField label="First Name" name="firstName" placeholder="Enter first name" required form={form} handleChange={handleChange}/>
-              <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} handleChange={handleChange}/>
-              <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} handleChange={handleChange}/>
+              <InputField label="First Name" name="firstName" placeholder="Enter first name" required form={form} errors={errors} handleChange={handleChange}/>
+              <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} errors={errors} handleChange={handleChange}/>
+              <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} errors={errors} handleChange={handleChange}/>
 
               <div className="mb-4">
                 <InputWithError label="Email" name="email" placeholder="Enter email address" required tooltip="Enter a valid email address like name@example.com" form={form} errors={errors} handleChange={handleChange}/>
@@ -332,7 +380,7 @@ export default function AgentSignup(): JSX.Element {
                     <option value="+44">🇬🇧 +44</option>
                   </select>
                   <input name="phone" value={form.phone} onChange={handleChange} placeholder="Enter phone number"
-                    className="w-full border border-[#00AFEF] border-l-0 rounded-r-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF]"/>
+                    className={`w-full border border-l-0 rounded-r-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF] ${errors.phone ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
                 </div>
                 <ErrorMessage message={errors.phone} />
               </div>
@@ -340,22 +388,23 @@ export default function AgentSignup(): JSX.Element {
               <div className="mb-4">
                 <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
                   Username<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Must start with alphabet only. 6-16 characters allowed.No special characters allowed.Check availability after generating or typing"/>
+                  <Tooltip text="Must start with alphabet only. 6-16 characters allowed. No special characters allowed. Check availability after generating or typing"/>
                 </label>
                 <div className="flex gap-2 mt-1">
                   <input name="username" value={form.username} onChange={handleChange} placeholder="Enter or generate username"
-                    className="flex-grow border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF]"/>
-                  <button type="button" onClick={checkUsername} disabled={!form.username || isChecking}
+                    className={`flex-grow border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] ${errors.username ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
+                  <button type="button" onClick={checkUsername} disabled={!form.username || isChecking || !!errors.username}
                     className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1">
                     {isChecking ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
                   </button>
                 </div>
-                {usernameStatus === "available" && (
+                <ErrorMessage message={errors.username} />
+                {usernameStatus === "available" && !errors.username && (
                   <p className="text-green-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
                     <CheckCircle2 size={14} /> Username is available!
                   </p>
                 )}
-                {usernameStatus === "unavailable" && (
+                {usernameStatus === "unavailable" && !errors.username && (
                   <p className="text-red-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
                     <AlertCircle size={14} /> This username is already taken.
                   </p>
@@ -371,14 +420,14 @@ export default function AgentSignup(): JSX.Element {
                   <input type={showPassword ? "text" : "password"} name="password"
                     onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
                     value={form.password} onChange={handleChange} placeholder="Enter password"
-                    className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 pr-10 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF]"/>
+                    className={`w-full border rounded-[4px] px-3 py-2 pr-10 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] ${errors.password ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition-colors">
                     {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
                   </button>
                 </div>
                 
-                {strengthLabel && (
+                {strengthLabel && !errors.password && (
                   <div className="mt-2.5 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
                     <div className="h-1.5 flex-grow bg-gray-100 rounded-full overflow-hidden">
                         <div className={`h-full transition-all duration-500 ${
@@ -399,13 +448,14 @@ export default function AgentSignup(): JSX.Element {
                     Re-Type Password<span className="text-red-500 ml-1">*</span>
                 </label>
                 <input type="password" name="confirmPassword"
+                  onFocus={() => setShowPassword(false)}
                   onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
                   value={form.confirmPassword} onChange={handleChange} placeholder="Re-enter password"
-                  className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF] mt-1"/>
+                  className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF] mt-1 ${errors.confirmPassword ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
                 <ErrorMessage message={errors.confirmPassword} />
               </div>
 
-              <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} handleChange={handleChange}/>
+              <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} errors={errors} handleChange={handleChange}/>
             </div>
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
@@ -437,31 +487,32 @@ interface InputFieldProps {
   required?: boolean;
   placeholder?: string;
   form: FormState;
+  errors: ErrorState;
   handleChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-const InputField = ({label,name,required,placeholder,form,handleChange}:InputFieldProps) => (
+const InputField = ({label,name,required,placeholder,form,errors,handleChange}:InputFieldProps) => (
   <div className="mb-4">
     <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
       {label}{required && <span className="text-red-500 ml-1">*</span>}
     </label>
     <input name={name} value={form[name as keyof FormState]} onChange={handleChange} placeholder={placeholder}
-      className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1"/>
+      className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1 ${errors[name] ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
+    <ErrorMessage message={errors[name]} />
   </div>
 );
 
 interface InputWithErrorProps extends InputFieldProps {
   tooltip?: string;
-  errors: ErrorState;
 }
 
-const InputWithError = ({label,name,required,placeholder,tooltip,form,handleChange}:InputWithErrorProps) => (
+const InputWithError = ({label,name,required,placeholder,tooltip,form,errors,handleChange}:InputWithErrorProps) => (
   <div>
     <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
       {label}{required && <span className="text-red-500 ml-1">*</span>}
       {tooltip && <Tooltip text={tooltip}/>}
     </label>
     <input name={name} value={form[name as keyof FormState]} onChange={handleChange} placeholder={placeholder}
-      className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1"/>
+      className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1 ${errors[name] ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
   </div>
 );

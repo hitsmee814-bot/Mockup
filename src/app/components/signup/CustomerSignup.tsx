@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
 import logovar from "../../assets/images/logoPrimary.png"
 import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg"
 
-/* Using the full metadata version to ensure strict national rules are applied */
-//import { isValidPhoneNumber, CountryCode } from 'libphonenumber-js';
 /* Using full metadata for strict validation */
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
+
 /* TYPES */
 type FormType = {
   firstName: string;
@@ -66,6 +65,7 @@ type InputProps = {
   tooltip?: string;
   placeholder?: string;
   value: string;
+  error?: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -76,6 +76,7 @@ const Input: React.FC<InputProps> = ({
   tooltip,
   placeholder,
   value,
+  error,
   onChange,
 }) => (
   <div className="mb-4">
@@ -89,13 +90,18 @@ const Input: React.FC<InputProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1"
+      className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 mt-1 ${
+        error ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+      }`}
     />
+    {/* Corrected: Added ErrorMessage call inside the Input component to ensure visibility for all fields */}
+    <ErrorMessage message={error} />
   </div>
 );
 
 export default function CustomerSignup(): JSX.Element {
   const router = useRouter();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [form, setForm] = useState<FormType>({
     firstName: "",
@@ -114,19 +120,53 @@ export default function CustomerSignup(): JSX.Element {
   const [strengthLabel, setStrengthLabel] = useState<string>("");
   const [strengthColor, setStrengthColor] = useState<string>("");
   const [countryCode, setCountryCode] = useState<CountryCode>("IN");
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
+
+  const containsNamePart = (p: string) => {
+    const lowerP = p.toLowerCase();
+    const nameParts = [form.firstName, form.middleName, form.lastName]
+      .filter(Boolean)
+      .map(n => n.toLowerCase());
+    return nameParts.some(name => name.length > 0 && lowerP.includes(name));
+  };
 
   const isTrivialPassword = (p: string) => {
+    if (p.length < 3) return false;
     const lowerP = p.toLowerCase();
-    const commonSequences = ["12345678", "abcdefgh", "qwerty"];
-    const nameParts = [form.firstName, form.middleName, form.lastName].filter(Boolean).map(n => n.toLowerCase());
-    return nameParts.some(name => lowerP.includes(name)) || commonSequences.some(seq => lowerP.includes(seq)) || lowerP.startsWith("aa@");
+    
+    for (let i = 0; i <= p.length - 3; i++) {
+      const char1 = lowerP.charCodeAt(i);
+      const char2 = lowerP.charCodeAt(i + 1);
+      const char3 = lowerP.charCodeAt(i + 2);
+      
+      const isNum = (c: number) => c >= 48 && c <= 57;
+      const isAlpha = (c: number) => c >= 97 && c <= 122;
+      const isSpec = (c: number) => (c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126);
+
+      if (char1 === char2 && char2 === char3) return true;
+
+      if (isNum(char1) && isNum(char2) && isNum(char3)) {
+        if (char2 === char1 + 1 && char3 === char2 + 1) return true;
+        if (char2 === char1 - 1 && char3 === char2 - 1) return true;
+      }
+
+      if (isAlpha(char1) && isAlpha(char2) && isAlpha(char3)) {
+        if (char2 === char1 + 1 && char3 === char2 + 1) return true;
+        if (char2 === char1 - 1 && char3 === char2 - 1) return true;
+      }
+
+      if (isSpec(char1) && isSpec(char2) && isSpec(char3)) return true;
+    }
+
+    const commonSequences = ["qwerty", "asdfgh"];
+    return commonSequences.some(seq => lowerP.includes(seq));
   };
 
   const passwordValidCriteria = (p: string) => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(p);
   const isCriteriaMet = passwordValidCriteria(form.password);
 
   useEffect(() => {
-    if (!form.password || !isCriteriaMet) {
+    if (!form.password || !isCriteriaMet || containsNamePart(form.password)) {
       setStrengthLabel("");
       setStrengthColor("");
       return;
@@ -149,96 +189,55 @@ export default function CustomerSignup(): JSX.Element {
     if (!basicRegex.test(e)) return false;
     const parts = e.split('@');
     const domainPart = parts[1].split('.')[0];
-    return domainPart === domainPart.toLowerCase();
+    return domainPart === domainPart.toLowerCase() && /^[a-zA-Z0-9]+$/.test(domainPart);
   };
 
-  /**
-   * STRICT PHONE VALIDATION
-   * isValidPhoneNumber checks against national numbering plans.
-   * e.g. For India, it will return false for "1234567890" because Indian mobile numbers
-   * cannot start with 1.
-   */
   const validatePhoneNumber = (p: string, country: CountryCode) => {
-  if (!p) return "";
-
-  // Must be exactly 10 digits
-  if (!/^[0-9]{10}$/.test(p)) {
-    return "Phone number must be exactly 10 digits.";
-  }
-
-  //  Extra strict rule for India
-  if (country === "IN") {
-    // Indian mobile numbers must start with 6,7,8,9
-    if (!/^[6-9]\d{9}$/.test(p)) {
-      return "Enter valid phone number";
-    }
-  }
-
-  // Parse using national format
-  const phoneNumber = parsePhoneNumberFromString(p, country);
-
-  if (!phoneNumber || !phoneNumber.isValid()) {
-    return "Enter valid phone number";
-  }
-
-  return "";
-};
+    if (!p) return "";
+    if (!/^[0-9]{10}$/.test(p)) return "Phone number must be exactly 10 digits.";
+    if (country === "IN" && !/^[6-9]\d{9}$/.test(p)) return "Enter valid phone number";
+    const phoneNumber = parsePhoneNumberFromString(p, country);
+    if (!phoneNumber || !phoneNumber.isValid()) return "Enter valid phone number";
+    return "";
+  };
 
   const usernameValid = (u: string) => /^[a-zA-Z][a-zA-Z0-9_]{5,15}$/.test(u);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-    if (name === "confirmPassword") {
-      setShowPassword(false);
-    }
+    if (name === "confirmPassword") setShowPassword(false);
 
     setForm(prev => ({ ...prev, [name]: value }));
     setMandatoryError("");
 
     let fieldError = "";
-
-    if (name === "email" && value && !emailValid(value)) {
-      fieldError = "Please enter a valid email address.";
-    }
-    
-    if (name === "phone") {
-      fieldError = validatePhoneNumber(value, countryCode);
-    }
-
-    if (name === "username" && value && !usernameValid(value)) {
-      fieldError = "Username must be 6-16 characters and start with a letter.";
-    }
+    // Real-time validations only if value is present
+    if (name === "email" && value && !emailValid(value)) fieldError = "Please enter a valid email address.";
+    if (name === "phone" && value) fieldError = validatePhoneNumber(value, countryCode);
+    if (name === "username" && value && !usernameValid(value)) fieldError = "Username must be 6-16 characters and start with a letter.";
     
     if (name === "password") {
-      if (value && !passwordValidCriteria(value)) {
-        fieldError = "Password criteria not fulfilled yet";
-      } else if (value && isTrivialPassword(value)) {
-        fieldError = "Password is too trivial.";
-      }
-      if (form.confirmPassword && value !== form.confirmPassword) {
-        setErrors(prev => ({ ...prev, confirmPassword: "The passwords you entered do not match." }));
+      if (value && !passwordValidCriteria(value)) fieldError = "Password criteria not fulfilled yet";
+      else if (value && containsNamePart(value)) fieldError = "First name or Middle name or Last name cannot be used in password setting";
+      
+      if (form.confirmPassword && value !== form.confirmPassword && value !== "") {
+        setErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match" }));
       } else {
         setErrors(prev => ({ ...prev, confirmPassword: "" }));
       }
     }
 
-    if (name === "confirmPassword") {
-      if (value && value !== form.password) {
-        fieldError = "The passwords you entered do not match.";
-      }
-    }
+    if (name === "confirmPassword" && value && value !== form.password) fieldError = "The passwords you entered do not match.";
 
+    // If field is cleared, we remove the error (including "Required") until next submit
     setErrors(prev => ({ ...prev, [name]: fieldError }));
   };
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCode = e.target.value as CountryCode;
     setCountryCode(newCode);
-    // Re-validate existing input with the new country's rules
     if (form.phone) {
-      const error = validatePhoneNumber(form.phone, newCode);
-      setErrors(prev => ({ ...prev, phone: error }));
+      setErrors(prev => ({ ...prev, phone: validatePhoneNumber(form.phone, newCode) }));
     }
   };
 
@@ -246,21 +245,36 @@ export default function CustomerSignup(): JSX.Element {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const requiredFields: (keyof FormType)[] = ["firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
+    const newFieldErrors: ErrorType = {};
+    let hasEmptyField = false;
+
+    requiredFields.forEach(field => {
+      if (!form[field]) {
+        newFieldErrors[field] = "Required";
+        hasEmptyField = true;
+      }
+    });
+
+    // Check if any existing dynamic errors OR any new "Required" errors
+    const hasDynamicErrors = Object.values(errors).some(err => err !== "" && err !== "Required");
     
-    if (!form.firstName || !form.lastName || !form.email || !form.phone || !form.username || !form.password || !form.confirmPassword) {
-      setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) for a successful registration");
-      return;
-    }
-    
-    // Final check for errors
-    const currentPhoneError = validatePhoneNumber(form.phone, countryCode);
-    if (currentPhoneError || Object.values(errors).some(err => err !== "")) {
-      if (currentPhoneError) setErrors(prev => ({ ...prev, phone: currentPhoneError }));
+    if (hasEmptyField || hasDynamicErrors || strengthLabel === "weak password") {
+      // Merge existing dynamic errors with new "Required" errors
+      setErrors(prev => ({ ...prev, ...newFieldErrors }));
+      setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) correctly for a successful registration");
+      
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
       return;
     }
 
-    alert("Registration successful!");
-    router.push("/");
+    setIsRegistered(true);
+    setTimeout(() => {
+      alert("Registered successfully");
+      router.push("/");
+    }, 500);
   };
 
   return (
@@ -289,7 +303,9 @@ export default function CustomerSignup(): JSX.Element {
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
 
-            <div className="flex-grow overflow-y-auto px-8 py-6 
+            <div 
+              ref={scrollContainerRef}
+              className="flex-grow overflow-y-auto px-8 py-6 
               scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent
               [&::-webkit-scrollbar]:w-1.5
               [&::-webkit-scrollbar-track]:bg-transparent
@@ -303,14 +319,12 @@ export default function CustomerSignup(): JSX.Element {
                 </div>
               )}
 
-              <Input name="firstName" label="First Name" required value={form.firstName} onChange={handleChange} placeholder="Enter first name" />
-              <Input name="middleName" label="Middle Name (Optional)" value={form.middleName} onChange={handleChange} placeholder="Enter middle name" />
-              <Input name="lastName" label="Last Name" required value={form.lastName} onChange={handleChange} placeholder="Enter last name" />
+              <Input name="firstName" label="First Name" required value={form.firstName} error={errors.firstName} onChange={handleChange} placeholder="Enter first name" />
+              <Input name="middleName" label="Middle Name (Optional)" value={form.middleName} error={errors.middleName} onChange={handleChange} placeholder="Enter middle name" />
+              <Input name="lastName" label="Last Name" required value={form.lastName} error={errors.lastName} onChange={handleChange} placeholder="Enter last name" />
 
-              <div className="mb-4">
-                <Input name="email" label="Email" required tooltip="Enter a valid email address like name@example.com" value={form.email} onChange={handleChange} placeholder="Enter email" />
-                <ErrorMessage message={errors.email} />
-              </div>
+              {/* Email has internal ErrorMessage inside Input component now */}
+              <Input name="email" label="Email" required tooltip="Enter a valid email address like name@example.com" value={form.email} error={errors.email} onChange={handleChange} placeholder="Enter email" />
 
               <div className="mb-4">
                 <label className="font-medium text-[12px] flex items-center text-[#1A1A1A] mb-1">
@@ -332,22 +346,20 @@ export default function CustomerSignup(): JSX.Element {
                     value={form.phone}
                     onChange={handleChange}
                     placeholder="Enter phone number"
-                    className="w-full border border-[#00AFEF] border-l-0 rounded-r-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF] transition-all"
+                    className={`w-full border border-l-0 rounded-r-[4px] px-3 py-2 text-sm outline-none focus:ring-1 transition-all ${
+                      errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                    }`}
                   />
                 </div>
                 <ErrorMessage message={errors.phone} />
               </div>
 
-              <div className="mb-4">
-                <Input name="username" label="Username" required tooltip="Must start with alphabet only. 6-16 characters allowed.No special characters allowed.
-                " value={form.username} onChange={handleChange} placeholder="Enter username" />
-                <ErrorMessage message={errors.username} />
-              </div>
+              <Input name="username" label="Username" required tooltip="Must start with alphabet only. 6-16 characters allowed. No special characters allowed." value={form.username} error={errors.username} onChange={handleChange} placeholder="Enter username" />
 
               <div className="mb-4">
                 <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
                   Password<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character." />
+                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character. No trivial sequences like 123, abc, or !!!" />
                 </label>
                 <div className="relative mt-1">
                   <input
@@ -358,14 +370,16 @@ export default function CustomerSignup(): JSX.Element {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="Enter password"
-                    className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 pr-10 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF]"
+                    className={`w-full border rounded-[4px] px-3 py-2 pr-10 text-sm outline-none transition-all focus:ring-1 ${
+                      (errors.password || strengthLabel === "weak password") ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                    }`}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF]">
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {isCriteriaMet && strengthLabel && (
+                {isCriteriaMet && strengthLabel && !containsNamePart(form.password) && (
                   <div className="mt-2.5 flex items-center gap-2">
                     <div className="h-1.5 flex-grow bg-gray-100 rounded-full overflow-hidden">
                       <div className={`h-full transition-all duration-500 ${
@@ -389,10 +403,13 @@ export default function CustomerSignup(): JSX.Element {
                   type="password"
                   name="confirmPassword"
                   onPaste={preventCopyPaste}
+                  onFocus={() => setShowPassword(false)}
                   value={form.confirmPassword}
                   onChange={handleChange}
                   placeholder="Re-enter password"
-                  className="w-full border border-[#00AFEF] rounded-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF] mt-1"
+                  className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none focus:ring-1 mt-1 ${
+                    errors.confirmPassword ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                  }`}
                 />
                 <ErrorMessage message={errors.confirmPassword} />
               </div>
@@ -407,7 +424,8 @@ export default function CustomerSignup(): JSX.Element {
                   Cancel
                 </button>
                 <button type="submit"
-                  className="w-full bg-[#00AFEF] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
+                  className="w-full bg-[#00AFEF] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95 flex items-center justify-center gap-2">
+                  {isRegistered && <CheckCircle2 size={18} className="animate-in zoom-in" />}
                   Register
                 </button>
               </div>
