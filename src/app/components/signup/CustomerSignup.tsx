@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
@@ -94,7 +94,6 @@ const Input: React.FC<InputProps> = ({
         error ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
       }`}
     />
-    {/* Corrected: Added ErrorMessage call inside the Input component to ensure visibility for all fields */}
     <ErrorMessage message={error} />
   </div>
 );
@@ -120,7 +119,6 @@ export default function CustomerSignup(): JSX.Element {
   const [strengthLabel, setStrengthLabel] = useState<string>("");
   const [strengthColor, setStrengthColor] = useState<string>("");
   const [countryCode, setCountryCode] = useState<CountryCode>("IN");
-  const [isRegistered, setIsRegistered] = useState<boolean>(false);
 
   const containsNamePart = (p: string) => {
     const lowerP = p.toLowerCase();
@@ -201,8 +199,6 @@ export default function CustomerSignup(): JSX.Element {
     return "";
   };
 
-  const usernameValid = (u: string) => /^[a-zA-Z][a-zA-Z0-9_]{5,15}$/.test(u);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === "confirmPassword") setShowPassword(false);
@@ -211,11 +207,32 @@ export default function CustomerSignup(): JSX.Element {
     setMandatoryError("");
 
     let fieldError = "";
-    // Real-time validations only if value is present
+    
     if (name === "email" && value && !emailValid(value)) fieldError = "Please enter a valid email address.";
     if (name === "phone" && value) fieldError = validatePhoneNumber(value, countryCode);
-    if (name === "username" && value && !usernameValid(value)) fieldError = "Username must be 6-16 characters and start with a letter.";
     
+    if (name === "username") {
+        const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
+        const forbiddenChars = /[&=_'\-+,<>]/;
+        const doublePeriod = /\.\./;
+        const lengthValid = value.length >= 6 && value.length <= 16;
+        const endsWithPeriod = value.endsWith('.');
+
+        if (value === "") {
+            fieldError = "";
+        } else if (!allowedChars.test(value)) {
+            fieldError = "Username must start with a letter and only contain letters, numbers, or periods.";
+        } else if (forbiddenChars.test(value)) {
+            fieldError = "Username cannot contain characters like &, =, _, ', -, +, ,, or brackets.";
+        } else if (doublePeriod.test(value)) {
+            fieldError = "Username cannot contain more than one period in a row.";
+        } else if (!lengthValid) {
+            fieldError = "Username must be between 6 and 16 characters.";
+        } else if (endsWithPeriod) {
+            fieldError = "Username cannot end with a period.";
+        }
+    }
+
     if (name === "password") {
       if (value && !passwordValidCriteria(value)) fieldError = "Password criteria not fulfilled yet";
       else if (value && containsNamePart(value)) fieldError = "First name or Middle name or Last name cannot be used in password setting";
@@ -229,7 +246,6 @@ export default function CustomerSignup(): JSX.Element {
 
     if (name === "confirmPassword" && value && value !== form.password) fieldError = "The passwords you entered do not match.";
 
-    // If field is cleared, we remove the error (including "Required") until next submit
     setErrors(prev => ({ ...prev, [name]: fieldError }));
   };
 
@@ -256,11 +272,9 @@ export default function CustomerSignup(): JSX.Element {
       }
     });
 
-    // Check if any existing dynamic errors OR any new "Required" errors
     const hasDynamicErrors = Object.values(errors).some(err => err !== "" && err !== "Required");
     
     if (hasEmptyField || hasDynamicErrors || strengthLabel === "weak password") {
-      // Merge existing dynamic errors with new "Required" errors
       setErrors(prev => ({ ...prev, ...newFieldErrors }));
       setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) correctly for a successful registration");
       
@@ -270,11 +284,10 @@ export default function CustomerSignup(): JSX.Element {
       return;
     }
 
-    setIsRegistered(true);
     setTimeout(() => {
       alert("Registered successfully");
       router.push("/");
-    }, 500);
+    }, 1200);
   };
 
   return (
@@ -323,8 +336,7 @@ export default function CustomerSignup(): JSX.Element {
               <Input name="middleName" label="Middle Name (Optional)" value={form.middleName} error={errors.middleName} onChange={handleChange} placeholder="Enter middle name" />
               <Input name="lastName" label="Last Name" required value={form.lastName} error={errors.lastName} onChange={handleChange} placeholder="Enter last name" />
 
-              {/* Email has internal ErrorMessage inside Input component now */}
-              <Input name="email" label="Email" required tooltip="Enter a valid email address like name@example.com" value={form.email} error={errors.email} onChange={handleChange} placeholder="Enter email" />
+              <Input name="email" label="Email" required tooltip="Enter a valid email address" value={form.email} error={errors.email} onChange={handleChange} placeholder="Enter email" />
 
               <div className="mb-4">
                 <label className="font-medium text-[12px] flex items-center text-[#1A1A1A] mb-1">
@@ -354,12 +366,21 @@ export default function CustomerSignup(): JSX.Element {
                 <ErrorMessage message={errors.phone} />
               </div>
 
-              <Input name="username" label="Username" required tooltip="Must start with alphabet only. 6-16 characters allowed. No special characters allowed." value={form.username} error={errors.username} onChange={handleChange} placeholder="Enter username" />
+              <Input 
+                name="username" 
+                label="Username" 
+                required 
+                tooltip="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc." 
+                value={form.username} 
+                error={errors.username} 
+                onChange={handleChange} 
+                placeholder="Enter username" 
+              />
 
               <div className="mb-4">
                 <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
                   Password<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character. No trivial sequences like 123, abc, or !!!" />
+                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character." />
                 </label>
                 <div className="relative mt-1">
                   <input
@@ -424,8 +445,7 @@ export default function CustomerSignup(): JSX.Element {
                   Cancel
                 </button>
                 <button type="submit"
-                  className="w-full bg-[#00AFEF] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95 flex items-center justify-center gap-2">
-                  {isRegistered && <CheckCircle2 size={18} className="animate-in zoom-in" />}
+                  className="w-full bg-[#00AFEF] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
                   Register
                 </button>
               </div>

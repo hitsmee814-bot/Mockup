@@ -181,12 +181,29 @@ export default function AgentSignup(): JSX.Element {
 
     let fieldError = "";
 
-    // Dynamic Validation (Only if value is not empty)
     if (value) {
         if (name === "username") {
-            const usernameRegex = /^[A-Za-z][A-Za-z0-9]{5,15}$/;
-            if (!usernameRegex.test(value)) {
-                fieldError = "Must start with alphabet, 6-16 characters, no special characters.";
+            // 1. Check start (alphabetic) and characters (letters, numbers, dots)
+            const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
+            // 2. Check forbidden characters
+            const forbiddenChars = /[&=_'\-+,<>]/;
+            // 3. Check for double periods
+            const doublePeriod = /\.\./;
+            // 4. Check length (6-16)
+            const lengthValid = value.length >= 6 && value.length <= 16;
+            // 5. Check end (cannot end with period)
+            const endsWithPeriod = value.endsWith('.');
+
+            if (!allowedChars.test(value)) {
+                fieldError = "Username must start with a letter and only contain letters, numbers, or periods.";
+            } else if (forbiddenChars.test(value)) {
+                fieldError = "Username cannot contain characters like &, =, _, ', -, +, ,, or brackets.";
+            } else if (doublePeriod.test(value)) {
+                fieldError = "Username cannot contain more than one period in a row.";
+            } else if (!lengthValid) {
+                fieldError = "Username must be between 6 and 16 characters.";
+            } else if (endsWithPeriod) {
+                fieldError = "Username cannot end with a period.";
             }
         }
         if (name === "email" && !emailValid(value)) {
@@ -211,7 +228,6 @@ export default function AgentSignup(): JSX.Element {
 
     setErrors(prev => {
         const newErrs = { ...prev };
-        // If field is cleared, remove any "Required" or dynamic error immediately
         if (!value) {
             delete newErrs[name];
         } else if (fieldError) {
@@ -220,7 +236,6 @@ export default function AgentSignup(): JSX.Element {
             delete newErrs[name];
         }
 
-        // Re-validate confirm password match dynamically if main password changes
         if (name === "password" && updatedForm.confirmPassword) {
             if (updatedForm.confirmPassword !== value) {
                 newErrs.confirmPassword = "The passwords you entered do not match.";
@@ -234,9 +249,9 @@ export default function AgentSignup(): JSX.Element {
 
   const generateUsername = () => {
     if (!form.agencyName) return;
-    const cleanAgency = form.agencyName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 9);
+    const cleanAgency = form.agencyName.replace(/[^a-zA-Z]/g, "").slice(0, 9);
     const timestamp = Date.now().toString().slice(-6);
-    const newUsername = `${cleanAgency}${timestamp}`;
+    const newUsername = `${cleanAgency}${timestamp}`.toLowerCase();
     
     setForm(prev => ({ ...prev, username: newUsername }));
     setErrors(prev => {
@@ -265,14 +280,12 @@ export default function AgentSignup(): JSX.Element {
 
     const mandatoryFields: (keyof FormState)[] = ["agencyName", "firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
     const emptyFields = mandatoryFields.filter(f => !form[f]);
-    // Check if there are any errors that are NOT "Required" (i.e. dynamic logic errors)
     const hasInvalidFields = Object.values(errors).some(error => error !== "" && error !== "Required");
 
     if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
       setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) correctly for a successful registration");
       
       const newFieldErrors: ErrorState = { ...errors };
-      // Set "Required" only on submission for empty fields
       emptyFields.forEach(f => { 
         newFieldErrors[f] = "Required"; 
       });
@@ -388,7 +401,7 @@ export default function AgentSignup(): JSX.Element {
               <div className="mb-4">
                 <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
                   Username<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Must start with alphabet only. 6-16 characters allowed. No special characters allowed. Check availability after generating or typing"/>
+                  <Tooltip text="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc."/>
                 </label>
                 <div className="flex gap-2 mt-1">
                   <input name="username" value={form.username} onChange={handleChange} placeholder="Enter or generate username"
