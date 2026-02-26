@@ -119,7 +119,7 @@ export default function HeroStepperCard() {
                                 >
                                     <Icon
                                         size={18}
-                                        className={isActive ? "text-black" : "text-white"}
+                                        className={isActive ? "text-[#1B120B]" : "text-white"}
                                     />
                                 </motion.div>
 

@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import TestimonialsSection from "../ext/TestimonialsSection";
+import TestimonialsSection from "./TestimonialsSection";
 
 export default function FeaturesSection() {
   const emotions = [
