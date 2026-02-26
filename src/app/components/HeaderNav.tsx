@@ -3,22 +3,33 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { Menu, X } from "lucide-react"
-import { useRouter } from "next/navigation"
-import logoPrimary from "../assets/images/logoPrimary.png"
-import logoSecondary from "../assets/images/logo png 2.png"
-
-const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
+import { Menu, X, ChevronDown } from "lucide-react"
+import logoPrimary from "../assets/images/final logo Bonhomiee in yellow without.png"
 
 const navItems = [
   { label: "Getting Started", id: "hero-sub" },
-  { label: "Packages", id: "packages" },
-  { label: "Our Services", id: "services" },
-  { label: "Inspiration", id: "inspiration" },
-  { label: "About us", id: "team" },
-  { label: "Testimonials", id: "testimonials" },
-  { label: "Privacy", id: "privacy" },
-  { label: "FAQs", id: "faq" },
+  {
+    label: "Explore",
+    children: [
+      { label: "Packages", id: "packages" },
+      { label: "Our Services", id: "services" },
+    ],
+  },
+  {
+    label: "About",
+    children: [
+      { label: "Inspiration", id: "inspiration" },
+      { label: "About us", id: "team" },
+      { label: "Testimonials", id: "testimonials" },
+    ],
+  },
+  {
+    label: "Support",
+    children: [
+      { label: "Privacy", id: "privacy" },
+      { label: "FAQs", id: "faq" },
+    ],
+  },
 ]
 
 interface HeaderNavProps {
@@ -30,20 +41,20 @@ interface HeaderNavProps {
 export default function HeaderNav({
   enableScrollBg = false,
   onAuthOpen,
-  position
+  position = "sticky",
 }: HeaderNavProps) {
   const [scrollRatio, setScrollRatio] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
-  const router = useRouter()
-  const [active, setActive] = useState(navItems[0].id)
+  const [hovered, setHovered] = useState<string | null>(null)
+
   const isScrolled = scrollRatio > 0.6
+
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : ""
   }, [menuOpen])
 
   useEffect(() => {
     if (!enableScrollBg) return
-
     const threshold = 200
     const handleScroll = () =>
       setScrollRatio(Math.min(window.scrollY / threshold, 1))
@@ -62,172 +73,131 @@ export default function HeaderNav({
     setMenuOpen(false)
   }
 
-  const bgColor = enableScrollBg
-    ? `rgba(
-   14, 64, 199,
-      ${0 + scrollRatio}
-    )`
-    : "rgba(14, 64, 199, 1)"
-
-  const headerShadow =
-    enableScrollBg && scrollRatio > 0.5 ? "shadow-md" : ""
-
   return (
     <>
       <motion.header
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
-        style={{ backgroundColor: bgColor }}
         className={`
-  ${position === "fixed" ? "fixed top-0 left-0" : "sticky top-0"}
-  w-full
-  z-50
-  px-4 md:px-10
-  py-4
-  transition-all
-  ${headerShadow}
-`}
+    ${position === "fixed" ? "fixed top-0 left-0" : "sticky top-0"}
+    w-full z-50
+    ${enableScrollBg ? "backdrop-blur-xl border-b border-white/10" : ""}
+    transition-all duration-300
+  `}
+        style={{
+          background: enableScrollBg
+            ? `rgba(14, 64, 199, ${0.2 + scrollRatio * 0.8})`
+            : "transparent",
+        }}
       >
-        <div className="flex items-center justify-between">
-          <a href="/" className="relative flex items-center gap-2 w-[150px] h-8">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+
+          <div
+            className="relative w-[160px] h-10 cursor-pointer"
+            onClick={() => handleNavClick("hero-sub")}
+          >
             <motion.div
-              style={{ opacity: 1 - scrollRatio }}
               className="absolute inset-0"
             >
               <Image src={logoPrimary} alt="Logo" fill style={{ objectFit: "contain" }} />
             </motion.div>
 
-            <motion.div
-              style={{ opacity: scrollRatio }}
-              className="absolute inset-0"
-            >
-              <Image src={logoSecondary} alt="Logo" fill style={{ objectFit: "contain" }} />
-            </motion.div>
+          </div>
 
-            <span className="relative ml-[100px] font-bold text-lg text-white" style={{ fontFamily: "Cocon, sans-serif" }}>Bonhomiee</span>
-          </a>
-          <nav className="hidden md:flex items-center gap-3 lg:gap-6 relative">
-            {navItems.map((item) => {
-              const isActive = active === item.id
-
-              return (
+          <nav className="hidden md:flex items-center gap-10 relative">
+            {navItems.map((item) => (
+              <div
+                key={item.label}
+                className="relative"
+                onMouseEnter={() => setHovered(item.label)}
+                onMouseLeave={() => setHovered(null)}
+              >
                 <button
-                  key={item.id}
                   onClick={() => {
-                    setActive(item.id)
-                    handleNavClick(item.id)
+                    if (!item.children) handleNavClick(item.id!)
                   }}
-                  className="relative px-4 py-2 text-sm font-medium"
+                  className="relative font-medium text-[15px] text-white/90 hover:text-white transition-colors flex items-center gap-1"
                 >
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active"
-                      transition={{ type: "spring", stiffness: 420, damping: 35 }}
-                      className="absolute inset-0 rounded-full -z-10"
-                      style={{
-                        background: isScrolled
-                          ? "rgba(255,255,255,0.12)"
-                          : "rgb(14, 63, 199)",
-                        border: isScrolled
-                          ? "1px solid rgba(255,255,255,0.25)"
-                          : "1px solid rgb(14, 63, 199)",
-                        backdropFilter: isScrolled ? "blur(8px)" : "none",
-                      }}
+                  {item.label}
+                  {item.children && (
+                    <ChevronDown
+                      size={16}
+                      className="opacity-70"
                     />
                   )}
 
-                  {/* ✨ Text */}
-                  <span
-                    className="relative z-10 transition-colors duration-300"
-                    style={{
-                      color: isScrolled
-                        ? "white"
-                        : "rgba(255,255,255,0.95)",
-                    }}
-                  >
-                    {item.label}
-                  </span>
-
                   <motion.span
-                    className="absolute left-1/2 -bottom-1 h-[2px] rounded-full"
-                    initial={false}
-                    animate={{ width: 0, x: "-50%" }}
-                    whileHover={{ width: "60%" }}
-                    transition={{ duration: 0.25, ease: "easeOut" }}
-                    style={{
-                      backgroundColor: isScrolled ? "white" : "#0E40C7",
+                    className="absolute left-0 -bottom-1 h-[2px] w-full bg-primary"
+                    initial={{ scaleX: 0 }}
+                    animate={{
+                      scaleX: hovered === item.label ? 1 : 0,
                     }}
+                    transition={{ duration: 0.3 }}
                   />
                 </button>
-              )
-            })}
+
+<AnimatePresence>
+  {item.children && hovered === item.label && (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="absolute top-full left-0 pt-4 z-50"
+    >
+      <div
+        className="
+          w-56 
+          bg-white 
+          border border-[#CAD8FF]
+          shadow-[0_10px_30px_rgba(4,37,126,0.08)]
+          rounded-xl 
+          p-3 
+          space-y-1
+        "
+      >
+        {item.children.map((subItem) => (
+          <button
+            key={subItem.id}
+            onClick={() => handleNavClick(subItem.id)}
+            className="
+              block w-full text-left 
+              px-3 py-2 
+              rounded-lg 
+              text-sm 
+              text-[#04257E]
+              transition-all duration-200
+              hover:bg-[#CAD8FF]
+              hover:text-[#04257E]
+            "
+          >
+            {subItem.label}
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
+              </div>
+            ))}
           </nav>
 
-          <div className="hidden md:flex gap-2">
+          <div className="hidden md:flex items-center gap-4">
+            <button
+              onClick={onAuthOpen}
+              className="text-sm font-medium text-white/90 hover:text-white transition-colors"
+            >
+              Login
+            </button>
+
             <motion.button
               onClick={onAuthOpen}
-              whileHover={{ y: -1 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="relative overflow-hidden px-4 py-2 rounded-md text-sm font-medium"
+              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-white text-[#0E40C7] shadow-lg"
             >
-              <span
-                className="absolute inset-0 rounded-md"
-                style={{
-                  background: isScrolled
-                    ? "rgba(255,255,255,0.12)"
-                    : "#0E40C7",
-                  border: isScrolled
-                    ? "1px solid rgba(255,255,255,0.3)"
-                    : "1px solid rgba(14,64,199,0.6)",
-                  backdropFilter: isScrolled ? "blur(8px)" : "none",
-                }}
-              />
-
-              <span className="absolute inset-0 rounded-md opacity-0 hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  boxShadow: isScrolled
-                    ? "0 0 0 rgba(255,255,255,0)"
-                    : "0 8px 24px rgba(14,64,199,0.45)",
-                }}
-              />
-
-              <span className="relative z-10 text-white">
-                Login / Signup
-              </span>
-            </motion.button>
-            <motion.button
-              onClick={onAuthOpen}
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="relative overflow-hidden px-4 py-2 rounded-md text-sm font-medium"
-            >
-              <span
-                className="absolute inset-0 rounded-md"
-                style={{
-                  background: isScrolled
-                    ? "rgba(255,255,255,0.12)"
-                    : "#0E40C7",
-                  border: isScrolled
-                    ? "1px solid rgba(255,255,255,0.3)"
-                    : "1px solid rgba(14,64,199,0.6)",
-                  backdropFilter: isScrolled ? "blur(8px)" : "none",
-                }}
-              />
-
-              <span className="absolute inset-0 rounded-md opacity-0 hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  boxShadow: isScrolled
-                    ? "0 0 0 rgba(255,255,255,0)"
-                    : "0 8px 24px rgba(14,64,199,0.45)",
-                }}
-              />
-
-              <span className="relative z-10 text-white">
-                Book Demo
-              </span>
+              Book Demo
             </motion.button>
           </div>
 
@@ -242,63 +212,74 @@ export default function HeaderNav({
 
       <AnimatePresence>
         {menuOpen && (
-          <>
-            <motion.div
-              className="fixed inset-0 bg-black/50 z-40"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-white z-[9999] flex flex-col pt-28 px-8"
+          >
+            <button
               onClick={() => setMenuOpen(false)}
-            />
-
-            <motion.aside
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 260, damping: 30 }}
-              className="fixed right-0 top-0 h-full w-72 bg-[#051F1D] z-50 p-6 text-white"
+              className="absolute top-6 right-6"
             >
-              <div className="flex items-center justify-between mb-8">
-                <span className="font-bold text-lg">Menu</span>
-                <button onClick={() => setMenuOpen(false)}>
-                  <X size={24} />
+              <X size={28} />
+            </button>
+
+            <nav className="flex flex-col space-y-6 text-lg font-medium">
+              {navItems.map((item) => (
+                <div key={item.label}>
+                  {!item.children ? (
+                    <button
+                      onClick={() => handleNavClick(item.id!)}
+                      className="text-left py-2 w-full border-b"
+                    >
+                      {item.label}
+                    </button>
+                  ) : (
+                    <>
+                      <div className="font-semibold py-2">
+                        {item.label}
+                      </div>
+                      <div className="pl-4 flex flex-col space-y-3 mt-2 text-base">
+                        {item.children.map((subItem) => (
+                          <button
+                            key={subItem.id}
+                            onClick={() => handleNavClick(subItem.id)}
+                            className="text-left text-gray-600"
+                          >
+                            {subItem.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+
+              <div className="pt-10 flex flex-col gap-4">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onAuthOpen?.()
+                  }}
+                  className="text-center py-3 border rounded-lg"
+                >
+                  Login
+                </button>
+
+                <button
+                  onClick={() => {
+                    setMenuOpen(false)
+                    onAuthOpen?.()
+                  }}
+                  className="text-center py-3 bg-[#0E40C7] text-white rounded-lg"
+                >
+                  Book Demo
                 </button>
               </div>
-
-              <nav className="flex flex-col gap-6">
-                {navItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id)}
-                    className="relative group text-left"
-                  >
-                    {item.label}
-                    <span className="absolute left-0 -bottom-1 h-0.5 w-0 bg-[#0E40C7] transition-all group-hover:w-full" />
-                  </button>
-                ))}
-              </nav>
-
-              <button
-                onClick={() => {
-                  setMenuOpen(false)
-                  onAuthOpen?.()
-                }}
-                className="mt-10 w-full py-3 rounded-sm bg-[#0E40C7] font-medium"
-              >
-                Login / Signup
-              </button>
-
-              <button
-                onClick={() => {
-                  setMenuOpen(false)
-                  onAuthOpen?.()
-                }}
-                className="mt-4 w-full py-3 rounded-sm bg-[#0E40C7] font-medium"
-              >
-                Book Demo
-              </button>
-            </motion.aside>
-          </>
+            </nav>
+          </motion.div>
         )}
       </AnimatePresence>
     </>
