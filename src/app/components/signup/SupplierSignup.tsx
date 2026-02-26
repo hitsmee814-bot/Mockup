@@ -59,8 +59,12 @@ type FormData = {
 
 /* ================= CONSTANTS ================= */   
   
-   const EMAIL_REGEX =/^[^\s@]+@[a-z0-9.-]+\.[a-z]{2,}$/
-  const WEBSITE_REGEX =  /^([\w-]+\.)+[\w-]{2,}(\/.*)?$/i
+  const EMAIL_REGEX =
+  /^(?!\.)(?!.*\.\.)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
+
+    const WEBSITE_REGEX =
+  /^(https?:\/\/)?((([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)\.)+[A-Za-z]{2,})(:\d{1,5})?(\/[^\s]*)?$/;
+
   const STRONG_PASSWORD =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
 
   const blockClipboard = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -162,6 +166,11 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
     </div>
   )
 }
+
+
+
+
+
 function ErrorMessage({ message }: { message?: string }) {
   const ref = React.useRef<HTMLParagraphElement>(null)
   const fieldRef = React.useRef<HTMLElement | null>(null)
@@ -201,6 +210,9 @@ function ErrorMessage({ message }: { message?: string }) {
     </p>
   )
 }
+
+
+
 
 
 function PasswordStrengthMeter({
@@ -280,18 +292,36 @@ export function TooltipIcon({ id, content }: TooltipIconProps) {
     </>
   )
 }
+
+const containsPersonalName = (
+  password: string,
+  firstName: string,
+  middleName: string,
+  lastName: string
+) => {
+  const pwd = password.toLowerCase()
+
+  return [firstName, middleName, lastName]
+    .filter(Boolean)
+    .some(name => pwd.includes(name.toLowerCase()))
+}
 /* ================= MAIN ================= */
 export default function SupplierSignup() {
+
       const router = useRouter()
       const dropdownRef = useRef<HTMLDivElement>(null)
       const serviceTriggerRef = useRef<HTMLDivElement>(null)
       const serviceDropdownRef = useRef<HTMLDivElement>(null)
+      const [hidePasswordEye, setHidePasswordEye] = useState(0)
       const [step, setStep] = useState<1 | 2 | 3>(1)
       const [error, setError] = useState('')
       const [passwordError, setPasswordError] = useState('')
       const [usernameError, setUsernameError] = useState('')
+      const [show, setShow] = useState(false)
       const usernameValid = (u: string) =>  /^[a-zA-Z][a-zA-Z0-9_]{5,15}$/.test(u)
       const [step1Submitted, setStep1Submitted] = useState(false)
+      const [step2Submitted, setStep2Submitted] = useState(false)
+      const [step3Submitted, setStep3Submitted] = useState(false)
       const [passwordStrengthInfo, setPasswordStrengthInfo] = useState<{
               id: number
               value: string
@@ -303,6 +333,7 @@ export default function SupplierSignup() {
       const [phoneError, setPhoneError] = useState('')
       const [taxIdError, setTaxIdError] = useState('')
       const [websiteError, setWebsiteError] = useState('')
+      
 
   
       const [form, setForm] = useState<FormData>({
@@ -351,6 +382,15 @@ export default function SupplierSignup() {
       e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> ) => {
       const { name, value } = e.target
       setForm(prev => ({ ...prev, [name]: value }))
+      if (step1Submitted) {
+        setError('')
+      }
+      if (step2Submitted) {
+          setError('')
+        }
+        if (step3Submitted) {
+          setError('')
+        }
 
         // USERNAME  VALIDATION
       if (name === 'username') {
@@ -382,8 +422,12 @@ export default function SupplierSignup() {
         validatePhoneLive(form.phone, value)
       }
 
-   if (name === 'password') {
-  // existing password logic (keep this)
+      if (name === 'websiteUrl') {
+        validateWebsiteLive(value)
+      }
+
+
+if (name === 'password') {
   setConfirmPasswordError('')
   setPasswordStrengthInfo(null)
   setPasswordError('')
@@ -393,6 +437,7 @@ export default function SupplierSignup() {
     return
   }
 
+  //  Strong password rule
   if (!STRONG_PASSWORD.test(value)) {
     setPasswordError(
       'The password does not yet meet the required criteria.'
@@ -401,14 +446,31 @@ export default function SupplierSignup() {
     return
   }
 
+  //  NEW: Personal name check
+  if (
+    containsPersonalName(
+      value,
+      form.firstName,
+      form.middleName,
+      form.lastName
+    )
+  ) {
+    setPasswordError(
+      'Password should not contain your first, middle, or last name.'
+    )
+    validateConfirmPasswordLive(value, form.confirmPassword)
+    return
+  }
+
+  // Strength check (only if valid)
   const result = passwordStrength(value)
   setPasswordStrengthInfo(result)
 
-  //  ADD THIS
   validateConfirmPasswordLive(value, form.confirmPassword)
 }
 
 if (name === 'confirmPassword') {
+  setHidePasswordEye(v => v + 1) // FORCE hide every time
   validateConfirmPasswordLive(form.password, value)
 }
   }
@@ -428,42 +490,122 @@ if (name === 'confirmPassword') {
       }
     }
 
-    const handleUsernameBlur = () => {
-  if (!form.username) return
-
-  if (!usernameValid(form.username)) {
-    setUsernameError(
-      'Username must be 6–16 characters and start with a letter.'
-    )
-  } else {
-    setUsernameError('')
-  }
-}
-
-        const validateConfirmPasswordLive = (
-  password: string,
-  confirmPassword: string
+//     const getStep1BorderClass = (
+//   isMandatory: boolean,
+//   hasError: boolean,
+//   value: string
+// ) => {
+//   if (step1Submitted && isMandatory && (!value || hasError)) {
+//     return 'border-red-500'
+//   }
+//   return 'border-[#00AFEF]'
+// }
+const getStep1BorderClass = (
+  isMandatory: boolean,
+  hasError: boolean,
+  value: string
 ) => {
-  // If both empty → no error
-  if (!password && !confirmPassword) {
-    setConfirmPasswordError('')
-    return
+  if (
+    step1Submitted &&
+    isMandatory &&
+    (!value.trim() || hasError)
+  ) {
+    return 'border-red-500'
   }
-
-  // If confirm empty → no error yet
-  if (!confirmPassword) {
-    setConfirmPasswordError('')
-    return
-  }
-
-  // Mismatch
-  if (password !== confirmPassword) {
-    setConfirmPasswordError('Passwords do not match')
-  } else {
-    setConfirmPasswordError('')
-  }
+  return 'border-[#00AFEF]'
 }
-  
+
+
+const getStep2BorderClass = (
+  isMandatory: boolean,
+  value: string | string[],
+  hasError = false
+) => {
+  const isEmpty =
+    typeof value === 'string'
+      ? !value.trim()
+      : value.length === 0
+
+  if (step2Submitted && isMandatory && (isEmpty || hasError)) {
+    return 'border-red-500'
+  }
+
+  return 'border-[#00AFEF]'
+}
+
+
+
+
+const getStep3FileBorderClass = (hasValue: boolean) => {
+  if (step3Submitted && !hasValue) {
+    return 'border-red-500'
+  }
+  return 'border-[#00AFEF]'
+}
+
+const getTaxTypeBorderClass = () => {
+  if (step3Submitted && !form.taxDocType) {
+    return 'border-red-500'
+  }
+  return 'border-[#00AFEF]'
+}
+
+const getTaxNumberBorderClass = () => {
+  if (
+    step3Submitted &&
+    (!form.panTaxId.trim() || taxIdError)
+  ) {
+    return 'border-red-500'
+  }
+  return 'border-[#00AFEF]'
+}
+
+const getTaxFileBorderClass = () => {
+  if (step3Submitted && !form.taxRegistrationDoc) {
+    return 'border-red-500'
+  }
+  return 'border-[#00AFEF]'
+}
+
+const getTaxPanelBorderClass = () => {
+  if (
+    step3Submitted &&
+    (
+      !form.taxDocType ||
+      !form.panTaxId.trim() ||
+      !form.taxRegistrationDoc ||
+      taxIdError
+    )
+  ) {
+    return 'border-red-500'
+  }
+  return 'border-[#00AFEF]'
+}
+
+       const validateConfirmPasswordLive = (
+          password: string,
+          confirmPassword: string
+        ) => {
+          // If both empty → no error
+          if (!password && !confirmPassword) {
+            setConfirmPasswordError('')
+            return
+          }
+
+          // If confirm empty → no error yet
+          if (!confirmPassword) {
+            setConfirmPasswordError('')
+            return
+          }
+
+          // Mismatch
+          if (password !== confirmPassword) {
+            setConfirmPasswordError('Passwords do not match')
+          } else {
+            setConfirmPasswordError('')
+          }
+        }
+          
         const validatePhoneLive = (phone: string, countryCode: string) => {
   // Clear error when empty
   if (!phone) {
@@ -489,35 +631,19 @@ if (name === 'confirmPassword') {
   }
 }
 
-
-
-  const handleConfirmPasswordBlur = () => {
-  if (!form.confirmPassword) {
-    setConfirmPasswordError('')
-    return
-  }
-
-  if (form.password !== form.confirmPassword) {
-    setConfirmPasswordError('Passwords do not match')
-  } else {
-    setConfirmPasswordError('')
-  }
-}
-
-
-const handleWebsiteBlur = () => {
-  if (!form.websiteUrl) {
+const validateWebsiteLive = (value: string) => {
+  // Empty → no error yet
+  if (!value) {
     setWebsiteError('')
     return
   }
 
-  if (!WEBSITE_REGEX.test(form.websiteUrl)) {
+  if (!WEBSITE_REGEX.test(value)) {
     setWebsiteError('Please enter a valid website URL')
   } else {
     setWebsiteError('')
   }
 }
-
 
 const validateEmailLive = (value: string) => {
   // If field is cleared → clear error
@@ -572,82 +698,99 @@ const validatePhoneNumber = () => {
   }))
 }
 
-
-
-  const validateStep1 = () => {
-    if (
-      !form.firstName ||
-      !form.lastName ||
-      !form.email ||
-      !form.phone ||
-      !form.username ||
-      !form.password ||
-      !form.confirmPassword
-    ) {
-      return 'All mandatory fields must be filled'
-    }
-    if (!form.email) {
-  setEmailError('Email is required')
-  return 'Email is required'
-}
-
-if (!form.email) {
-  setEmailError('Email is required')
-  return 'Email is required'
-}
-
-if (!EMAIL_REGEX.test(form.email)) {
-  setEmailError('Please enter a valid email address')
-  return 'Invalid email address'
-}
-
-  const phoneErr = validatePhoneNumber()
-  if (phoneErr) {
-    setPhoneError(phoneErr)
-    return phoneErr
-  }
-
-  if (form.password !== form.confirmPassword) {
-  setConfirmPasswordError('Passwords do not match')
-  return 'Passwords do not match'
-  }
-    if (!usernameValid(form.username)) {
-  setUsernameError(
-    'Username must be 6–16 characters and start with a letter.'
-  )
-  return 'Invalid username'
-}
-
-    return ''
-  }
-
-  const hasFieldErrorsStep1 = () => {
+const hasEmptyMandatoryStep1 = () => {
   return (
-    !!emailError ||
-    !!phoneError ||
-    !!usernameError ||
-    !!passwordError ||
-    !!confirmPasswordError
+    !form.firstName.trim() ||
+    !form.lastName.trim() ||
+    !form.email.trim() ||
+    !form.phone.trim() ||
+    !form.username.trim() ||
+    !form.password ||
+    !form.confirmPassword
   )
 }
 
-  const validateStep2 = () => {
-    if (
-      !form.supplierLegalName ||
-      !form.tradeName ||
-      form.serviceTypes.length === 0 ||
-      !form.countryOfRegistration ||
-      // !form.panTaxId ||
-      !form.websiteUrl
-    ) {
-      return 'All mandatory fields must be filled'
-    }
-      if (!WEBSITE_REGEX.test(form.websiteUrl)) {
-    setWebsiteError('Please enter a valid website URL')
-    return 'Please enter a valid website URL'
+const hasEmptyMandatoryStep2 = () => {
+  return (
+    !form.supplierLegalName.trim() ||
+    !form.tradeName.trim() ||
+    form.serviceTypes.length === 0 ||
+    !form.countryOfRegistration ||
+    !form.websiteUrl.trim()
+  )
+}
+
+const hasEmptyMandatoryStep3 = () => {
+  return (
+    !form.tradeLicense ||
+    !form.registrationCert ||
+    !form.taxDocType ||
+    !form.panTaxId.trim() ||
+    !form.taxRegistrationDoc
+  )
+}
+
+
+const validateStep1 = () => {
+  // 1 Empty mandatory fields
+  if (hasEmptyMandatoryStep1()) {
+    return 'EMPTY'
   }
-    return ''
+
+  // 2 Invalid fields
+  if (
+    emailError ||
+    phoneError ||
+    usernameError ||
+    passwordError ||
+    confirmPasswordError
+  ) {
+    return 'INVALID'
   }
+
+  // 3️ Password mismatch safety
+  if (form.password !== form.confirmPassword) {
+    setConfirmPasswordError('Passwords do not match')
+    return 'INVALID'
+  }
+
+  return 'OK'
+}
+
+
+const validateStep2 = () => {
+  //  Empty mandatory fields
+  if (hasEmptyMandatoryStep2()) {
+    return 'EMPTY'
+  }
+
+  // Invalid field values
+  if (websiteError) {
+    return 'INVALID'
+  }
+
+  return 'OK'
+}
+
+
+
+const validateStep3 = () => {
+  //  Missing mandatory fields
+  if (hasEmptyMandatoryStep3()) {
+    return 'EMPTY'
+  }
+
+  //  Invalid values
+  if (taxIdError) {
+    return 'INVALID'
+  }
+
+  return 'OK'
+}
+
+
+
+
 
   return (
     <main className="min-h-screen bg-blue-50 flex items-center justify-center px-4 pt-20">
@@ -667,11 +810,7 @@ if (!EMAIL_REGEX.test(form.email)) {
         
 
         <div className="bg-white rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 max-w-4xl w-full h-[85vh]">
-          {/* <div
-            className="bg-cover bg-center h-full"
-            style={{ backgroundImage: `url(${supplierPic.src})` }}
-          /> */}
-
+      
           {/* LEFT IMAGE SECTION */}
           <div className="hidden md:block relative">
             <Image src={supplierPic} alt="Signup" fill className="object-cover" />
@@ -704,20 +843,28 @@ if (!EMAIL_REGEX.test(form.email)) {
               <div className="space-y-3">            
                 {step === 1 && (
                   <>
-                    <Input label="First Name" required placeholder="Enter first name" name="firstName" value={form.firstName} onChange={handleChange} />
-                    <ErrorMessage
-                      message={
-                        step1Submitted && !form.firstName ? '' : undefined
-                      }
-                    />
+                    <Input
+                    label="First Name"
+                    required
+                    placeholder="Enter first name"
+                    name="firstName"
+                    value={form.firstName}
+                    onChange={handleChange}
+                    className={getStep1BorderClass(true, false, form.firstName)}
+                  />
+                   
                     <Input label="Middle Name (optional)" placeholder="Enter middle name" name="middleName"   value={form.middleName} onChange={handleChange} />
                     
-                    <Input label="Last Name" required placeholder="Enter last name" name="lastName"  value={form.lastName} onChange={handleChange} />
-                    <ErrorMessage
-                      message={
-                        step1Submitted && !form.lastName ? '' : undefined
-                      }
-                    />
+                    <Input
+                    label="Last Name"
+                    required
+                    placeholder="Enter last name"
+                    name="lastName"
+                    value={form.lastName}
+                    onChange={handleChange}
+                    className={getStep1BorderClass(true, false, form.lastName)}
+                  />
+                   
                     <Input
                         label="Email"
                         required
@@ -727,11 +874,12 @@ if (!EMAIL_REGEX.test(form.email)) {
                         value={form.email}
                         onChange={handleChange}
                         tooltip="Enter a valid email address like name@example.com"
+                        className={getStep1BorderClass(true, !!emailError, form.email)}
                       />
                      <ErrorMessage message={emailError} />
 
                       {/* PHONE */}
-                      <div className="flex flex-col gap-1">
+                      <div >
                           <label className={`${labelClass} flex items-center gap-1`}>
                             Phone Number <span className="text-red-500">*</span>
 
@@ -740,13 +888,20 @@ if (!EMAIL_REGEX.test(form.email)) {
                           content="Please enter valid phone number"
                         />
                           </label>
-                          <div className="flex h-[38px] rounded border border-[#00AFEF] bg-white">
-
+                          <div
+                              className={`flex h-[38px] rounded border bg-white
+                                ${
+                                  step1Submitted && (phoneError || !form.phone)
+                                    ? 'border-red-500'
+                                    : 'border-[#00AFEF]'
+                                }
+                              `}
+                            >
                             <select
                               name="countryCode"
                               value={form.countryCode}
                               onChange={handleChange}
-                              className="h-full px-3 text-[12px] bg-transparent border-r border-[#9ec5e5] outline-none">
+                               className="px-3 text-[12px] border-r border-[#9ec5e5]">
                               {COUNTRY_CODES.map(c => (
                                 <option key={c.code} value={c.code}>
                                   {c.label} {c.code}
@@ -762,9 +917,9 @@ if (!EMAIL_REGEX.test(form.email)) {
                                 className="flex-1 h-full px-3 text-[12px] text-black caret-black outline-none"
                                 inputMode="numeric"/>
                           </div>
+                            <ErrorMessage message={phoneError} />
                       </div>
-                      <ErrorMessage message={phoneError} />
-                                                               
+                                                                                   
                        
                         <Input
                           label="Username"
@@ -772,15 +927,11 @@ if (!EMAIL_REGEX.test(form.email)) {
                           name="username"
                           value={form.username}
                           onChange={handleChange}
-                          onBlur={handleUsernameBlur}
                           tooltip="Must start with a letter, followed by underscores or numbers. 6–16 characters allowed."
-                        />                       
-                        <ErrorMessage message={usernameError} />
-                        <ErrorMessage
-                          message={
-                            step1Submitted && (!!usernameError || !form.username) ? '' : undefined
-                          }
+                          className={getStep1BorderClass(true, !!usernameError, form.username)}
                         />
+                        <ErrorMessage message={usernameError} />
+
                            <Input
                             label="Password"
                             required
@@ -795,13 +946,11 @@ if (!EMAIL_REGEX.test(form.email)) {
                             onPaste={blockClipboard}
                             onContextMenu={blockContextMenu}
                             showEye
+                            forceHideEye={hidePasswordEye}
                             tooltip="Password must be at least 8 characters with uppercase, lowercase, number & symbol"
+                              className={getStep1BorderClass(true, !!passwordError, form.password)}
                           />
-                          <ErrorMessage
-                            message={
-                              step1Submitted && (!!passwordError || !form.password) ? '' : undefined
-                            }
-                          />
+                      
                              <ErrorMessage message={passwordError} />    
                           
                           {form.password && !passwordError && (
@@ -817,13 +966,24 @@ if (!EMAIL_REGEX.test(form.email)) {
                             name="confirmPassword"
                             type="password"
                             autoComplete="new-password"
-                            value={form.confirmPassword}
-                            onChange={handleChange}
-                            onBlur={handleConfirmPasswordBlur}
+                            value={form.confirmPassword}                           
                             onCopy={blockClipboard}
                             onCut={blockClipboard}
                             onPaste={blockClipboard}
                             onContextMenu={blockContextMenu}
+                              //  Covers mouse click + tab navigation
+                            onFocusCapture={() => setHidePasswordEye(v => v + 1)}
+
+                            //  Covers typing, delete, backspace, paste, mobile keyboards
+                            onInput={() => setHidePasswordEye(v => v + 1)}
+
+                            //  KEEP THIS – your existing validation logic
+                            onChange={handleChange}
+                            className={getStep1BorderClass(
+                              true,
+                              !!confirmPasswordError,
+                              form.confirmPassword
+                            )}
                           />
                           <ErrorMessage message={confirmPasswordError} />   
                                         
@@ -832,19 +992,23 @@ if (!EMAIL_REGEX.test(form.email)) {
 
                 {step === 2 && (
                   <>
-                    <Input label="Supplier Legal Name" required placeholder="Registered legal name" name="supplierLegalName" value={form.supplierLegalName} onChange={handleChange} />
-                    <Input label="Trade Name" required placeholder="Business / brand name" name="tradeName" value={form.tradeName} onChange={handleChange} />
+                    <Input label="Supplier Legal Name" required placeholder="Registered legal name" name="supplierLegalName"
+                     value={form.supplierLegalName} onChange={handleChange} className={getStep2BorderClass(true, form.supplierLegalName)}/>
+                   
+                    <Input label="Trade Name" required placeholder="Business / brand name" 
+                    name="tradeName" value={form.tradeName} onChange={handleChange}className={getStep2BorderClass(true, form.tradeName)} />
 
                     {/* SERVICE TYPE */}
                     <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
-                    <label className={labelClass}>
+                    <label className={labelClass} >
                     Service Type <span className="text-red-500">*</span>
                     </label>
 
                     {/* INPUT AREA WITH CHIPS */}
                   <div
                       ref={serviceTriggerRef}
-                      className={`${inputClass} flex flex-wrap items-center gap-1 cursor-pointer`}
+                      className={`${inputClass}
+                       flex flex-wrap items-center gap-1 cursor-pointer ${getStep2BorderClass(true, form.serviceTypes)}`}
                       onClick={() => setServiceOpen(prev => !prev)}>
 
                     {form.serviceTypes.length === 0 && (
@@ -914,7 +1078,7 @@ if (!EMAIL_REGEX.test(form.email)) {
                             name="countryOfRegistration"
                             value={form.countryOfRegistration}
                             onChange={handleChange}
-                            className={`${inputClass} appearance-none bg-white cursor-pointer pr-8 focus:outline-none`}>
+                            className={`${inputClass} appearance-none bg-white cursor-pointer pr-8  ${getStep2BorderClass(true, form.countryOfRegistration)}`}>
                             <option value="" disabled hidden>Select country</option>
                             {REG_COUNTRIES.map(c => (
                               <option key={c} value={c}>
@@ -930,23 +1094,23 @@ if (!EMAIL_REGEX.test(form.email)) {
 
                 </div>
 
-                 <Input
+                <Input
                   label="Website URL"
                   required
                   placeholder="Company website"
                   name="websiteUrl"
                   value={form.websiteUrl}
-                  onChange={e => {
-                    handleChange(e)
-                    setWebsiteError('')
-                  }}
-                  onBlur={handleWebsiteBlur}
-                  tooltip="Example: www.company.com"/>
+                  onChange={handleChange} 
+                  className={getStep2BorderClass(
+                    true,
+                    form.websiteUrl,
+                    !!websiteError
+                  )}
+                  tooltip="Example: www.company.com"
+                />
 
-                {websiteError && (
-                <p className={errorTextClass}>ⓘ  {websiteError}</p>
-                
-                )}
+                 <ErrorMessage message={websiteError} />
+
              
               </>
            )}
@@ -956,6 +1120,7 @@ if (!EMAIL_REGEX.test(form.email)) {
                   label="Company Trade License"
                   required
                   file={form.tradeLicense}
+                   borderClass={getStep3FileBorderClass(!!form.tradeLicense)}
                   onChange={file =>
                     setForm(prev => ({ ...prev, tradeLicense: file }))
                   }
@@ -965,6 +1130,7 @@ if (!EMAIL_REGEX.test(form.email)) {
                   label="Company Registration Certificate"
                   required
                   file={form.registrationCert}
+                  borderClass={getStep3FileBorderClass(!!form.registrationCert)}
                   onChange={file =>
                     setForm(prev => ({ ...prev, registrationCert: file }))
                   }
@@ -975,12 +1141,12 @@ if (!EMAIL_REGEX.test(form.email)) {
                   Tax Document Details <span className="text-red-500">*</span>
                 </label>
 
-                <div className="border-2 border-dashed border-[#00AFEF] rounded bg-white p-4 flex flex-col gap-4">
+                <div className={`border-2 border-dashed rounded bg-white p-4 flex flex-col gap-4 ${getTaxPanelBorderClass()}`}>
 
                 {/* TAX DOCUMENT TYPE */}
                 <div className="flex flex-col gap-1">
                     <label className={labelClass}>
-                      Tax Document Type
+                      Tax Document Type <span className="text-red-500">*</span>
                     </label>
 
                       <div className="relative">
@@ -999,7 +1165,7 @@ if (!EMAIL_REGEX.test(form.email)) {
 
                               setTaxIdError('')               
                             }}
-                            className={`${inputClass} appearance-none bg-white cursor-pointer pr-8 focus:outline-none`}>
+                            className={`${inputClass} appearance-none  ${getTaxTypeBorderClass()}`}>
                             <option value="" disabled hidden>
                               Select document type
                             </option>
@@ -1033,7 +1199,7 @@ if (!EMAIL_REGEX.test(form.email)) {
                             validateTaxIdLive(value, form.taxDocType)
                           }}
 
-                        
+                         className={getTaxNumberBorderClass()}
                         />
 
                         {taxIdError && (
@@ -1045,6 +1211,7 @@ if (!EMAIL_REGEX.test(form.email)) {
                           label={`Upload ${form.taxDocType} Document`}
                           required
                           file={form.taxRegistrationDoc}
+                          borderClass={getTaxFileBorderClass()}
                           onChange={file =>
                             setForm(prev => ({ ...prev, taxRegistrationDoc: file }))
                           }
@@ -1060,9 +1227,7 @@ if (!EMAIL_REGEX.test(form.email)) {
                       setForm(prev => ({ ...prev, otherDocs: files }))
                     }
                   />
-                  <p className="text-[11px] text-gray-500 mt-0.5 font-semibold">
-                  You can upload up to five documents.
-                </p>
+                
                   </>
                 )}
                 
@@ -1085,12 +1250,20 @@ if (!EMAIL_REGEX.test(form.email)) {
 
                     <button
                       type="button"
+                    
+
                       onClick={() => {
                         setStep1Submitted(true)
 
-                        const err = validateStep1()
-                        if (err || hasFieldErrorsStep1()) {
-                          setError('Please fill all mandatory fields correctly')
+                        const result = validateStep1()
+
+                        if (result === 'EMPTY') {
+                          setError('Please fill all mandatory fields (marked with *)')
+                          return
+                        }
+
+                        if (result === 'INVALID') {
+                          setError('Please fill the mandatory fields correctly')
                           return
                         }
 
@@ -1124,13 +1297,25 @@ if (!EMAIL_REGEX.test(form.email)) {
 
                   <button
                     type="button"
+                   
                     onClick={() => {
-                      const err = validateStep2()
-                      if (err) return setError(err)
-                      setError('')
-                      setStep(3)
+                  setStep2Submitted(true)
 
-                    }}
+                  const result = validateStep2()
+
+                  if (result === 'EMPTY') {
+                    setError('Please fill all mandatory fields (marked with *)')
+                    return
+                  }
+
+                  if (result === 'INVALID') {
+                    setError('Please fill the mandatory fields correctly')
+                    return
+                  }
+
+                  setError('')
+                  setStep(3)
+                }}
                      className={`${footerButtonClass} bg-[#00afef]`}
                   >
                     Next
@@ -1151,21 +1336,25 @@ if (!EMAIL_REGEX.test(form.email)) {
 
           <button
             type="button"
+          
             onClick={() => {
-              if (
-                   !form.tradeLicense ||
-                    !form.registrationCert ||
-                    !form.taxDocType ||
-                    !form.panTaxId ||
-                    taxIdError ||
-                    !form.taxRegistrationDoc
-                  ) {
-               return setError('Please fill in all required fields.')
-              }
+            setStep3Submitted(true)
 
-              setError('')
-              router.push('/')
-            }}
+            const result = validateStep3()
+
+            if (result === 'EMPTY') {
+              setError('Please fill all mandatory fields (marked with *)')
+              return
+            }
+
+            if (result === 'INVALID') {
+              setError('Please fill the mandatory fields correctly')
+              return
+            }
+
+            setError('')
+            router.push('/')
+          }}
              className={`${footerButtonClass} bg-[#00afef]`}
           >
             Register
@@ -1202,11 +1391,16 @@ if (!EMAIL_REGEX.test(form.email)) {
 }
 
 /* ================= INPUT ================= */
+
+
+
+
     function Input({
       label,
       required = false,
       tooltip,
       showEye = false,
+       forceHideEye = 0,
       type = 'text',
       name,
       ...props
@@ -1215,8 +1409,11 @@ if (!EMAIL_REGEX.test(form.email)) {
       required?: boolean
       tooltip?: string
       showEye?: boolean
+      forceHideEye?: number
     } & React.InputHTMLAttributes<HTMLInputElement>) {
       const [show, setShow] = useState(false)
+     React.useEffect(() => {
+        setShow(false)}, [forceHideEye])
       const tooltipId = `tooltip-${name}`
       return (
         <div className="flex flex-col gap-1">
@@ -1237,7 +1434,7 @@ if (!EMAIL_REGEX.test(form.email)) {
         {...props}
         name={name}
         type={showEye && show ? 'text' : type}
-        className={`${inputClass} pr-9`}
+        className={`${inputClass} pr-9 ${props.className ?? ''}`}
         onChange={e => {
           //  Hide password as soon as user types
           if (show) setShow(false)
@@ -1267,11 +1464,13 @@ if (!EMAIL_REGEX.test(form.email)) {
       required,
       file,
       onChange,
+      borderClass = 'border-[#00AFEF]',
     }: {
       label: string
       required?: boolean
       file?: File | null
       onChange: (file: File | null) => void
+      borderClass?: string
     }) {
       const [error, setError] = useState('')
 
@@ -1307,7 +1506,7 @@ if (!EMAIL_REGEX.test(form.email)) {
             {label} {required && <span className="text-red-500">*</span>}
           </label>
 
-          <div className="border-2 border-dashed border-[#00AFEF] rounded bg-white p-2 hover:border-blue-400 transition">
+          <div className={`border-2 border-dashed rounded bg-white p-2 transition ${borderClass}`}>
             {!file ? (
               <label className="flex items-center gap-2 cursor-pointer">
                 <UploadIcon
@@ -1381,7 +1580,7 @@ if (!EMAIL_REGEX.test(form.email)) {
       const [popupError, setPopupError] = useState('')
       const [documentName, setDocumentName] = useState('')
       const documentNameRef = useRef<HTMLInputElement>(null)
-      
+      const [maxLimitError, setMaxLimitError] = useState('')
       
       
 
@@ -1509,14 +1708,16 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
   setDocumentName('')
   setPopupError('')
   setOpen(false)
+  setMaxLimitError('') 
 }
 
 
 
+ 
   const removeFile = (index: number) => {
-    onChange(files.filter((_, i) => i !== index))
-  }
-
+  onChange(files.filter((_, i) => i !== index))
+  setMaxLimitError('')
+}
   return (
     <>
       {/* LABEL + BUTTON */}
@@ -1545,17 +1746,30 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
   }}
 />
 
+       
+      <div className="flex flex-col items-end">
         <button
-        type='button'
+        type="button"
         onClick={() => {
-      setPopupError('')
-      setOpen(true)
-    }}
-          disabled={files.length >= maxFiles}
-          className="px-3 py-1.5 rounded border border--[#00AFEF] text-white text-sm bg-[#00afef] disabled:opacity-50"
-        >
-           Upload
-        </button>
+          if (files.length >= maxFiles) {
+            setMaxLimitError('You can upload up to five documents.')
+            return
+          }
+
+    setMaxLimitError('')
+    setPopupError('')
+    setOpen(true)
+  }}
+  className="px-3 py-1.5 rounded text-white text-sm bg-[#00afef]"
+>
+  Upload
+</button>
+{maxLimitError && (
+      <p className="text-[11px] text-red-600 mt-1 font-semibold">
+        {maxLimitError}
+      </p>
+    )}
+</div>
       </div>
 
       {/* FILE LIST */}
@@ -1587,7 +1801,7 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
     <button
       type="button"
       onClick={() => removeFile(index)}
-      className="text-gray-400 hover:text-gray-600"
+      className="text-gray-400 hover:text-red-600"
     >
       <X className="h-4 w-4" />
     </button>

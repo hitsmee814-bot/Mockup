@@ -11,7 +11,8 @@ import logo from '../../assets/images/logoPrimary.png'
 import corporatePic from '../../assets/images/traveling-concept-with-landmarks.jpg'
 
 /* ================= CONSTANTS ================= */
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_REGEX =
+  /^(?!\.)(?!.*\.\.)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
 
 const labelClass = 'text-[12px] font-medium text-[#1A1A1A]'
 const inputClass =
@@ -273,7 +274,7 @@ const handleSubmit = (e: React.FormEvent) => {
               {formError}
             </div>
           )}
-
+          <div className="mx-12 mb-5 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>   
           <div className="space-y-4 flex-1 overflow-y-auto pr-1">
             {/* EMAIL */}
             <div>
@@ -325,6 +326,7 @@ const handleSubmit = (e: React.FormEvent) => {
                   value={form.phone}
                   onChange={handleChange}
                   placeholder="Enter mobile number"
+                  maxLength={10}
                   className="flex-1 px-3 text-[12px] outline-none"
                 />
               </div>
