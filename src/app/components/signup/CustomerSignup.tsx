@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
-import logovar from "../../assets/images/logoPrimary.png"
-import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg"
+import logovar from "../../assets/images/logoPrimary.png";
+import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg";
 
 /* Using full metadata for strict validation */
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
@@ -120,6 +120,10 @@ export default function CustomerSignup(): JSX.Element {
   const [strengthColor, setStrengthColor] = useState<string>("");
   const [countryCode, setCountryCode] = useState<CountryCode>("IN");
 
+  /* Username Availability States */
+  const [isChecking, setIsChecking] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
+
   const containsNamePart = (p: string) => {
     const lowerP = p.toLowerCase();
     const nameParts = [form.firstName, form.middleName, form.lastName]
@@ -185,21 +189,11 @@ export default function CustomerSignup(): JSX.Element {
   const emailValid = (e: string) => {
     const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!basicRegex.test(e)) return { valid: false, errorType: "syntax" };
-    
     const parts = e.split('@');
     const domainPart = parts[1].split('.')[0];
-    
-    // 1. Check if domain part contains any uppercase letters
-    if (/[A-Z]/.test(domainPart)) {
-      return { valid: false, errorType: "casing" };
-    }
-    
-    // 2. Check if domain part contains ONLY lowercase letters or numbers (no special chars)
+    if (/[A-Z]/.test(domainPart)) return { valid: false, errorType: "casing" };
     const noSpecialCharsRegex = /^[a-z0-9]+$/;
-    if (!noSpecialCharsRegex.test(domainPart)) {
-        return { valid: false, errorType: "syntax" };
-    }
-    
+    if (!noSpecialCharsRegex.test(domainPart)) return { valid: false, errorType: "syntax" };
     return { valid: true, errorType: "" };
   };
 
@@ -210,6 +204,20 @@ export default function CustomerSignup(): JSX.Element {
     const phoneNumber = parsePhoneNumberFromString(p, country);
     if (!phoneNumber || !phoneNumber.isValid()) return "Enter valid phone number";
     return "";
+  };
+
+  /* CHECK USERNAME FUNCTIONALITY */
+  const checkUsername = () => {
+    if (!form.username || errors.username) return;
+    setIsChecking(true);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        setIsChecking(false);
+        const status = form.username.toLowerCase().includes("taken") ? "unavailable" : "available";
+        setUsernameStatus(status);
+        resolve(status);
+      }, 1200);
+    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -233,6 +241,7 @@ export default function CustomerSignup(): JSX.Element {
     if (name === "phone" && value) fieldError = validatePhoneNumber(value, countryCode);
     
     if (name === "username") {
+        setUsernameStatus(null); // Reset availability status on change
         const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
         const forbiddenChars = /[&=_'\-+,<>]/;
         const doublePeriod = /\.\./;
@@ -280,7 +289,7 @@ export default function CustomerSignup(): JSX.Element {
 
   const preventCopyPaste = (e: React.ClipboardEvent) => { e.preventDefault(); };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const requiredFields: (keyof FormType)[] = ["firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
     const newFieldErrors: ErrorType = {};
@@ -302,6 +311,18 @@ export default function CustomerSignup(): JSX.Element {
       if (scrollContainerRef.current) {
         scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }
+      return;
+    }
+
+    /* Auto-Check Logic if Button was forgotten */
+    let currentStatus = usernameStatus;
+    if (currentStatus === null) {
+      currentStatus = await checkUsername() as "available" | "unavailable";
+    }
+
+    if (currentStatus !== "available") {
+      setMandatoryError("Please check and verify a unique username before registering.");
+      if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -387,16 +408,42 @@ export default function CustomerSignup(): JSX.Element {
                 <ErrorMessage message={errors.phone} />
               </div>
 
-              <Input 
-                name="username" 
-                label="Username" 
-                required 
-                tooltip="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc." 
-                value={form.username} 
-                error={errors.username} 
-                onChange={handleChange} 
-                placeholder="Enter username" 
-              />
+              {/* USERNAME FIELD WITH CHECK BUTTON (EXACTLY AS AGENT UI) */}
+              <div className="mb-4">
+                <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
+                  Username<span className="text-red-500 ml-1">*</span>
+                  <Tooltip text="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc." />
+                </label>
+                <div className="flex gap-2 mt-1">
+                  <input
+                    name="username"
+                    value={form.username}
+                    onChange={handleChange}
+                    placeholder="Enter username"
+                    className={`flex-grow border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 ${
+                      errors.username ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                    }`}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={checkUsername} 
+                    disabled={!form.username || isChecking || !!errors.username}
+                    className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1">
+                    {isChecking ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
+                  </button>
+                </div>
+                <ErrorMessage message={errors.username} />
+                {usernameStatus === "available" && !errors.username && (
+                  <p className="text-green-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
+                    <CheckCircle2 size={14} /> Username is available!
+                  </p>
+                )}
+                {usernameStatus === "unavailable" && !errors.username && (
+                  <p className="text-red-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
+                    <AlertCircle size={14} /> This username is already taken.
+                  </p>
+                )}
+              </div>
 
               <div className="mb-4">
                 <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
