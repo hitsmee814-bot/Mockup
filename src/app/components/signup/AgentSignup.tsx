@@ -152,11 +152,22 @@ export default function AgentSignup(): JSX.Element {
 
   const emailValid = (e: string) => {
     const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!basicRegex.test(e)) return false;
+    if (!basicRegex.test(e)) return { valid: false, errorType: "syntax" };
+    
     const parts = e.split('@');
-    if (parts.length !== 2) return false;
     const domainPart = parts[1].split('.')[0];
-    return /^[a-z0-9]+$/.test(domainPart);
+    
+    // Check for uppercase characters in domain
+    if (/[A-Z]/.test(domainPart)) {
+        return { valid: false, errorType: "casing" };
+    }
+
+    // Check for special characters in domain (only lowercase letters and numbers allowed)
+    if (!/^[a-z0-9]+$/.test(domainPart)) {
+        return { valid: false, errorType: "syntax" };
+    }
+
+    return { valid: true, errorType: "" };
   };
 
   const validatePhoneNumber = (p: string, country: string) => {
@@ -183,15 +194,10 @@ export default function AgentSignup(): JSX.Element {
 
     if (value) {
         if (name === "username") {
-            // 1. Check start (alphabetic) and characters (letters, numbers, dots)
             const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
-            // 2. Check forbidden characters
             const forbiddenChars = /[&=_'\-+,<>]/;
-            // 3. Check for double periods
             const doublePeriod = /\.\./;
-            // 4. Check length (6-16)
             const lengthValid = value.length >= 6 && value.length <= 16;
-            // 5. Check end (cannot end with period)
             const endsWithPeriod = value.endsWith('.');
 
             if (!allowedChars.test(value)) {
@@ -206,8 +212,13 @@ export default function AgentSignup(): JSX.Element {
                 fieldError = "Username cannot end with a period.";
             }
         }
-        if (name === "email" && !emailValid(value)) {
-            fieldError = "Please enter a valid email address.";
+        if (name === "email") {
+            const validation = emailValid(value);
+            if (!validation.valid) {
+                fieldError = validation.errorType === "casing" 
+                    ? "Email domain must be in lowercase" 
+                    : "Please enter a valid email address";
+            }
         }
         if (name === "phone") {
             fieldError = validatePhoneNumber(value, updatedForm.countryCode);
@@ -283,7 +294,7 @@ export default function AgentSignup(): JSX.Element {
     const hasInvalidFields = Object.values(errors).some(error => error !== "" && error !== "Required");
 
     if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
-      setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) correctly for a successful registration");
+      setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
       
       const newFieldErrors: ErrorState = { ...errors };
       emptyFields.forEach(f => { 

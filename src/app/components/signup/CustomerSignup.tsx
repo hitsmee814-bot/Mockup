@@ -184,10 +184,23 @@ export default function CustomerSignup(): JSX.Element {
 
   const emailValid = (e: string) => {
     const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!basicRegex.test(e)) return false;
+    if (!basicRegex.test(e)) return { valid: false, errorType: "syntax" };
+    
     const parts = e.split('@');
     const domainPart = parts[1].split('.')[0];
-    return domainPart === domainPart.toLowerCase() && /^[a-zA-Z0-9]+$/.test(domainPart);
+    
+    // 1. Check if domain part contains any uppercase letters
+    if (/[A-Z]/.test(domainPart)) {
+      return { valid: false, errorType: "casing" };
+    }
+    
+    // 2. Check if domain part contains ONLY lowercase letters or numbers (no special chars)
+    const noSpecialCharsRegex = /^[a-z0-9]+$/;
+    if (!noSpecialCharsRegex.test(domainPart)) {
+        return { valid: false, errorType: "syntax" };
+    }
+    
+    return { valid: true, errorType: "" };
   };
 
   const validatePhoneNumber = (p: string, country: CountryCode) => {
@@ -208,7 +221,15 @@ export default function CustomerSignup(): JSX.Element {
 
     let fieldError = "";
     
-    if (name === "email" && value && !emailValid(value)) fieldError = "Please enter a valid email address.";
+    if (name === "email" && value) {
+        const validation = emailValid(value);
+        if (!validation.valid) {
+            fieldError = validation.errorType === "casing" 
+                ? "Email domain must be in lowercase" 
+                : "Please enter a valid email address";
+        }
+    }
+
     if (name === "phone" && value) fieldError = validatePhoneNumber(value, countryCode);
     
     if (name === "username") {
@@ -276,7 +297,7 @@ export default function CustomerSignup(): JSX.Element {
     
     if (hasEmptyField || hasDynamicErrors || strengthLabel === "weak password") {
       setErrors(prev => ({ ...prev, ...newFieldErrors }));
-      setMandatoryError("Kindly fill-up all the mandatory fields ( marked with * ) correctly for a successful registration");
+      setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
       
       if (scrollContainerRef.current) {
         scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
@@ -336,7 +357,7 @@ export default function CustomerSignup(): JSX.Element {
               <Input name="middleName" label="Middle Name (Optional)" value={form.middleName} error={errors.middleName} onChange={handleChange} placeholder="Enter middle name" />
               <Input name="lastName" label="Last Name" required value={form.lastName} error={errors.lastName} onChange={handleChange} placeholder="Enter last name" />
 
-              <Input name="email" label="Email" required tooltip="Enter a valid email address" value={form.email} error={errors.email} onChange={handleChange} placeholder="Enter email" />
+              <Input name="email" label="Email" required tooltip="Enter a valid email address like name@example.com" value={form.email} error={errors.email} onChange={handleChange} placeholder="Enter email" />
 
               <div className="mb-4">
                 <label className="font-medium text-[12px] flex items-center text-[#1A1A1A] mb-1">
