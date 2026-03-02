@@ -94,7 +94,7 @@ export default function VideoMain() {
             visible: { transition: { staggerChildren: 0.25 } },
           }}
           className="text-4xl sm:text-5xl md:text-7xl font-bold text-white
-          flex flex-wrap items-center justify-center gap-4"
+          flex flex-wrap items-center justify-center gap-1"
         >
           <motion.span variants={wordVariant}>Plan.</motion.span>
           <motion.span variants={wordVariant}>Tap.</motion.span>
@@ -103,7 +103,7 @@ export default function VideoMain() {
               onClick={scrollToSection}
               whileTap={{ scale: 0.97 }}
               className="relative inline-flex items-center px-5 py-2 rounded-full
-              font-semibold text-white bg-[#0E40C7] overflow-hidden"
+              font-semibold text-white bg-[#3FB8FF] overflow-hidden"
             >
               <motion.span
                 aria-hidden

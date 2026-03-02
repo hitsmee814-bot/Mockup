@@ -5,6 +5,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion"
 import { HiOutlineBriefcase, HiOutlinePaperAirplane } from "react-icons/hi"
 import { useRouter } from "next/navigation"
 import HeroStepperCard from "./HeroStepperCard"
+import { PremiumButton } from "../utils/PremiumButton"
 
 export default function Hero() {
   const router = useRouter()
@@ -53,13 +54,15 @@ export default function Hero() {
                     truly one-of-a-kind.
                   </p>
 
-                  <button
+
+                  <PremiumButton
+                    variant="primary"
                     onClick={() => router.push("/itinerary")}
-                    className="px-5 py-2 bg-[#0E40C7] text-white rounded-md font-medium text-sm hover:bg-[#3769F1] transition mb-4 flex items-center gap-2"
+                    className="mb-4 flex items-center w-fit-content"
                   >
                     <HiOutlinePaperAirplane size={18} />
                     Start Itinerary
-                  </button>
+                  </PremiumButton>
 
                   <p
                     onClick={() => setMode("corporate")}
@@ -84,12 +87,14 @@ export default function Hero() {
                     Book flights, hotels, and packages instantly while staying
                     compliant and saving on every trip.
                   </p>
-
-                  <button className="px-5 py-2 bg-[#00AFEF] text-white rounded-md font-medium text-sm hover:bg-[#0086b8] transition mb-4 flex items-center gap-2">
+                  <PremiumButton
+                    variant="primary"
+                    onClick={() => router.push("/itinerary")}
+                    className="mb-4 flex items-center w-fit-content"
+                  >
                     <HiOutlineBriefcase size={18} />
                     Request Demo
-                  </button>
-
+                  </PremiumButton>
                   <p
                     onClick={() => setMode("leisure")}
                     className="text-sm text-indigo-600 cursor-pointer hover:underline"

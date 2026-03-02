@@ -6,6 +6,7 @@ import {
   useMotionValue,
 } from "framer-motion";
 import { useRef } from "react";
+import { useMemo } from "react";
 
 interface Testimonial {
   name: string;
@@ -104,6 +105,7 @@ function ScrollingRow({ items, speed, direction }: RowProps) {
 }
 
 export default function TestimonialsCarousel() {
+
   const testimonials: Testimonial[] = Array.from(
     { length: 10 },
     (_, i) => ({
@@ -111,7 +113,7 @@ export default function TestimonialsCarousel() {
       role: "Product Manager",
       text:
         "This product completely transformed our workflow and improved team efficiency.",
-      rating: Math.floor(Math.random() * 2) + 4,
+      rating: 4 + (i % 2),
     })
   );
 
@@ -125,12 +127,12 @@ export default function TestimonialsCarousel() {
           viewport={{ once: true }}
           className="text-center mb-10 mt-10"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-[#0E40C7]"
+          <h2 className="text-4xl md:text-5xl font-bold text-[#1B120B]"
           >
             Hear From Our Travellers
           </h2>
 
-          <p className="mt-5 text-[#306F7D] max-w-2xl mx-auto text-lg">
+          <p className="mt-5 text-gray-500 max-w-2xl mx-auto text-lg">
             Discover the experiences and stories of our travellers who explored the world with us. Their journeys inspire, delight, and showcase the memories we help create.
           </p>
         </motion.div>

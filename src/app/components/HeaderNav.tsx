@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { Menu, X, ChevronDown } from "lucide-react"
-import logoPrimary from "../assets/images/final logo Bonhomiee in yellow without.png"
+import { Menu, X, ChevronDown, LogIn } from "lucide-react"
+import logoPrimary from "../assets/images/final logo Bonhomiee white without.png"
+import { PremiumButton } from "../utils/PremiumButton"
+import { HiOutlineBriefcase } from "react-icons/hi"
 
 const navItems = [
   { label: "Getting Started", id: "hero-sub" },
+  { label: "Services", id: "hero-sub" },
   {
     label: "Explore",
     children: [
@@ -57,7 +60,6 @@ export default function HeaderNav({
     if (!enableScrollBg) return
     const threshold = 200
     const handleScroll = () =>
-      console.log(window.scrollY);
       setScrollRatio(Math.min(window.scrollY / threshold, 1))
 
     window.addEventListener("scroll", handleScroll)
@@ -81,14 +83,14 @@ export default function HeaderNav({
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
         className={`
-    ${position === "fixed" ? "fixed top-0 left-0" : "sticky top-0"}
-    w-full z-50
-    ${enableScrollBg ? "backdrop-blur-xl border-b border-white/10" : ""}
-    transition-all duration-300
-  `}
+          ${position === "fixed" ? "fixed top-0 left-0" : "sticky top-0"}
+          w-full z-50
+          transition-all duration-300
+          ${isScrolled ? "backdrop-blur-xl" : ""}
+        `}
         style={{
-          background: enableScrollBg
-            ? `rgba(14, 64, 199, ${0.2 + scrollRatio * 0.8})`
+          background: isScrolled
+            ? "#3FB8FF"
             : "transparent",
         }}
       >
@@ -98,12 +100,12 @@ export default function HeaderNav({
             className="relative w-[160px] h-10 cursor-pointer"
             onClick={() => handleNavClick("hero-sub")}
           >
-            <motion.div
-              className="absolute inset-0"
-            >
-              <Image src={logoPrimary} alt="Logo" fill style={{ objectFit: "contain" }} />
-            </motion.div>
-
+            <Image
+              src={logoPrimary}
+              alt="Logo"
+              fill
+              style={{ objectFit: "contain" }}
+            />
           </div>
 
           <nav className="hidden md:flex items-center gap-10 relative">
@@ -118,93 +120,98 @@ export default function HeaderNav({
                   onClick={() => {
                     if (!item.children) handleNavClick(item.id!)
                   }}
-                  className="relative font-medium text-[15px] text-white/90 hover:text-white transition-colors flex items-center gap-1"
+                  className="relative font-medium text-[15px] text-[#FFFFFF]/90 hover:text-[#FFFFFF] transition-colors flex items-center gap-1"
                 >
                   {item.label}
+
                   {item.children && (
-                    <ChevronDown
-                      size={16}
-                      className="opacity-70"
-                    />
+                    <ChevronDown size={16} className="opacity-70" />
                   )}
 
                   <motion.span
-                    className="absolute left-0 -bottom-1 h-[2px] w-full bg-primary"
+                    className="absolute left-0 -bottom-1 h-[2px] w-full bg-[#FBAB18]"
                     initial={{ scaleX: 0 }}
                     animate={{
                       scaleX: hovered === item.label ? 1 : 0,
                     }}
                     transition={{ duration: 0.3 }}
+                    style={{ originX: 0 }}
                   />
                 </button>
 
-<AnimatePresence>
-  {item.children && hovered === item.label && (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="absolute top-full left-0 pt-4 z-50"
-    >
-      <div
-        className="
-          w-56 
-          bg-white 
-          border border-[#CAD8FF]
-          shadow-[0_10px_30px_rgba(4,37,126,0.08)]
-          rounded-xl 
-          p-3 
-          space-y-1
-        "
-      >
-        {item.children.map((subItem) => (
-          <button
-            key={subItem.id}
-            onClick={() => handleNavClick(subItem.id)}
-            className="
-              block w-full text-left 
-              px-3 py-2 
-              rounded-lg 
-              text-sm 
-              text-[#04257E]
-              transition-all duration-200
-              hover:bg-[#CAD8FF]
-              hover:text-[#04257E]
-            "
-          >
-            {subItem.label}
-          </button>
-        ))}
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                <AnimatePresence>
+                  {item.children && hovered === item.label && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.25 }}
+                      className="absolute top-full left-0 pt-4 z-50"
+                    >
+                      <div className="
+                        w-56
+                        bg-[#FFFFFF]
+                        border border-[#3FB8FF]/20
+                        shadow-[0_10px_30px_rgba(27,18,11,0.08)]
+                        rounded-xl
+                        p-3
+                        space-y-1
+                      ">
+                        {item.children.map((subItem) => (
+                          <button
+                            key={subItem.id}
+                            onClick={() => handleNavClick(subItem.id)}
+                            className="
+                              block w-full text-left
+                              px-3 py-2
+                              rounded-lg
+                              text-sm
+                              text-[#1B120B]
+                              transition-all duration-200
+                              hover:bg-[#3FB8FF]/10
+                            "
+                          >
+                            {subItem.label}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ))}
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <button
+            <PremiumButton
+              variant="primary"
               onClick={onAuthOpen}
-              className="text-sm font-medium text-white/90 hover:text-white transition-colors"
-            >
+              className="mb-4 flex items-center w-fit-content"
+              >
               Login
-            </button>
-
-            <motion.button
+              <LogIn size={18}/>
+            </PremiumButton>
+            <PremiumButton
+              variant="secondary"
+              onClick={onAuthOpen}
+              className="mb-4 flex items-center w-fit-content"
+            >
+              Book Demo
+              <HiOutlineBriefcase size={18}/>
+            </PremiumButton>
+            {/* <motion.button
               onClick={onAuthOpen}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-white text-[#0E40C7] shadow-lg"
+              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#FBAB18] text-[#1B120B] shadow-lg"
             >
               Book Demo
-            </motion.button>
+            </motion.button> */}
           </div>
 
           <button
             onClick={() => setMenuOpen(true)}
-            className="md:hidden text-white"
+            className="md:hidden text-[#FFFFFF]"
           >
             <Menu size={28} />
           </button>
@@ -218,22 +225,22 @@ export default function HeaderNav({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-white z-[9999] flex flex-col pt-28 px-8"
+            className="fixed inset-0 bg-[#3FB8FF] z-[9999] flex flex-col pt-28 px-8"
           >
             <button
               onClick={() => setMenuOpen(false)}
-              className="absolute top-6 right-6"
+              className="absolute top-6 right-6 text-[#1B120B]"
             >
-              <X size={28} />
+              <X className="text-white" size={28} />
             </button>
 
-            <nav className="flex flex-col space-y-6 text-lg font-medium">
+            <nav className="flex flex-col space-y-6 text-lg font-medium text-white">
               {navItems.map((item) => (
                 <div key={item.label}>
                   {!item.children ? (
                     <button
                       onClick={() => handleNavClick(item.id!)}
-                      className="text-left py-2 w-full border-b"
+                      className="text-left py-2 w-full border-b border-[#1B120B]/20"
                     >
                       {item.label}
                     </button>
@@ -247,7 +254,7 @@ export default function HeaderNav({
                           <button
                             key={subItem.id}
                             onClick={() => handleNavClick(subItem.id)}
-                            className="text-left text-gray-600"
+                            className="text-left"
                           >
                             {subItem.label}
                           </button>
@@ -264,7 +271,7 @@ export default function HeaderNav({
                     setMenuOpen(false)
                     onAuthOpen?.()
                   }}
-                  className="text-center py-3 border rounded-lg"
+                  className="text-center py-3 rounded-lg bg-[#FBAB18] text-white"
                 >
                   Login
                 </button>
@@ -274,7 +281,7 @@ export default function HeaderNav({
                     setMenuOpen(false)
                     onAuthOpen?.()
                   }}
-                  className="text-center py-3 bg-[#0E40C7] text-white rounded-lg"
+                  className="text-center py-3 bg-[#FBAB18] text-white rounded-lg font-semibold"
                 >
                   Book Demo
                 </button>
