@@ -57,6 +57,7 @@ export default function HeaderNav({
     if (!enableScrollBg) return
     const threshold = 200
     const handleScroll = () =>
+      console.log(window.scrollY);
       setScrollRatio(Math.min(window.scrollY / threshold, 1))
 
     window.addEventListener("scroll", handleScroll)
