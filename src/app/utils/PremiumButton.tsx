@@ -14,7 +14,7 @@ interface PremiumButtonProps
 }
 
 const baseStyles =
-  "relative inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold overflow-hidden transition-all duration-300 focus:outline-none"
+  "relative inline-flex items-center justify-center rounded-md px-6 py-3 text-sm font-semibold overflow-hidden transition-all duration-300 focus:outline-none"
 
 const variantStyles: Record<Variant, string> = {
   primary:

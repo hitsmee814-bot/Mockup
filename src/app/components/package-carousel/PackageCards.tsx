@@ -1,10 +1,17 @@
-
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Star, ChevronLeft, ChevronRight, Home, Globe } from "lucide-react"
+import { Star, Home, Globe } from "lucide-react"
 import { PremiumButton } from "@/app/utils/PremiumButton"
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 const destinations = {
   domestic: [
@@ -27,38 +34,9 @@ const destinations = {
 
 export default function VacationDestinations() {
   const [mode, setMode] = useState<"domestic" | "international">("domestic")
-  const [index, setIndex] = useState(1)
-  const [isAnimating, setIsAnimating] = useState(false)
 
   const isDomestic = mode === "domestic"
   const data = destinations[mode]
-
-  const slides = [data[data.length - 1], ...data, data[0]]
-
-  const next = () => {
-    if (isAnimating) return
-    setIndex((prev) => prev + 1)
-  }
-
-  const prev = () => {
-    if (isAnimating) return
-    setIndex((prev) => prev - 1)
-  }
-
-  useEffect(() => {
-    setIndex(1)
-  }, [mode])
-
-  const handleAnimationComplete = () => {
-    setIsAnimating(false)
-
-    if (index === slides.length - 1) {
-      setIndex(1)
-    }
-    if (index === 0) {
-      setIndex(slides.length - 2)
-    }
-  }
 
   return (
     <section className="py-28 px-6">
@@ -66,7 +44,7 @@ export default function VacationDestinations() {
 
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold text-[#1B120B] mb-4">
-            Premium <span className="">Vacation</span> Packages
+            Premium Vacation Packages
           </h2>
           <p className="text-gray-500 text-lg">
             Handpicked journeys crafted for elevated travel experiences
@@ -75,12 +53,22 @@ export default function VacationDestinations() {
 
         <div className="flex justify-center mb-20">
           <div className="flex p-1.5 bg-white border border-slate-200 rounded-2xl shadow-sm relative">
-            <ToggleButton label="Domestic" active={isDomestic} onClick={() => setMode("domestic")} activeColor="bg-[#3FB8FF]" glowColor="shadow-[#3FB8FF]/30" />
-            <ToggleButton label="International" active={!isDomestic} onClick={() => setMode("international")} activeColor="bg-[#FBAB18]" glowColor="shadow-[#FBAB18]/30" />
+            <ToggleButton
+              label="Domestic"
+              active={isDomestic}
+              onClick={() => setMode("domestic")}
+              activeColor="bg-[#3FB8FF]"
+            />
+            <ToggleButton
+              label="International"
+              active={!isDomestic}
+              onClick={() => setMode("international")}
+              activeColor="bg-[#FBAB18]"
+            />
           </div>
         </div>
 
-        <div className="hidden xl:grid grid-cols-3 gap-8 min-h-[800px]">
+        <div className="hidden xl:grid grid-cols-3 gap-8">
           <AnimatePresence mode="wait">
             {data.map((dest) => (
               <motion.div
@@ -96,13 +84,34 @@ export default function VacationDestinations() {
           </AnimatePresence>
         </div>
 
-        <div className="xl:hidden relative overflow-hidden">
-
-          <LoopCarousel data={data} />
-
+        <div className="xl:hidden relative">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {data.map((dest) => (
+                <CarouselItem
+                  key={dest.name}
+                  className="basis-full md:basis-1/2 px-3"
+                >
+                  <Card dest={dest} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-5"/>
+            <CarouselNext className="right-9"/>
+          </Carousel>
         </div>
+
         <div className="mt-16 text-center">
-          <a href="#" className="text-lg font-semibold text-[#3FB8FF] hover:underline">
+          <a
+            href="#"
+            className="text-lg font-semibold text-[#3FB8FF] hover:text-[#FBAB18] transition-colors"
+          >
             {isDomestic ? "Explore 20+ destinations" : "Explore 30+ destinations"}
           </a>
         </div>
@@ -129,138 +138,49 @@ function Card({ dest }: { dest: any }) {
 
       <div className="p-7">
         <h3 className="text-xl font-bold text-[#1B120B] mb-4">{dest.name}</h3>
+
         <div className="flex items-center justify-between text-gray-500 text-sm mb-5">
           <span>{dest.days} Days</span>
           <span>{dest.people} People</span>
         </div>
+
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-[#3FB8FF]">{dest.price}</span>
-          <PremiumButton
-            variant="primary"
-            className="mb-4 flex items-center w-fit-content"
-          >
+          <span className="text-2xl font-bold text-[#3FB8FF]">
+            {dest.price}
+          </span>
+
+          <PremiumButton variant="primary">
             Book Now
           </PremiumButton>
-          {/* <button className="px-5 py-2.5 rounded-full bg-[#1B120B] text-white font-medium hover:bg-[#3FB8FF] transition-colors">
-            Book Now
-          </button> */}
         </div>
       </div>
     </div>
   )
 }
 
-function ToggleButton({ label, active, onClick, activeColor, glowColor }: any) {
+function ToggleButton({ label, active, onClick, activeColor }: any) {
   return (
     <button
       onClick={onClick}
-      className={`relative px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-colors duration-300 z-10 ${active ? "text-white" : "text-slate-400 hover:text-slate-600"
+      className={`relative px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-colors duration-300 ${active ? "text-white" : "text-slate-400"
         }`}
     >
       <span className="relative z-20 flex items-center gap-2">
         {label}
-        {label === "Domestic" ? <Home className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+        {label === "Domestic" ? (
+          <Home className="w-4 h-4" />
+        ) : (
+          <Globe className="w-4 h-4" />
+        )}
       </span>
+
       {active && (
         <motion.div
           layoutId="active-pill"
-          className={`absolute inset-0 rounded-xl z-10 shadow-lg ${activeColor} ${glowColor}`}
+          className={`absolute inset-0 rounded-xl ${activeColor}`}
           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
         />
       )}
     </button>
-  )
-}
-
-function LoopCarousel({ data }: { data: any[] }) {
-  const [index, setIndex] = useState(0)
-  const [visibleCount, setVisibleCount] = useState(1)
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  useEffect(() => {
-    const update = () => {
-      if (window.innerWidth >= 768) {
-        setVisibleCount(2)
-      } else {
-        setVisibleCount(1)
-      }
-    }
-    update()
-    window.addEventListener("resize", update)
-    return () => window.removeEventListener("resize", update)
-  }, [])
-
-  const clonesStart = data.slice(-visibleCount)
-  const clonesEnd = data.slice(0, visibleCount)
-  const slides = [...clonesStart, ...data, ...clonesEnd]
-
-  useEffect(() => {
-    setIndex(visibleCount)
-  }, [visibleCount, data])
-
-  const next = () => {
-    if (isAnimating) return
-    setIndex((prev) => prev + 1)
-  }
-
-  const prev = () => {
-    if (isAnimating) return
-    setIndex((prev) => prev - 1)
-  }
-
-  const handleComplete = () => {
-    setIsAnimating(false)
-
-    if (index >= data.length + visibleCount) {
-      setIndex(visibleCount)
-    }
-
-    if (index < visibleCount) {
-      setIndex(data.length + visibleCount - 1)
-    }
-  }
-
-  return (
-    <>
-      <motion.div
-        className="flex"
-        animate={{
-          x: `-${index * (100 / visibleCount)}%`
-        }}
-        transition={{ type: "spring", stiffness: 260, damping: 30 }}
-        onAnimationStart={() => setIsAnimating(true)}
-        onAnimationComplete={handleComplete}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.15}
-        onDragEnd={(e, info) => {
-          if (info.offset.x < -50) next()
-          if (info.offset.x > 50) prev()
-        }}
-      >
-        {slides.map((dest, i) => (
-          <div
-            key={i}
-            className={`px-3 ${visibleCount === 1 ? "min-w-full" : "min-w-1/2"
-              }`}
-          >
-            <Card dest={dest} />
-          </div>
-        ))}
-      </motion.div>
-
-      <button
-        onClick={prev}
-        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-md rounded-full p-2 z-20"
-      >
-        <ChevronLeft size={18} />
-      </button>
-      <button
-        onClick={next}
-        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-md rounded-full p-2 z-20"
-      >
-        <ChevronRight size={18} />
-      </button>
-    </>
   )
 }

@@ -1,15 +1,5 @@
-import HeaderNav from "../components/HeaderNav"
-import ItenaryBuilder from "../components/itinerary/ItenaryBuilder"
+import { redirect } from "next/navigation"
 
 export default function ItineraryPage() {
-  return (
-    <main className="min-h-screen bg-gray-50">
-      <HeaderNav
-        enableScrollBg={false}
-        position="sticky"
-      />
-
-      <ItenaryBuilder />
-    </main>
-  )
+  redirect("/itinerary/packages")
 }

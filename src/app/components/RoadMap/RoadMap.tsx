@@ -38,30 +38,40 @@ export default function RoadmapTimeline() {
       <section className="pt-20 bg-transparent min-h-screen flex items-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(63,184,255,0.12),_transparent_60%)]" />
 
-        <div className="max-w-[1700px] mx-auto px-16 w-full relative z-10">
+        <div className="max-w-[1700px] mx-auto px-6 md:px-16 w-full relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-center mb-28"
+            transition={{ duration: 0.8 }}
+            className="text-center mb-20 md:mb-28"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-[#1B120B] tracking-tight">
               Our Journey
             </h2>
           </motion.div>
 
-          <div className="relative flex gap-8">
+          <div className="relative flex flex-col md:flex-row gap-16 md:gap-8">
+
             <motion.div
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 1.2, delay: 0.3, ease: "easeInOut" }}
-              className="absolute top-12 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#3FB8FF]/100 to-transparent origin-left"
+              transition={{ duration: 1.2, delay: 0.3 }}
+              className="hidden md:block absolute top-12 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#3FB8FF] to-transparent origin-left"
             />
+
+            {/* <motion.div
+              initial={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, delay: 0.3 }}
+              className="md:hidden absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#3FB8FF] to-transparent origin-top"
+            /> */}
 
             {roadmap.map((item, index) => {
               const Icon = item.icon
+
               return (
                 <motion.div
                   key={item.title}
@@ -71,64 +81,34 @@ export default function RoadmapTimeline() {
                   transition={{
                     duration: 0.7,
                     delay: 0.5 + index * 0.15,
-                    ease: [0.25, 0.4, 0.25, 1]
                   }}
-                  className="relative flex-1 group"
+                  className="relative flex-1"
                 >
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center text-center">
+
                     <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      whileInView={{ scale: 1, rotate: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 0.8,
-                        delay: 0.7 + index * 0.15,
-                        ease: "backOut"
-                      }}
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      className="relative w-24 h-24 mb-8"
+                      className="relative w-20 h-20 md:w-24 md:h-24 mb-6 md:mb-8"
                     >
-                      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18] blur-xl opacity-40 group-hover:opacity-80 transition-opacity duration-500" />
+                      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18] blur-xl opacity-40" />
 
                       <div className="relative w-full h-full rounded-3xl bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18] p-[2px]">
                         <div className="w-full h-full rounded-3xl bg-[#1B120B] flex items-center justify-center">
-                          <Icon className="w-11 h-11 text-white" />
+                          <Icon className="w-9 h-9 md:w-11 md:h-11 text-white" />
                         </div>
                       </div>
                     </motion.div>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 0.6,
-                        delay: 0.9 + index * 0.15
-                      }}
-                      className="text-center"
-                    >
-                      <h3 className="text-3xl font-bold text-[#1B120B] mb-4 tracking-tight">
+                    <div>
+                      <h3 className="text-2xl md:text-3xl font-bold text-[#1B120B] mb-3">
                         {item.title}
                       </h3>
-                      <p className="text-[#1B120B]/70 text-sm leading-relaxed px-4">
+                      <p className="text-[#1B120B]/70 text-sm md:text-base leading-relaxed px-4 md:px-6">
                         {item.desc}
                       </p>
-                    </motion.div>
-                  </div>
+                    </div>
 
-                  {/* {index < roadmap.length - 1 && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ 
-                        duration: 0.5, 
-                        delay: 1.1 + index * 0.15,
-                        ease: "backOut"
-                      }}
-                      className="absolute top-20 -right-4 w-3 h-3 rounded-full bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18] shadow-lg shadow-[#3FB8FF]/40"
-                    />
-                  )} */}
+                  </div>
                 </motion.div>
               )
             })}
@@ -136,8 +116,8 @@ export default function RoadmapTimeline() {
         </div>
       </section>
 
-      <section className="pb-20 -mt-20 bg-transparent relative overflow-hidden">
-        <div className="max-w-[1700px] mx-auto px-16 relative z-10">
+      <section className="pb-20 -mt-10 md:-mt-20 bg-transparent relative overflow-hidden">
+        <div className="max-w-[1700px] mx-auto px-6 md:px-16 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -145,7 +125,7 @@ export default function RoadmapTimeline() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h3 className="text-4xl md:text-5xl font-bold text-[#1B120B] mb-6 tracking-tight">
+            <h3 className="text-4xl md:text-5xl font-bold text-[#1B120B] mb-6">
               Partner with Us
             </h3>
 

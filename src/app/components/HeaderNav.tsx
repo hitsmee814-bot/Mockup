@@ -50,8 +50,7 @@ export default function HeaderNav({
   const [menuOpen, setMenuOpen] = useState(false)
   const [hovered, setHovered] = useState<string | null>(null)
 
-  const isScrolled = scrollRatio > 0.6
-
+  const isScrolled = enableScrollBg ? scrollRatio > 0.6 : true
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : ""
   }, [menuOpen])
@@ -79,19 +78,17 @@ export default function HeaderNav({
   return (
     <>
       <motion.header
-        initial={{ y: -80, opacity: 0 }}
+        initial={enableScrollBg ? { y: -80, opacity: 0 } : false}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
         className={`
-          ${position === "fixed" ? "fixed top-0 left-0" : "sticky top-0"}
-          w-full z-50
-          transition-all duration-300
-          ${isScrolled ? "backdrop-blur-xl" : ""}
-        `}
+    ${position === "fixed" ? "fixed top-0 left-0" : "sticky top-0"}
+    w-full z-50
+    transition-all duration-300
+    ${isScrolled ? "backdrop-blur-xl" : ""}
+  `}
         style={{
-          background: isScrolled
-            ? "#3FB8FF"
-            : "transparent",
+          background: isScrolled ? "#3FB8FF" : "transparent",
         }}
       >
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -187,9 +184,9 @@ export default function HeaderNav({
               variant="primary"
               onClick={onAuthOpen}
               className="mb-4 flex items-center w-fit-content"
-              >
+            >
               Login
-              <LogIn size={18}/>
+              <LogIn size={18} />
             </PremiumButton>
             <PremiumButton
               variant="secondary"
@@ -197,16 +194,8 @@ export default function HeaderNav({
               className="mb-4 flex items-center w-fit-content"
             >
               Book Demo
-              <HiOutlineBriefcase size={18}/>
+              <HiOutlineBriefcase size={18} />
             </PremiumButton>
-            {/* <motion.button
-              onClick={onAuthOpen}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#FBAB18] text-[#1B120B] shadow-lg"
-            >
-              Book Demo
-            </motion.button> */}
           </div>
 
           <button
