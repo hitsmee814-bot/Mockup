@@ -116,32 +116,31 @@ export default function RoadmapTimeline() {
         </div>
       </section>
 
-      <section className="pb-20 -mt-10 md:-mt-20 bg-transparent relative overflow-hidden">
-        <div className="max-w-[1700px] mx-auto px-6 md:px-16 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
+      <section className="pt-5 md:pt-0 pb-20 bg-transparent relative overflow-hidden">        <div className="max-w-[1700px] mx-auto px-6 md:px-16 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center"
+        >
+          <h3 className="text-4xl md:text-5xl font-bold text-[#1B120B] mb-6">
+            Partner with Us
+          </h3>
+
+          <p className="text-[#1B120B]/70 text-lg mb-10 max-w-2xl mx-auto">
+            Join industry leaders who trust us to deliver exceptional experiences
+          </p>
+
+          <PremiumButton
+            variant="secondary"
+            className="mb-4 mx-auto flex items-center justify-center gap-2"
           >
-            <h3 className="text-4xl md:text-5xl font-bold text-[#1B120B] mb-6">
-              Partner with Us
-            </h3>
-
-            <p className="text-[#1B120B]/70 text-lg mb-10 max-w-2xl mx-auto">
-              Join industry leaders who trust us to deliver exceptional experiences
-            </p>
-
-            <PremiumButton
-              variant="secondary"
-              className="mb-4 mx-auto flex items-center justify-center gap-2"
-            >
-              Get in touch
-              <Handshake className="w-4 h-4" />
-            </PremiumButton>
-          </motion.div>
-        </div>
+            Get in touch
+            <Handshake className="w-4 h-4" />
+          </PremiumButton>
+        </motion.div>
+      </div>
       </section>
     </>
   )

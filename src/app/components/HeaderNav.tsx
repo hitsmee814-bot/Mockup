@@ -183,7 +183,7 @@ export default function HeaderNav({
             <PremiumButton
               variant="primary"
               onClick={onAuthOpen}
-              className="mb-4 flex items-center w-fit-content"
+              className="mb-0 flex items-center w-fit-content"
             >
               Login
               <LogIn size={18} />
@@ -191,7 +191,7 @@ export default function HeaderNav({
             <PremiumButton
               variant="secondary"
               onClick={onAuthOpen}
-              className="mb-4 flex items-center w-fit-content"
+              className="mb-0 flex items-center w-fit-content"
             >
               Book Demo
               <HiOutlineBriefcase size={18} />
