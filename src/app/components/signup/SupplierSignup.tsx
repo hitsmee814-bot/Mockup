@@ -2,7 +2,7 @@
 
     /* ================= IMPORTS ================= */
 
-import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import { parsePhoneNumberFromString } from 'libphonenumber-js' //123
 import React,{ useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tooltip } from 'react-tooltip'
@@ -53,6 +53,8 @@ type FormData = {
   taxDocType: string
   taxRegistrationDoc: File | null
   otherDocs: NamedDocument[]
+  tradeLicenseNumber: string
+  compRegistrationNumber: string 
 
 }
 
@@ -62,8 +64,8 @@ type FormData = {
   const EMAIL_REGEX =
   /^(?!\.)(?!.*\.\.)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
 
-    const WEBSITE_REGEX =
-  /^(https?:\/\/)?((([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)\.)+[A-Za-z]{2,})(:\d{1,5})?(\/[^\s]*)?$/;
+   const WEBSITE_REGEX =
+/^(https?:\/\/)?(?:(?:www\.)|(?!w+\.))([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?::\d{1,5})?(?:\/[^\s]*)?$/
 
   const STRONG_PASSWORD =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
 
@@ -211,6 +213,17 @@ function ErrorMessage({ message }: { message?: string }) {
   )
 }
 
+const FormErrorBanner = ({ message }: { message?: string }) => {
+  if (!message) return null
+
+  return (
+    <div className="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg mb-6 border border-red-100 flex items-center gap-2">
+      <AlertCircle size={16} className="shrink-0" />
+      <span>{message}</span>
+    </div>
+  )
+}
+
 
 
 
@@ -333,8 +346,8 @@ export default function SupplierSignup() {
       const [phoneError, setPhoneError] = useState('')
       const [taxIdError, setTaxIdError] = useState('')
       const [websiteError, setWebsiteError] = useState('')
-      
-
+      const [tradeLicenseNumberError, setTradeLicenseNumberError] = useState('')
+      const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')        
   
       const [form, setForm] = useState<FormData>({
           firstName: '',
@@ -353,7 +366,9 @@ export default function SupplierSignup() {
           panTaxId: '',
           websiteUrl: '',
           tradeLicense: null,
-          registrationCert: null,
+           tradeLicenseNumber: '',
+           registrationCert: null,
+           compRegistrationNumber: '',  
           taxDocType: '',
           taxRegistrationDoc: null,
           otherDocs: [],
@@ -551,10 +566,7 @@ const getTaxTypeBorderClass = () => {
 }
 
 const getTaxNumberBorderClass = () => {
-  if (
-    step3Submitted &&
-    (!form.panTaxId.trim() || taxIdError)
-  ) {
+  if (taxIdError) {
     return 'border-red-500'
   }
   return 'border-[#00AFEF]'
@@ -646,18 +658,27 @@ const validateWebsiteLive = (value: string) => {
 }
 
 const validateEmailLive = (value: string) => {
-  // If field is cleared → clear error
+  // Empty field → no error
   if (!value) {
     setEmailError('')
     return
   }
 
-  // Live aggressive validation (same as username)
+  // Format check
   if (!EMAIL_REGEX.test(value)) {
-    setEmailError('Please enter valid email address')
-  } else {
-    setEmailError('')
+    setEmailError('Please enter a valid email address')
+    return
   }
+
+  // Domain lowercase check
+  const domain = value.split('@')[1]
+  if (domain && domain !== domain.toLowerCase()) {
+    setEmailError('Email domain must be lowercase')
+    return
+  }
+
+  // All good
+  setEmailError('')
 }
 
 const validateTaxIdLive = (value: string, docType: string) => {
@@ -722,13 +743,15 @@ const hasEmptyMandatoryStep2 = () => {
 
 const hasEmptyMandatoryStep3 = () => {
   return (
-    !form.tradeLicense ||
-    !form.registrationCert ||
-    !form.taxDocType ||
-    !form.panTaxId.trim() ||
-    !form.taxRegistrationDoc
-  )
-}
+        !form.tradeLicenseNumber.trim() ||
+        !form.tradeLicense ||
+        !form.compRegistrationNumber.trim() ||
+        !form.registrationCert ||
+        !form.taxDocType ||
+        !form.panTaxId.trim() ||
+        !form.taxRegistrationDoc
+      )
+    }
 
 
 const validateStep1 = () => {
@@ -775,12 +798,29 @@ const validateStep2 = () => {
 
 
 const validateStep3 = () => {
-  //  Missing mandatory fields
-  if (hasEmptyMandatoryStep3()) {
+  // 1️ Trade License Number mandatory (set error explicitly)
+  if (!form.tradeLicenseNumber.trim()) {
+  
     return 'EMPTY'
   }
 
-  //  Invalid values
+   if (!form.compRegistrationNumber.trim()) {
+   
+    return 'EMPTY'
+  }
+  // 2️ Missing other mandatory fields
+  if (
+    !form.tradeLicense ||
+    !form.registrationCert ||
+    !form.taxDocType ||
+    !form.panTaxId.trim() ||
+    !form.taxRegistrationDoc
+  ) {
+    return 'EMPTY'
+    
+  }
+
+  // 3️ Invalid values
   if (taxIdError) {
     return 'INVALID'
   }
@@ -788,7 +828,14 @@ const validateStep3 = () => {
   return 'OK'
 }
 
-
+                const step3FileNames = [
+                form.tradeLicense?.name,
+                form.registrationCert?.name,
+                form.taxRegistrationDoc?.name,
+                ...form.otherDocs.map(doc => doc.file.name),
+              ]
+                .filter(Boolean)
+                .map(name => name!.toLowerCase())
 
 
 
@@ -827,11 +874,7 @@ const validateStep3 = () => {
                             </h2>
 
                           <StepIndicator step={step} />
-                            {error && (
-                              <div className="bg-red-100 border  text-red-700 px-3 py-2 rounded mb-3 text-xs">
-                                {error}
-                              </div>
-                            )}
+                          <FormErrorBanner message={error} />
                     </div>
                     
                     {/* divider */}
@@ -851,7 +894,14 @@ const validateStep3 = () => {
                     value={form.firstName}
                     onChange={handleChange}
                     className={getStep1BorderClass(true, false, form.firstName)}
-                  />
+                    />
+                    <ErrorMessage
+                      message={
+                        step1Submitted && !form.firstName.trim()
+                          ? 'Required'
+                          : undefined
+                      }
+                    />
                    
                     <Input label="Middle Name (optional)" placeholder="Enter middle name" name="middleName"   value={form.middleName} onChange={handleChange} />
                     
@@ -864,11 +914,17 @@ const validateStep3 = () => {
                     onChange={handleChange}
                     className={getStep1BorderClass(true, false, form.lastName)}
                   />
-                   
+                   <ErrorMessage
+                      message={
+                        step1Submitted && !form.lastName.trim()
+                          ? 'Required'
+                          : undefined
+                      }
+                    />
                     <Input
                         label="Email"
                         required
-                        placeholder="name@company.com"
+                        placeholder="Enter email"
                         name="email"
                         //autoComplete="off"
                         value={form.email}
@@ -876,7 +932,14 @@ const validateStep3 = () => {
                         tooltip="Enter a valid email address like name@example.com"
                         className={getStep1BorderClass(true, !!emailError, form.email)}
                       />
-                     <ErrorMessage message={emailError} />
+                     <ErrorMessage
+                        message={
+                          emailError ||
+                          (step1Submitted && !form.email.trim()
+                            ? 'Required'
+                            : undefined)
+                        }
+                      />
 
                       {/* PHONE */}
                       <div >
@@ -917,20 +980,35 @@ const validateStep3 = () => {
                                 className="flex-1 h-full px-3 text-[12px] text-black caret-black outline-none"
                                 inputMode="numeric"/>
                           </div>
-                            <ErrorMessage message={phoneError} />
+                            <ErrorMessage
+                            message={
+                              phoneError ||
+                              (step1Submitted && !form.phone.trim()
+                                ? 'Required'
+                                : undefined)
+                            }
+                          />
                       </div>
                                                                                    
                        
                         <Input
                           label="Username"
                           required
+                          placeholder="Enter username"
                           name="username"
                           value={form.username}
                           onChange={handleChange}
                           tooltip="Must start with a letter, followed by underscores or numbers. 6–16 characters allowed."
                           className={getStep1BorderClass(true, !!usernameError, form.username)}
                         />
-                        <ErrorMessage message={usernameError} />
+                        <ErrorMessage
+                          message={
+                            usernameError ||
+                            (step1Submitted && !form.username.trim()
+                              ? 'Required'
+                              : undefined)
+                          }
+                        />
 
                            <Input
                             label="Password"
@@ -951,7 +1029,14 @@ const validateStep3 = () => {
                               className={getStep1BorderClass(true, !!passwordError, form.password)}
                           />
                       
-                             <ErrorMessage message={passwordError} />    
+                            <ErrorMessage
+                            message={
+                              passwordError ||
+                              (step1Submitted && !form.password
+                                ? 'Required'
+                                : undefined)
+                            }
+                          />    
                           
                           {form.password && !passwordError && (
                           <PasswordStrengthMeter strength={passwordStrengthInfo} />
@@ -985,7 +1070,14 @@ const validateStep3 = () => {
                               form.confirmPassword
                             )}
                           />
-                          <ErrorMessage message={confirmPasswordError} />   
+                          <ErrorMessage
+                          message={
+                            confirmPasswordError ||
+                            (step1Submitted && !form.confirmPassword
+                              ? 'Required'
+                              : undefined)
+                          }
+                        />          
                                         
                         </>
                       )}
@@ -994,9 +1086,27 @@ const validateStep3 = () => {
                   <>
                     <Input label="Supplier Legal Name" required placeholder="Registered legal name" name="supplierLegalName"
                      value={form.supplierLegalName} onChange={handleChange} className={getStep2BorderClass(true, form.supplierLegalName)}/>
-                   
+                    <ErrorMessage
+                      message={
+                        step2Submitted && !form.supplierLegalName.trim()
+                          ? 'Required'
+                          : undefined
+                      }
+                    />
+
                     <Input label="Trade Name" required placeholder="Business / brand name" 
                     name="tradeName" value={form.tradeName} onChange={handleChange}className={getStep2BorderClass(true, form.tradeName)} />
+
+
+                      <ErrorMessage
+                      message={
+                        step2Submitted && !form.tradeName.trim()
+                          ? 'Required'
+                          : undefined
+                      }
+                    />
+
+
 
                     {/* SERVICE TYPE */}
                     <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
@@ -1067,6 +1177,13 @@ const validateStep3 = () => {
                 </div>
                   )}
             </div>
+            <ErrorMessage
+              message={
+                step2Submitted && form.serviceTypes.length === 0
+                  ? 'Required'
+                  : undefined
+              }
+            />
 
                 {/* COUNTRY */}
                 <div className="flex flex-col gap-1">
@@ -1093,7 +1210,13 @@ const validateStep3 = () => {
                     </div>
 
                 </div>
-
+                     <ErrorMessage
+                    message={
+                      step2Submitted && !form.countryOfRegistration
+                        ? 'Required'
+                        : undefined
+                    }
+                  />           
                 <Input
                   label="Website URL"
                   required
@@ -1109,32 +1232,150 @@ const validateStep3 = () => {
                   tooltip="Example: www.company.com"
                 />
 
-                 <ErrorMessage message={websiteError} />
-
+                <ErrorMessage
+                message={
+                  websiteError ||
+                  (step2Submitted && !form.websiteUrl.trim()
+                    ? 'Required'
+                    : undefined)
+                }
+              />
              
               </>
            )}
             {step === 3 && (
             <>
-                <FileInput
-                  label="Company Trade License"
+                {/* TRADE LICENSE PANEL */}
+                <label className={labelClass}>
+                  Company Trade License <span className="text-red-500">*</span>
+                </label>
+
+                <div
+                  className={`border-2 border-dashed rounded bg-white p-4 flex flex-col gap-3
+                    ${
+                      step3Submitted &&
+                      (!form.tradeLicenseNumber.trim() || !form.tradeLicense)
+                        ? 'border-red-500'
+                        : 'border-[#00AFEF]'
+                    }`}
+                >
+                  {/* Trade License Number */}
+                  <Input
+                    label="Trade License Number"
+                    required
+                    placeholder=" Trade license number"
+                    name="tradeLicenseNumber"
+                    value={form.tradeLicenseNumber}
+                    onChange={e => {
+                      setForm(prev => ({
+                        ...prev,
+                        tradeLicenseNumber: e.target.value,
+                      }))
+                      setTradeLicenseNumberError('')
+                    }}
+                  />
+
+                  {tradeLicenseNumberError && (
+                    <p className="text-[11px] font-semibold text-red-600">
+                      ⓘ {tradeLicenseNumberError}
+                    </p>
+                  )}
+
+                  {/* Trade License Upload */}
+                 <FileInput
+                  label="Upload Trade License Certificate"
                   required
                   file={form.tradeLicense}
-                   borderClass={getStep3FileBorderClass(!!form.tradeLicense)}
-                  onChange={file =>
+                  borderClass="border-[#9ec5e5]"
+                  onBeforeSelect={() => {
+                    if (!form.tradeLicenseNumber.trim()) {
+                      setTradeLicenseNumberError('Please enter Trade License Number')
+                      return false   // stop picker
+                    }
+                    return true      //  allow picker
+                  }}
+                  onChange={file => {
+                    setTradeLicenseNumberError('')
                     setForm(prev => ({ ...prev, tradeLicense: file }))
-                  }
+                  }}
+
+                  existingFiles={step3FileNames} 
+                />
+                </div>
+
+               {step3Submitted &&
+                (!form.tradeLicenseNumber.trim() || !form.tradeLicense) && (
+                  <p className="flex items-center gap-1 text-[11px] font-semibold text-red-600 mt-1">
+                    <AlertCircle size={12} className="shrink-0" />
+                    <span>Please upload Company Trade License</span>
+                  </p>
+                )}
+
+                {/* REGISTRATION CERTIFICATE PANEL */}
+              <label className={labelClass}>
+                Company Registration Certificate <span className="text-red-500">*</span>
+              </label>
+
+              <div
+                className={`border-2 border-dashed rounded bg-white p-4 flex flex-col gap-3
+                  ${
+                    step3Submitted &&
+                    (!form.compRegistrationNumber.trim() || !form.registrationCert)
+                      ? 'border-red-500'
+                      : 'border-[#00AFEF]'
+                  }`}
+              >
+                {/* Registration Certificate Number */}
+                <Input
+                  label="Company Registration Number"
+                  required
+                  placeholder="Company registration number"
+                  name="compRegistrationNumber"
+                  value={form.compRegistrationNumber}
+                  onChange={e => {
+                    setForm(prev => ({
+                      ...prev,
+                      compRegistrationNumber: e.target.value,
+                    }))
+                    setRegistrationCertNumberError('')
+                  }}
                 />
 
-                <FileInput
-                  label="Company Registration Certificate"
-                  required
-                  file={form.registrationCert}
-                  borderClass={getStep3FileBorderClass(!!form.registrationCert)}
-                  onChange={file =>
-                    setForm(prev => ({ ...prev, registrationCert: file }))
+                {registrationCertNumberError && (
+                  <p className="text-[11px] font-semibold text-red-600">
+                    ⓘ {registrationCertNumberError}
+                  </p>
+                )}
+
+                {/* Registration Certificate Upload */}
+              <FileInput
+                label="Upload Registration Certificate"
+                required
+                file={form.registrationCert}
+                borderClass="border-[#9ec5e5]"
+                onBeforeSelect={() => {
+                  if (!form.compRegistrationNumber.trim()) {
+                    setRegistrationCertNumberError(
+                      'Please enter Company Registration Number'
+                    )
+                    return false   //  block file picker
                   }
-                />
+                  return true      //  allow picker
+                }}
+                onChange={file => {
+                  setRegistrationCertNumberError('')
+                  setForm(prev => ({ ...prev, registrationCert: file }))
+                }}
+                existingFiles={step3FileNames} 
+              />
+              </div>
+              {step3Submitted &&
+                (!form.compRegistrationNumber.trim() || !form.registrationCert) && (
+                  <p className="flex items-center gap-1 text-[11px] font-semibold text-red-600 mt-1">
+                    <AlertCircle size={12} className="shrink-0" />
+                    <span>Please upload Company Registration Certificate</span>
+                  </p>
+                )}
 
                 {/* PANEL TITLE */}
                 <label className={labelClass}>
@@ -1165,7 +1406,7 @@ const validateStep3 = () => {
 
                               setTaxIdError('')               
                             }}
-                            className={`${inputClass} appearance-none  ${getTaxTypeBorderClass()}`}>
+                           className={`${inputClass} appearance-none border-[#00AFEF]`}>
                             <option value="" disabled hidden>
                               Select document type
                             </option>
@@ -1211,18 +1452,43 @@ const validateStep3 = () => {
                           label={`Upload ${form.taxDocType} Document`}
                           required
                           file={form.taxRegistrationDoc}
-                          borderClass={getTaxFileBorderClass()}
-                          onChange={file =>
-                            setForm(prev => ({ ...prev, taxRegistrationDoc: file }))
-                          }
-                        />
+                         borderClass="border-[#00AFEF]"
+                          onBeforeSelect={() => {
+                            if (!form.panTaxId.trim()) {
+                              setTaxIdError(
+                                `Please enter ${form.taxDocType} number`
+                              )
+                              return false   //  block file picker
+                            }
+                            return true      // allow picker
+                          }}
+                        onChange={file =>
+                          setForm(prev => ({ ...prev, taxRegistrationDoc: file }))
+                        }
+                        existingFiles={step3FileNames} 
+                      />
                       </>
                     )}
 
              </div>
+
+             {step3Submitted &&
+              (
+                !form.taxDocType ||
+                !form.panTaxId.trim() ||
+                !form.taxRegistrationDoc
+              ) && (
+                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-600 mt-1">
+                  <AlertCircle size={12} className="shrink-0" />
+                  <span>Please upload Tax Document</span>
+                </p>
+              )}
+
+
                   <MultiFileInput
                     label="Other Documents"
                     files={form.otherDocs}
+                    existingFiles={step3FileNames} 
                     onChange={files =>
                       setForm(prev => ({ ...prev, otherDocs: files }))
                     }
@@ -1258,7 +1524,7 @@ const validateStep3 = () => {
                         const result = validateStep1()
 
                         if (result === 'EMPTY') {
-                          setError('Please fill all mandatory fields (marked with *)')
+                          setError('Kindly fill-up all the mandatory fields.')
                           return
                         }
 
@@ -1304,7 +1570,7 @@ const validateStep3 = () => {
                   const result = validateStep2()
 
                   if (result === 'EMPTY') {
-                    setError('Please fill all mandatory fields (marked with *)')
+                    setError('Kindly fill-up all the mandatory fields.')
                     return
                   }
 
@@ -1343,7 +1609,7 @@ const validateStep3 = () => {
             const result = validateStep3()
 
             if (result === 'EMPTY') {
-              setError('Please fill all mandatory fields (marked with *)')
+              setError('Kindly fill-up all the mandatory fields.')
               return
             }
 
@@ -1465,12 +1731,18 @@ const validateStep3 = () => {
       file,
       onChange,
       borderClass = 'border-[#00AFEF]',
+      disabled = false,   
+      onBeforeSelect,  
+       existingFiles = [], 
     }: {
       label: string
       required?: boolean
       file?: File | null
       onChange: (file: File | null) => void
       borderClass?: string
+      disabled?: boolean  
+       onBeforeSelect?: () => boolean 
+       existingFiles?: string[]  
     }) {
       const [error, setError] = useState('')
 
@@ -1480,6 +1752,13 @@ const validateStep3 = () => {
           onChange(null)
           return
         }
+
+        //  Duplicate check across Step 3
+        if (file && existingFiles.includes(file.name.toLowerCase())) {
+          setError(`File "${file.name}" is already uploaded`)
+          return
+        }
+
 
         //  File type validation
         if (!ALLOWED_TYPES.includes(file.type)) {
@@ -1506,9 +1785,18 @@ const validateStep3 = () => {
             {label} {required && <span className="text-red-500">*</span>}
           </label>
 
-          <div className={`border-2 border-dashed rounded bg-white p-2 transition ${borderClass}`}>
+          <div className={`border rounded bg-white p-2 transition ${borderClass}`}>
             {!file ? (
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label
+                onClick={e => {
+                  if (onBeforeSelect && !onBeforeSelect()) {
+                    e.preventDefault()   //  blocks file picker
+                    e.stopPropagation()
+                  }
+                }}
+                className={`flex items-center gap-2 cursor-pointer`}
+              >
+
                 <UploadIcon
                 className="h-5 w-5 text-blue-500"
                 strokeWidth={1.5}
@@ -1522,14 +1810,16 @@ const validateStep3 = () => {
                   </span>
                 </div>
 
-                <input
+               <input
                   type="file"
                   hidden
+                  disabled={disabled}        // BLOCK
                   accept=".pdf,.jpg,.jpeg"
                   onChange={e =>
                     handleFileChange(e.target.files?.[0] || null)
                   }
                 />
+
               </label>
             ) : (
               <div className="flex items-center justify-between bg-gray-50 rounded px-3 py-2 text-xs">
@@ -1566,11 +1856,13 @@ const validateStep3 = () => {
       files,
       maxFiles = 5,
       onChange,
+      existingFiles = [],
     }: {
       label: string
-    files: NamedDocument[]
+      files: NamedDocument[]
       maxFiles?: number
       onChange: (files: NamedDocument[]) => void
+       existingFiles?: string[]  
     }) {
       const [error, setError] = useState('')
       const [open, setOpen] = useState(false)
@@ -1611,6 +1903,34 @@ const validateStep3 = () => {
         e.target.value = ''
         return
       }
+
+
+  //  Duplicate check across entire Step 3
+  const duplicate = filesArray.find(file =>
+    existingFiles.includes(file.name.toLowerCase())
+  )
+
+  if (duplicate) {
+    setPopupError(`File "${duplicate.name}" is already uploaded`)
+    e.target.value = ''
+    return
+  }
+
+  // Duplicate inside current popup selection
+  const duplicateInTemp = filesArray.find(file =>
+    tempFiles.some(
+      existing => existing.name.toLowerCase() === file.name.toLowerCase()
+    )
+  )
+
+  if (duplicateInTemp) {
+    setPopupError(`File "${duplicateInTemp.name}" is already selected`)
+    e.target.value = ''
+    return
+  }
+
+
+
 
       //  Valid files
       setPopupError('')
@@ -1661,14 +1981,14 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
   setPopupError('Document with same name has already been uploaded')
   return
 }
-  const duplicate = tempFiles.find(file =>
-    existingFileNames.includes(file.name.toLowerCase())
-  )
+  // const duplicate = tempFiles.find(file =>
+  //   existingFiles.includes(file.name.toLowerCase())
+  // )
 
-  if (duplicate) {
-    setPopupError(`File "${duplicate.name}" is already uploaded`)
-    return
-  }
+  // if (duplicate) {
+  //   setPopupError(`File "${duplicate.name}" is already uploaded`)
+  //   return
+  // }
 
   // 3️ File type validation
   const invalidType = tempFiles.find(
@@ -1764,14 +2084,13 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
 >
   Upload
 </button>
-{maxLimitError && (
-      <p className="text-[11px] text-red-600 mt-1 font-semibold">
+  </div>
+  </div>
+    {maxLimitError && (
+      <p className="text-[11px] text-red-600 mt-[2px] font-semibold">
         {maxLimitError}
       </p>
     )}
-</div>
-      </div>
-
       {/* FILE LIST */}
       <div className="border border-[#00AFEF] rounded bg-white p-3">
         {files.length === 0 ? (

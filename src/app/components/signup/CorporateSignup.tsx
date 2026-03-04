@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react' // Import useEffect
+import React, { useState, useEffect } from 'react' // Import useEffect 123
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Tooltip } from 'react-tooltip'
@@ -150,16 +150,17 @@ const validateForm = (data: FormData) => {
   const newErrors: Errors = {}
 
   // Required checks only
-  if (!data.email) newErrors.email = ''
-  if (!data.phone) newErrors.phone = ''
-  if (!data.organisationId) newErrors.organisationId = ''
+// Required checks
+if (!data.email) newErrors.email = 'Required'
+if (!data.phone) newErrors.phone = 'Required'
+if (!data.organisationId) newErrors.organisationId = 'Required'
 
   // Format checks (submit safety net)
   const emailError = validateEmailLive(data.email)
-  if (emailError) newErrors.email = emailError
+ if (emailError && data.email) newErrors.email = emailError
 
   const phoneError = validatePhoneLive(data.phone, data.countryCode)
-  if (phoneError) newErrors.phone = phoneError
+  if (phoneError && data.phone) newErrors.phone = phoneError
 
   setErrors(newErrors)
   return newErrors
@@ -293,6 +294,7 @@ const handleSubmit = (e: React.FormEvent) => {
                 placeholder="name@company.com"
               />
               <ErrorMessage message={errors.email} />
+              
             </div>
 
             {/* PHONE */}
