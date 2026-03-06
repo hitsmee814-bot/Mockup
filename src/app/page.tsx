@@ -24,7 +24,7 @@ export default function HomePage() {
       <TestimonialsCarousel />
       <RoadmapTimeline/>
       {/* <PrivacyPolicy /> */}
-      {/* <FAQ /> */}
+      <FAQ />
       <Footer />
       </>
   )

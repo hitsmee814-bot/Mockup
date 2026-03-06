@@ -8,32 +8,51 @@ import logoPrimary from "../assets/images/final logo Bonhomiee white without.png
 import { PremiumButton } from "../utils/PremiumButton"
 import { HiOutlineBriefcase } from "react-icons/hi"
 
-const navItems = [
+
+type NavChild = {
+  label: string
+  id: string
+}
+
+type NavItem = {
+  label: string
+  id?: string
+  children?: NavChild[]
+}
+const navItems: NavItem[] = [
   { label: "Getting Started", id: "hero-sub" },
-  { label: "Services", id: "hero-sub" },
-  {
-    label: "Explore",
-    children: [
-      { label: "Packages", id: "packages" },
-      { label: "Our Services", id: "services" },
-    ],
-  },
-  {
-    label: "About",
-    children: [
-      { label: "Inspiration", id: "inspiration" },
-      { label: "About us", id: "team" },
-      { label: "Testimonials", id: "testimonials" },
-    ],
-  },
-  {
-    label: "Support",
-    children: [
-      { label: "Privacy", id: "privacy" },
-      { label: "FAQs", id: "faq" },
-    ],
-  },
+  { label: "Packages", id: "packages" },
+  { label: "Testimonials", id: "testimonials" },
+  { label: "Partner", id: "partner" },
 ]
+
+// const navItems = [
+//   { label: "Getting Started", id: "hero-sub" },
+//   // { label: "Services", id: "hero-sub" },
+//   { label: "Packages", id: "packages" },
+//   // {
+//   //   label: "Explore",
+//   //   children: [
+//   //     { label: "Our Services", id: "services" },
+//   //   ],
+//   // },
+//   { label: "Testimonials", id: "testimonials" },
+//   // {
+//   //   label: "About",
+//   //   children: [
+//   //     { label: "Inspiration", id: "inspiration" },
+//   //     { label: "About us", id: "team" },
+//   //   ],
+//   // },
+//   { label: 'Partner', id: "partner" },
+//   // {
+//   //   label: "Support",
+//   //   children: [
+//   //     { label: "Privacy", id: "privacy" },
+//   //     { label: "FAQs", id: "faq" },
+//   //   ],
+//   // },
+// ]
 
 interface HeaderNavProps {
   enableScrollBg?: boolean
@@ -239,7 +258,7 @@ export default function HeaderNav({
                         {item.label}
                       </div>
                       <div className="pl-4 flex flex-col space-y-3 mt-2 text-base">
-                        {item.children.map((subItem) => (
+                        {item.children.map((subItem: any) => (
                           <button
                             key={subItem.id}
                             onClick={() => handleNavClick(subItem.id)}

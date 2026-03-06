@@ -44,6 +44,7 @@ export const PremiumButton = React.forwardRef<
       children,
       icon,
       iconPosition = "left",
+      disabled,
       ...props
     },
     ref
@@ -53,27 +54,32 @@ export const PremiumButton = React.forwardRef<
     return (
       <button
         ref={ref}
-        onMouseEnter={() => setHovered(true)}
+        disabled={disabled}
+        onMouseEnter={() => !disabled && setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         className={cn(
           baseStyles,
           variantStyles[variant],
           "group gap-2",
+          disabled &&
+            "opacity-50 cursor-not-allowed hover:shadow-none pointer-events-none",
           className
         )}
         {...props}
       >
-        <motion.span
-          initial={{ scale: 0 }}
-          animate={{ scale: hovered ? 4 : 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 120,
-            damping: 20,
-            mass: 0.8,
-          }}
-          className="absolute bottom-0 left-1/2 w-40 h-40 -translate-x-1/2 translate-y-1/2 bg-white rounded-full z-0 pointer-events-none"
-        />
+        {!disabled && (
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: hovered ? 4 : 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 20,
+              mass: 0.8,
+            }}
+            className="absolute bottom-0 left-1/2 w-40 h-40 -translate-x-1/2 translate-y-1/2 bg-white rounded-full z-0 pointer-events-none"
+          />
+        )}
 
         <span className="relative z-10 flex items-center gap-2 transition-colors duration-300 group-hover:text-black">
           {icon && iconPosition === "left" && (

@@ -39,7 +39,7 @@ export default function VacationDestinations() {
   const data = destinations[mode]
 
   return (
-    <section className="py-28 px-6">
+    <section className="py-28 px-6" id="packages">
       <div className="max-w-7xl mx-auto">
 
         <div className="text-center mb-16">

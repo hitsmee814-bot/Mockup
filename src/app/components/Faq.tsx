@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { PremiumButton } from "../utils/PremiumButton"
 
 const faqs = [
   {
@@ -71,10 +72,10 @@ export default function FaqSection() {
       <div className="max-w-7xl mx-auto px-6">
 
         <div className="text-center mb-16">
-          <h2 className="text-5xl text-[#0E40C7] font-bold">
+          <h2 className="text-5xl text font-bold">
             Frequently Asked Questions
           </h2>
-          <p className="text-[#306F7D] mt-4">
+          <p className="text mt-4">
             Everything you need to know about our services.
           </p>
         </div>
@@ -92,34 +93,38 @@ export default function FaqSection() {
                 />
               </div>
 
-              <h3 className="text-2xl font-bold mb-3 text-[#306F7D]">
+              <h3 className="text-2xl font-bold mb-3 text-black">
                 Still have questions?
               </h3>
 
-              <p className="text-[#479EA8] mb-6">
+              <p className="text-black/70 mb-6">
                 Contact our support team anytime, we’re happy to help!
               </p>
 
               <div className="space-y-2 mb-6">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-[#0E40C7]">📧 Email:</span>
-                  <span className="text-[#306F7D]">support@bonhomiee.com</span>
+                  <span className="font-semibold text-black">📧 Email:</span>
+                  <span className="text-black/70">support@bonhomiee.com</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-[#0E40C7]">📞 Phone:</span>
-                  <span className="text-[#306F7D]">+91 98765 43210</span>
+                  <span className="font-semibold text-black">📞 Phone:</span>
+                  <span className="text-black/70">+91 98765 43210</span>
                 </div>
               </div>
 
-              <p className="text-sm text-[#3769F1] mb-4">
+              <p className="text-sm text-black mb-4">
                 Can’t find an answer? Ask us directly:
               </p>
 
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="text-white bg-[#306F7D] px-6 py-3 rounded-full transition-all duration-300 hover:bg-[#479EA8]">
+
+                  <PremiumButton
+                    variant="primary"
+                    className="mb-0 flex items-center w-fit-content"
+                  >
                     Chat with us
-                  </Button>
+                  </PremiumButton>
                 </DialogTrigger>
 
                 <DialogContent className="rounded-2xl p-6 md:p-8">
@@ -142,7 +147,7 @@ export default function FaqSection() {
 
           <div className="flex flex-col h-full max-h-[700px]">
             <div className="relative mb-10">
-              <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-3.5 h-4 w-4" />
               <Input
                 placeholder="Search questions..."
                 className="pl-10 h-12 rounded-xl"

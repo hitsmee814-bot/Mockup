@@ -35,7 +35,7 @@ const roadmap = [
 export default function RoadmapTimeline() {
   return (
     <>
-      <section className="pt-20 bg-transparent min-h-screen flex items-center relative overflow-hidden">
+      <section className="pt-20 bg-transparent min-h-screen flex items-center relative overflow-hidden" id="partner">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(63,184,255,0.12),_transparent_60%)]" />
 
         <div className="max-w-[1700px] mx-auto px-6 md:px-16 w-full relative z-10">

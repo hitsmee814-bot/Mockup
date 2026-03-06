@@ -19,6 +19,7 @@ import {
   Truck,
 } from "lucide-react"
 import HeaderNav from "./HeaderNav"
+import AuthRoleDialog from "./AuthDialog"
 
 const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
 
@@ -155,53 +156,7 @@ export default function VideoMain() {
           <ChevronDown size={26} />
         </motion.div>
       </div>
-
-      <Dialog open={authOpen} onOpenChange={setAuthOpen}>
-        <DialogContent className="sm:max-w-lg rounded-2xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl font-semibold">
-              Choose your role
-            </DialogTitle>
-            <p className="text-center text-sm text-muted-foreground mt-1">
-              Select how you want to continue
-            </p>
-          </DialogHeader>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            {roles.map(({ label, icon: Icon, route, description }) => (
-              <button
-                key={label}
-                onClick={() => {
-                  setAuthOpen(false)
-                  router.push(route)
-                }}
-                className="
-                  group flex items-center gap-4 rounded-xl border p-4 text-left
-                  bg-background transition-all duration-200 ease-out
-                  hover:-translate-y-1 hover:shadow-lg
-                "
-              >
-                <div
-                  className="
-                    flex h-12 w-12 items-center justify-center rounded-lg
-                    bg-muted transition-colors duration-200
-                    group-hover:bg-[#0E40C7]
-                  "
-                >
-                  <Icon className="h-6 w-6 text-muted-foreground group-hover:text-white" />
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="font-medium text-base">{label}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {description}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AuthRoleDialog open={authOpen} onOpenChange={setAuthOpen} />
     </section>
   )
 }
