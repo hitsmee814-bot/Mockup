@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 
-export default function Packages() {
+export default function Cabs() {
   return (
     <div className="flex items-center justify-center h-full min-h-[60vh] px-6">
       <motion.div

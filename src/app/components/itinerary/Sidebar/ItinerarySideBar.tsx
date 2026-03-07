@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import Image from "next/image"
 
 import {
@@ -16,36 +15,44 @@ import {
     SidebarMenuButton,
     SidebarHeader,
 } from "@/components/ui/sidebar"
-import { useRouter } from "next/navigation"
+
 import { useSidebar } from "@/components/ui/sidebar"
-import { PanelLeft, PanelLeftClose } from "lucide-react"
+import { PanelLeftClose } from "lucide-react"
 import { Package, Plane, Hotel, Car, Sparkles } from "lucide-react"
+
 import logoPrimary from "../../../assets/images/final logo Bonhomiee.png"
 import logoSecondary from "../../../assets/images/logoPrimary.png"
+import { useRouter } from "next/navigation"
 
 const navigation = [
     {
         groupLabel: "",
         items: [
-            { title: "Packages", href: "/itinerary/packages/", icon: Package },
-            { title: "Flights", href: "/itinerary/flights/", icon: Plane },
-            { title: "Hotels", href: "/itinerary/hotels/", icon: Hotel },
-            { title: "Cabs", href: "/itinerary/cabs/", icon: Car },
-            { title: "AI", href: "/itinerary/ai/", icon: Sparkles },
+            { title: "Packages", key: "packages", icon: Package },
+            { title: "Flights", key: "flights", icon: Plane },
+            { title: "Hotels", key: "hotels", icon: Hotel },
+            { title: "Cabs", key: "cabs", icon: Car },
+            { title: "AI", key: "ai", icon: Sparkles },
         ],
     },
 ]
 
-export function ItinerarySidebar() {
-    const pathname = usePathname()
+interface Props {
+    activeTab: string
+    changeTab: (tab: string) => void
+}
+
+export function ItinerarySidebar({ activeTab, changeTab }: Props) {
     const { toggleSidebar, state } = useSidebar()
     const router = useRouter()
     return (
-        <Sidebar collapsible="icon" className="border-r" style={{ backgroundColor: "#1B120B" }}>
-
+        <Sidebar
+            collapsible="icon"
+            className="border-r"
+            style={{ backgroundColor: "#ffffff" }}
+        >
             <SidebarHeader className="p-4">
                 <div className="relative flex items-center gap-2 font-semibold text-lg">
-
                     {state === "expanded" ? (
                         <>
                             <button
@@ -54,7 +61,6 @@ export function ItinerarySidebar() {
                             >
                                 <PanelLeftClose className="h-5 w-5 text-[#3FB8FF]" />
                             </button>
-
 
                             <Link href="/">
                                 <Image
@@ -96,35 +102,43 @@ export function ItinerarySidebar() {
                             <SidebarMenu>
                                 {group.items.map((item) => {
                                     const Icon = item.icon
-                                    const isActive = pathname.includes(item.href)
+                                    const isActive = activeTab === item.key
 
                                     return (
                                         <SidebarMenuItem key={item.title}>
-                                            <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
+                                            <SidebarMenuButton
+                                                asChild
+                                                tooltip={item.title}
+                                                isActive={isActive}
+                                            >
                                                 <button
                                                     onClick={() => {
+                                                        changeTab(item.key)
+
                                                         if (state === "expanded") {
                                                             toggleSidebar()
-
-                                                            setTimeout(() => {
-                                                                router.push(item.href)
-                                                            }, 250) // match your sidebar animation duration
-                                                        } else {
-                                                            router.push(item.href)
                                                         }
+
+                                                        router.push(`/itinerary/${item.key}`)
                                                     }}
                                                     className={`flex items-center gap-2 p-2 rounded transition
-    ${isActive
-                                                            ? "bg-[#3FB8FF] text-[#FFFFFF]"
-                                                            : "text-black hover:text-white hover:[&>svg]:text-white"
+                          ${isActive
+                                                            ? "bg-[#3FB8FF] text-white"
+                                                            : "text-black hover:text-[#FBAB18] hover:[&>svg]:text-[#FBAB18]"
                                                         }`}
                                                 >
-                                                    <Icon className={`h-4 w-4 ${isActive ? "text-[#FFFFFF]" : "text-[#3FB8FF]"}`} />
-                                                    <span className={`group-data-[collapsible=icon]:hidden ${isActive ? "text-white" : ""}`}>
+                                                    <Icon
+                                                        className={`h-4 w-4 ${isActive ? "text-white" : "text-[#3FB8FF]"
+                                                            }`}
+                                                    />
+
+                                                    <span
+                                                        className={`group-data-[collapsible=icon]:hidden ${isActive ? "text-white" : ""
+                                                            }`}
+                                                    >
                                                         {item.title}
                                                     </span>
                                                 </button>
-
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
                                     )

@@ -200,7 +200,7 @@ export default function HeaderNav({
 
           <div className="hidden md:flex items-center gap-4">
             <PremiumButton
-              variant="primary"
+              variant={isScrolled ? "ghost" : "primary"}
               onClick={onAuthOpen}
               className="mb-0 flex items-center w-fit-content"
             >
