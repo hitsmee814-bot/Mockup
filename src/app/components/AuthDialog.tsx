@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
     Dialog,
@@ -20,6 +20,8 @@ import {
     Select,
     SelectContent,
     SelectItem,
+    SelectLabel,
+    SelectGroup,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
@@ -30,8 +32,12 @@ import {
     Building2,
     Truck,
     ArrowLeft,
+    AlertCircle,
 } from "lucide-react"
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js"
+import { otpService } from "@/services/otpService"
+import { toast } from "sonner"
+import { Spinner } from "@/components/ui/spinner"
 
 const roles = [
     {
@@ -86,16 +92,66 @@ export default function AuthRoleDialog({
     const [email, setEmail] = useState("")
     const [phone, setPhone] = useState("")
 
+    const [phoneError, setPhoneError] = useState("")
+    const [emailError, setEmailError] = useState("")
+    const [phoneTouched, setPhoneTouched] = useState(false)
+    const [emailTouched, setEmailTouched] = useState(false)
+
     const [country, setCountry] = useState(countries[0])
     const [otp, setOtp] = useState("")
 
-    const validatePhone = () => {
-        const number = parsePhoneNumberFromString(
-            `${country.dial}${phone}`,
-            country.code as CountryCode
-        )
-        return number?.isValid()
-    }
+    const [loading, setLoading] = useState(false)
+
+    const otpRef = useRef<HTMLInputElement>(null)
+    const phoneRef = useRef<HTMLInputElement>(null)
+    const emailRef = useRef<HTMLInputElement>(null)
+
+    const RESEND_SECONDS = 30
+
+    const [timer, setTimer] = useState(RESEND_SECONDS)
+    const [canResend, setCanResend] = useState(false)
+
+    useEffect(() => {
+        if (step === 3) {
+            setTimeout(() => {
+                if (method === "phone") phoneRef.current?.focus()
+                if (method === "email") emailRef.current?.focus()
+            }, 50)
+        }
+
+        if (step === 4) {
+            setTimeout(() => {
+                otpRef.current?.focus()
+            }, 50)
+        }
+    }, [step, method])
+
+    useEffect(() => {
+        if (step === 4) {
+            setTimer(RESEND_SECONDS)
+            setCanResend(false)
+
+            setTimeout(() => {
+                otpRef.current?.focus()
+            }, 50)
+        }
+    }, [step])
+
+    useEffect(() => {
+        if (step !== 4) return
+
+        if (timer === 0) {
+            setCanResend(true)
+            return
+        }
+
+        const interval = setInterval(() => {
+            setTimer((prev) => prev - 1)
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [timer, step])
+
 
     const goBack = () => {
         if (step === 1) return
@@ -109,6 +165,81 @@ export default function AuthRoleDialog({
         setOtp("")
     }
 
+    const handleVerifyOtp = async () => {
+        if (otp.length !== 6) return
+
+        setLoading(true)
+
+        try {
+            let response
+
+            if (method === "phone") {
+                response = await otpService.verifyMobileOtp(phone, otp)
+            } else {
+                response = await otpService.verifyEmailOtp(email, otp)
+            }
+
+            toast.success(response?.status || "Verification successful", {position: 'top-right'})
+
+            if (roleRoute) router.push(roleRoute)
+
+        } catch (error: any) {
+            console.error(error)
+            toast.error(error?.detail || "Invalid OTP", {position: 'top-right'})
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleSendOtp = async () => {
+        setLoading(true)
+
+        try {
+            let response
+
+            if (method === "phone") {
+                response = await otpService.sendMobileOtp(phone)
+            } else {
+                response = await otpService.sendEmailOtp(email)
+            }
+
+            toast.success(response?.message || "OTP sent successfully", {position: 'top-right'})
+            setStep(4)
+
+        } catch (error: any) {
+            console.error(error)
+            toast.error(error?.message || "Failed to send OTP", {position: 'top-right'})
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleResendOtp = async () => {
+        if (!canResend) return
+
+        setLoading(true)
+
+        try {
+            let response
+
+            if (method === "phone") {
+                response = await otpService.sendMobileOtp(phone)
+            } else {
+                response = await otpService.sendEmailOtp(email)
+            }
+
+            toast.success(response?.message || "OTP resent", {position: 'top-right'})
+
+            setTimer(RESEND_SECONDS)
+            setCanResend(false)
+
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to resend OTP", {position: 'top-right'})
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <Dialog
             open={open}
@@ -117,13 +248,18 @@ export default function AuthRoleDialog({
                 if (!v) reset()
             }}
         >
-            <DialogContent className="sm:max-w-lg rounded-2xl p-6">
+            <DialogContent className="sm:max-w-lg rounded-2xl p-6 pt-3" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+                {loading && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl">
+                        <Spinner className="size-5" />
+                    </div>
+                )}
                 <DialogHeader className="relative">
 
                     {step > 1 && (
                         <button
                             onClick={goBack}
-                            className="absolute left-0 top-0 p-2 text-muted-foreground hover:text-foreground"
+                            className="absolute left-0 top-0 p-2 pl-0 text-muted-foreground hover:text-foreground"
                         >
                             <ArrowLeft size={18} />
                         </button>
@@ -199,47 +335,80 @@ export default function AuthRoleDialog({
                 )}
 
                 {step === 3 && (
-                    <div className="space-y-5 mt-6">
+                    <form
+                        className="space-y-5 mt-6"
+                        onSubmit={(e) => {
+                            e.preventDefault()
+                            handleSendOtp()
+                        }}
+                    >
 
                         {method === "phone" && (
                             <>
                                 <Label>Mobile Number</Label>
 
                                 <div className="flex items-center gap-2">
-
                                     <Select
                                         value={country.code}
                                         onValueChange={(val) =>
-                                            setCountry(
-                                                countries.find((c) => c.code === val)!
-                                            )
+                                            setCountry(countries.find((c) => c.code === val)!)
                                         }
                                     >
                                         <SelectTrigger className="w-[120px]">
-                                            <SelectValue />
+                                            <SelectValue placeholder="Country" />
                                         </SelectTrigger>
 
                                         <SelectContent>
-                                            {countries.map((c) => (
-                                                <SelectItem key={c.code} value={c.code}>
-                                                    {c.label} {c.dial}
-                                                </SelectItem>
-                                            ))}
+                                            <SelectGroup>
+                                                <SelectLabel>Country</SelectLabel>
+
+                                                {countries.map((c) => (
+                                                    <SelectItem key={c.code} value={c.code}>
+                                                        {c.label} {c.dial}
+                                                    </SelectItem>
+                                                ))}
+
+                                            </SelectGroup>
                                         </SelectContent>
                                     </Select>
 
                                     <Input
                                         type="tel"
+                                        ref={phoneRef}
                                         inputMode="numeric"
-                                        className="flex-1"
                                         placeholder="9876543210"
                                         value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                    />
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                            setPhone(value)
+                                            setPhoneTouched(true)
 
+                                            const number = parsePhoneNumberFromString(
+                                                `${country.dial}${value}`,
+                                                country.code as CountryCode
+                                            )
+
+                                            if (!value) {
+                                                setPhoneError("Mobile number is required")
+                                            } else if (!number?.isValid()) {
+                                                setPhoneError("Enter a valid mobile number")
+                                            } else {
+                                                setPhoneError("")
+                                            }
+                                        }}
+                                        className={`flex-1  ${phoneTouched && phoneError ? "border-red-500 focus:ring-red-500" : ""
+                                            }`}
+                                    />
                                 </div>
+                                {phoneTouched && phoneError && (
+                                    <p className="flex items-center gap-1 text-red-500 text-sm">
+                                        <AlertCircle size={14} />
+                                        {phoneError}
+                                    </p>
+                                )}
 
                                 <button
+                                    type="button"
                                     className="text-sm text-muted-foreground underline"
                                     onClick={() => {
                                         setMethod("email")
@@ -256,11 +425,39 @@ export default function AuthRoleDialog({
                                 <Label>Email</Label>
                                 <Input
                                     type="email"
+                                    ref={emailRef}
                                     placeholder="you@example.com"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        const value = e.target.value
+                                        setEmail(value)
+                                        setEmailTouched(true)
+
+                                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+                                        if (!value) {
+                                            setEmailError("Email is required")
+                                        } else if (!emailRegex.test(value)) {
+                                            setEmailError("Enter a valid email address")
+                                        } else {
+                                            setEmailError("")
+                                        }
+                                    }}
+                                    className={`w-full text-sm outline-none transition-all focus:ring-1 mt-1 ${emailTouched && emailError
+                                        ? "border-red-500 focus:ring-red-500"
+                                        : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                                        }`}
                                 />
+
+                                {emailTouched && emailError && (
+                                    <p className="flex items-center gap-1 text-red-500 text-sm mt-0">
+                                        <AlertCircle size={14} />
+                                        {emailError}
+                                    </p>
+                                )}
+
                                 <button
+                                    type="button"
                                     className="text-sm text-muted-foreground underline"
                                     onClick={() => {
                                         setMethod("phone")
@@ -273,25 +470,35 @@ export default function AuthRoleDialog({
                         )}
 
                         <PremiumButton
+                            type="submit"
                             className="w-full"
                             disabled={
                                 method === "phone"
-                                    ? !validatePhone()
-                                    : !email
+                                    ? !!phoneError || !phone
+                                    : !!emailError || !email
                             }
-                            onClick={() => setStep(4)}
                         >
                             Send OTP
                         </PremiumButton>
 
-                    </div>
+                    </form>
                 )}
 
                 {step === 4 && (
-                    <div className="flex flex-col items-center gap-6 mt-6">
-                        <InputOTP maxLength={6} value={otp} onChange={(value) => setOtp(value)}>
+                    <div className="flex flex-col items-center gap-6 mt-6" onKeyDown={(e) => {
+                        if (e.key === "Enter" && otp.length === 6) {
+                            handleVerifyOtp()
+                        }
+                    }}>
+                        <InputOTP
+                            disabled={loading}
+                            ref={otpRef}
+                            maxLength={6}
+                            value={otp}
+                            onChange={(value) => setOtp(value)}
+                        >
                             <InputOTPGroup>
-                                <InputOTPSlot index={0} />
+                                <InputOTPSlot index={0} ref={otpRef} />
                                 <InputOTPSlot index={1} />
                                 <InputOTPSlot index={2} />
                             </InputOTPGroup>
@@ -302,12 +509,22 @@ export default function AuthRoleDialog({
                                 <InputOTPSlot index={5} />
                             </InputOTPGroup>
                         </InputOTP>
+                        <p className="text-sm text-muted-foreground text-center">
+                            {canResend ? (
+                                <button
+                                    onClick={handleResendOtp}
+                                    className="text-primary font-medium hover:underline"
+                                >
+                                    Resend OTP
+                                </button>
+                            ) : (
+                                <>Resend OTP in {timer}s</>
+                            )}
+                        </p>
                         <PremiumButton
                             className="w-full"
-                            disabled={otp.length !== 6}
-                            onClick={() => {
-                                if (roleRoute) router.push(roleRoute)
-                            }}
+                            disabled={otp.length !== 6 || loading}
+                            onClick={handleVerifyOtp}
                         >
                             Verify & Continue
                         </PremiumButton>

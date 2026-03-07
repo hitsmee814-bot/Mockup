@@ -1,5 +1,6 @@
 import BackgroundCurve from "./ext/BackgroundCurve";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner"
 
 export const metadata = {
   title: "Bonhomiee",
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="antialiased relative">
         <BackgroundCurve />
+        <Toaster />
         {/* <Header /> */}
         {children}
       </body>
