@@ -3,7 +3,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { ItinerarySidebar } from "./Sidebar/ItinerarySideBar"
 import Packages from "../packages/Packages"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { usePathname } from "next/navigation"
 import { RightSideLoader } from "@/app/utils/RightSideSpinner"
 import Hotels from "../hotels/hotels"
@@ -39,7 +39,14 @@ export default function ItenaryBuilder() {
     let Content: React.ReactNode = null
 
     if (activeTab === "packages") Content = <Packages />
-    if (activeTab === "flights") Content = <Flight />
+
+    if (activeTab === "flights")
+        Content = (
+            <Suspense fallback={<div className="p-8">Loading flights...</div>}>
+                <Flight />
+            </Suspense>
+        )
+
     if (activeTab === "hotels") Content = <Hotels />
     if (activeTab === "cabs") Content = <Cabs />
     if (activeTab === "ai") Content = <AISmartBot />
