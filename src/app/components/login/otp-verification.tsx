@@ -60,6 +60,12 @@ export function OTPVerification({
         onOtpChange("")
     }, [verificationMethod])
 
+    useEffect(() => {
+        if (otp.length === 6) {
+            onVerifyOtp()
+        }
+    }, [otp])
+
     const switchMethod = () => {
         const next = verificationMethod === "email" ? "mobile" : "email"
         onMethodSelect(next)
@@ -240,13 +246,7 @@ export function OTPVerification({
                                         maxLength={6}
                                         value={otp}
                                         autoFocus
-                                        onChange={(value) => {
-                                            onOtpChange(value)
-
-                                            if (value.length === 6) {
-                                                onVerifyOtp()
-                                            }
-                                        }}
+                                        onChange={(value) => onOtpChange(value)}
                                     >
                                         <InputOTPGroup>
                                             <InputOTPSlot
