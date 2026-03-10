@@ -80,7 +80,8 @@ export default function VideoMain() {
       <HeaderNav
         enableScrollBg
         position="fixed"
-        onAuthOpen={() => setAuthOpen(true)}
+        // onAuthOpen={() => setAuthOpen(true)}
+        onAuthOpen={() => router.push("/auth")}
       />
 
       <div
