@@ -1,6 +1,7 @@
 import { travelPackages } from "@/app/components/packages/data"
 import { PackageDetailPage } from "@/app/components/packages/PackageDetailPage"
 import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export function generateStaticParams() {
   return travelPackages.map(pkg => ({ id: pkg.id }))
@@ -8,13 +9,17 @@ export function generateStaticParams() {
 
 interface Props {
   params: Promise<{ id: string }>
-  searchParams?: Promise<{ tripType?: string }>
 }
 
-export default async function PackagePage({ params, searchParams }: Props) {
+export default async function PackagePage({ params }: Props) {
   const { id } = await params
-  const { tripType } = (await searchParams) ?? {}
   const pkg = travelPackages.find(p => p.id === id)
+
   if (!pkg) notFound()
-  return <PackageDetailPage pkg={pkg} tripType={tripType} />
+
+  return (
+    <Suspense fallback={<div>Loading package details...</div>}>
+      <PackageDetailPage pkg={pkg} />
+    </Suspense>
+  )
 }
