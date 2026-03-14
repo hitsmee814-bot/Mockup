@@ -4,19 +4,18 @@ import { notFound } from "next/navigation"
 
 interface Props {
   params: { id: string }
-  searchParams: { tripType?: string }
+  searchParams?: { tripType?: string }
 }
 
-// tell Next.js which package IDs to pre-render
 export function generateStaticParams() {
   return travelPackages.map((pkg) => ({
     id: pkg.id,
   }))
 }
 
-export default async function BookingPage({ params, searchParams }: Props) {
+export default function BookingPage({ params, searchParams }: Props) {
   const { id } = params
-  const { tripType } = searchParams
+  const tripType = searchParams?.tripType
   const pkg = travelPackages.find((p) => p.id === id)
   if (!pkg) notFound()
 
