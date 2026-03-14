@@ -14,18 +14,22 @@ import { otpService } from "@/services/otpService"
 import { toast } from "sonner"
 import logoPrimary from "../../assets/images/final logo Bonhomiee white without.png"
 import Image from "next/image"
-import { Spinner } from "@/components/ui/spinner"
 import { LogIn } from "lucide-react"
 import { HiOutlineBriefcase } from "react-icons/hi"
+import { Spinner } from "@/components/ui/spinner"
 
 export function Login() {
     const router = useRouter()
     const [selectedType, setSelectedType] = useState<string | null>(null)
     const [isSignup, setIsSignup] = useState(false)
-    const [verificationMethod, setVerificationMethod] = useState<"email" | "mobile" | null>(null)
-    const [verificationValue, setVerificationValue] = useState("")
-    const [otp, setOtp] = useState("")
-    const [otpSent, setOtpSent] = useState(false)
+    const [mobile, setMobile] = useState("")
+    const [verificationEmail, setVerificationEmail] = useState("")
+    const [mobileOtp, setMobileOtp] = useState("")
+    const [emailOtp, setEmailOtp] = useState("")
+    const [mobileOtpSent, setMobileOtpSent] = useState(false)
+    const [emailOtpSent, setEmailOtpSent] = useState(false)
+    const [mobileVerified, setMobileVerified] = useState(false)
+    const [emailVerified, setEmailVerified] = useState(false)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [emailError, setEmailError] = useState("")
@@ -34,7 +38,7 @@ export function Login() {
     const [selectedCountry, setSelectedCountry] = useState(countries[0])
     const [loading, setLoading] = useState(false)
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^(?:[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})$/;
 
     const validateEmail = (value: string) => {
         if (value && !emailRegex.test(value)) {
@@ -45,74 +49,158 @@ export function Login() {
 
     const validatePhone = (value: string, countryCode: string) => {
         if (!value) return ""
+
         try {
-            const fullNumber = `${selectedCountry.dialCode}${value}`
+            const country = countries.find(c => c.code === countryCode)
+            if (!country) return "Invalid country"
+
+            const fullNumber = `${country.dialCode}${value}`
+
+            console.log(fullNumber)
+            console.log(countryCode)
+
             if (!isValidPhoneNumber(fullNumber, countryCode as "IN" | "FR" | "US")) {
                 return "Please enter a valid phone number"
             }
+
             return ""
         } catch {
             return "Please enter a valid phone number"
         }
     }
 
-    const handleSendOtp = async () => {
+    const handleSendMobileOtp = async () => {
         try {
-            if (!verificationMethod) return
 
             setLoading(true)
 
             let response
+            const fullMobile = `${selectedCountry.dialCode}${mobile}`
+            response = await otpService.sendMobileOtp(fullMobile)
 
-            if (verificationMethod === "mobile") {
-                const fullMobile = `${selectedCountry.dialCode}${verificationValue}`
-                response = await otpService.sendMobileOtp(fullMobile)
-            }
-
-            if (verificationMethod === "email") {
-                response = await otpService.sendEmailOtp(verificationValue)
-            }
 
             if (response?.message) {
-                setOtpSent(true)
+                setMobileOtpSent(true)
                 toast.success(response?.message || "OTP sent successfully", { position: "top-right" })
             }
         } catch (error: any) {
-            toast.error(error?.message || "Failed to send OTP", { position: "top-right" })
+            toast.error(error?.detail || "Failed to send OTP", { position: "top-right" })
         } finally {
             setLoading(false)
         }
     }
-    const handleVerifyOtp = async () => {
-        try {
-            if (!verificationMethod) return
 
+    const handleResendMobileOtp = async () => {
+        try {
+            let response
+            response = await otpService.sendEmailOtp(email)
+            if (response?.message) {
+                toast.success(response?.message || "OTP sent successfully", { position: "top-right" })
+            }
+        } catch (error: any) {
+            toast.error(error?.detail || "Failed to send OTP", { position: "top-right" })
+        } finally {
+        }
+    }
+
+    const handleResendEmailOtp = async () => {
+        try {
+            let response
+            response = await otpService.sendEmailOtp(email)
+            if (response?.message) {
+                toast.success(response?.message || "OTP sent successfully", { position: "top-right" })
+            }
+        } catch (error: any) {
+            toast.error(error?.detail || "Failed to send OTP", { position: "top-right" })
+        } finally {
+        }
+    }
+    const handleSendEmailOtp = async () => {
+        try {
             setLoading(true)
 
             let response
-
-            if (verificationMethod === "mobile") {
-                const fullMobile = `${selectedCountry.dialCode}${verificationValue}`
-                response = await otpService.verifyMobileOtp(fullMobile, otp)
+            response = await otpService.sendEmailOtp(email)
+            if (response?.message) {
+                setEmailOtpSent(true)
+                toast.success(response?.message || "OTP sent successfully", { position: "top-right" })
             }
+        } catch (error: any) {
+            toast.error(error?.detail || "Failed to send OTP", { position: "top-right" })
+        } finally {
+            setLoading(false)
+        }
+    }
 
-            if (verificationMethod === "email") {
-                response = await otpService.verifyEmailOtp(verificationValue, otp)
-            }
+    const handleVerifyMobileOtp = async () => {
+        try {
+
+            setLoading(true)
+
+            const fullMobile = `${selectedCountry.dialCode}${mobile}`
+            const response = await otpService.verifyMobileOtp(fullMobile, mobileOtp)
 
             if (response?.status) {
-                toast.success(response.message || "OTP verified successfully", {
+                toast.success(response.detail || "Mobile OTP verified successfully", {
                     position: "top-right",
                 })
+
+                setMobileVerified(true)
+                setMobileOtpSent(false)
+                setMobileOtp("")
+
+            } else {
+                toast.error(response?.detail || "Invalid OTP", {
+                    position: "top-right",
+                })
+            }
+
+        } catch (error: any) {
+            toast.error(error?.detail || "Mobile OTP verification failed", {
+                position: "top-right",
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleVerifyEmailOtp = async () => {
+        try {
+            if (!verificationEmail || !emailOtp) return
+            setLoading(true)
+            const response = await otpService.verifyEmailOtp(verificationEmail, emailOtp)
+
+            if (response?.status) {
+                toast.success(response.detail || "Email OTP verified successfully", {
+                    position: "top-right",
+                })
+
+                setEmailVerified(true)
+                setEmailOtpSent(false)
+                setEmailOtp("")
 
                 if (selectedType) {
                     router.push(`/signup/${selectedType}`)
                 }
+
+            } else {
+                toast.error(response?.detail || "Invalid OTP", {
+                    position: "top-right",
+                })
             }
+
         } catch (error: any) {
-            toast.error(error?.message || "Invalid OTP", { position: "top-right" })
+            toast.error(error?.detail || "Email OTP verification failed", {
+                position: "top-right",
+            })
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleComplete = () => {
+        if (selectedType) {
+            router.push(`/signup/${selectedType}`)
         }
     }
 
@@ -122,16 +210,21 @@ export function Login() {
 
     const handleModeChange = () => {
         setIsSignup(!isSignup)
-        setVerificationMethod(null)
-        setVerificationValue("")
-        setOtp("")
-        setOtpSent(false)
+        setMobile("")
+        setVerificationEmail("")
+        setMobileOtp("")
+        setEmailOtp("")
+        setMobileOtpSent(false)
+        setEmailOtpSent(false)
+        setMobileVerified(false)
+        setEmailVerified(false)
     }
 
     const selectedUserType = userTypes.find(t => t.id === selectedType)
 
     return (
-        <div className="min-h-screen pt-24 flex items-center justify-center p-4 relative overflow-y-auto">
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
+
             <header className="fixed top-0 left-0 right-0 h-20 bg-[#3FB8FF] backdrop-blur-md border-b border-slate-200 z-50">
                 <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4">
 
@@ -169,35 +262,27 @@ export function Login() {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-7xl relative z-10"
             >
-
                 <div className="text-center mb-12">
-
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="text-5xl md:text-6xl font-bold mb-4 
-                bg-gradient-to-r from-white via-[#7B9FFF] to-[#CAD8FF] 
-                bg-clip-text"
+                        className="text-5xl md:text-6xl font-bold mb-4 text-[#3FB8FF]"
                     >
                         Welcome Back
                     </motion.h1>
-
                     <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
-                        className="text-lg text-slate-600"
+                        className="text-lg text-[#0E40C7]"
                     >
-                        {selectedType
-                            ? `Continue as ${selectedUserType?.label}`
-                            : "Select your account type to continue"}
+                        {selectedType ? `Continue as ${selectedUserType?.label}` : "Select your account type to continue"}
                     </motion.p>
                 </div>
 
                 <AnimatePresence mode="wait">
                     {!selectedType ? (
-
                         <motion.div
                             key="selection"
                             initial={{ opacity: 0 }}
@@ -206,17 +291,10 @@ export function Login() {
                             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
                         >
                             {userTypes.map((type, i) => (
-                                <UserTypeCard
-                                    key={type.id}
-                                    type={type}
-                                    index={i}
-                                    onSelect={setSelectedType}
-                                />
+                                <UserTypeCard key={type.id} type={type} index={i} onSelect={setSelectedType} />
                             ))}
                         </motion.div>
-
                     ) : (
-
                         <motion.div
                             key="form"
                             initial={{ opacity: 0, scale: 0.95 }}
@@ -224,101 +302,85 @@ export function Login() {
                             exit={{ opacity: 0 }}
                             className="max-w-lg mx-auto"
                         >
-
-                            <Card
-                                className="p-10 border border-slate-200
-    bg-white backdrop-blur-xl
-    shadow-xl
-    relative overflow-hidden"
-                            >
+                            <Card className="p-10 border-[#CAD8FF] bg-white shadow-xl relative overflow-hidden">
                                 {loading && (
                                     <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
                                         <Spinner />
                                     </div>
                                 )}
 
-                                <div
-                                    className="absolute top-0 left-0 right-0 h-1.5
-        bg-gradient-to-r from-[#3FB8FF] to-[#FBAB18]"
-                                />
-                                <div
-                                    className="absolute -top-32 -right-32 w-64 h-64
-        bg-gradient-to-br from-[#3FB8FF] to-[#6060E9]
-        opacity-10 rounded-full blur-3xl"
-                                />
+                                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#3FB8FF] to-[#FBAB18]" />
+                                <div className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18] opacity-5 rounded-full blur-3xl" />
 
                                 <div className="relative z-10">
                                     <div className="flex items-center justify-between mb-8">
-
                                         <div className="flex items-center gap-4">
-
                                             {selectedUserType && (
-                                                <div
-                                                    className="p-3 rounded-xl
-                        bg-gradient-to-br
-                        from-[#3FB8FF] to-[#FBAB18]"
-                                                >
+                                                <div className="p-3 rounded-xl bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18]">
                                                     <selectedUserType.icon className="h-6 w-6 text-white" />
                                                 </div>
                                             )}
-
                                             <div>
-                                                <h2 className="text-3xl font-bold text-slate-900">
-                                                    {isSignup ? "Verify Identity" : "Welcome Back"}
-                                                </h2>
-
-                                                <p className="text-sm text-slate-600 mt-1">
-                                                    {selectedUserType?.label}
-                                                </p>
+                                                <p className="text-sm text-[#0E40C7] mt-1">{selectedUserType?.label}</p>
                                             </div>
                                         </div>
-
                                         <PremiumButton
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => {
                                                 setSelectedType(null)
-                                                setVerificationMethod(null)
-                                                setOtpSent(false)
+                                                setMobile("")
+                                                setMobileOtp("")
+                                                setEmailOtp("")
+                                                setVerificationEmail("")
+                                                setMobileOtpSent(false)
+                                                setEmailOtpSent(false)
+                                                setMobileVerified(false)
+                                                setEmailVerified(false)
                                             }}
-                                            className="text-slate-800 hover:text-slate-900"
+                                            className="text-[#0E40C7] hover:text-[#04257E]"
                                         >
                                             Change
                                         </PremiumButton>
-
                                     </div>
 
                                     {isSignup ? (
                                         <OTPVerification
-                                            verificationMethod={verificationMethod}
-                                            verificationValue={verificationValue}
-                                            otp={otp}
-                                            otpSent={otpSent}
+                                            userType={selectedType!}
+                                            mobile={mobile}
+                                            verificationEmail={verificationEmail}
+                                            mobileOtp={mobileOtp}
+                                            emailOtp={emailOtp}
+                                            mobileOtpSent={mobileOtpSent}
+                                            emailOtpSent={emailOtpSent}
+                                            mobileVerified={mobileVerified}
+                                            emailVerified={emailVerified}
                                             selectedCountry={selectedCountry}
                                             verificationEmailError={verificationEmailError}
                                             phoneError={phoneError}
                                             gradient="from-[#3FB8FF] to-[#FBAB18]"
-                                            onMethodSelect={setVerificationMethod}
-                                            onValueChange={(value) => {
-                                                setVerificationValue(value)
-
-                                                if (verificationMethod === "email") {
-                                                    setVerificationEmailError(validateEmail(value))
-                                                } else {
-                                                    setPhoneError(validatePhone(value, selectedCountry.code))
-                                                }
+                                            onMobileChange={(value) => {
+                                                setMobile(value)
+                                                setPhoneError(validatePhone(value, selectedCountry.code))
                                             }}
-                                            onOtpChange={setOtp}
+                                            onEmailChange={(value) => {
+                                                setVerificationEmail(value)
+                                                setVerificationEmailError(validateEmail(value))
+                                            }}
+                                            onMobileOtpChange={setMobileOtp}
+                                            onEmailOtpChange={setEmailOtp}
                                             onCountryChange={(country) => {
                                                 setSelectedCountry(country)
-                                                setPhoneError(validatePhone(verificationValue, country.code))
+                                                setPhoneError(validatePhone(mobile, country.code))
                                             }}
-                                            onSendOtp={handleSendOtp}
-                                            onVerifyOtp={handleVerifyOtp}
-                                            onBack={() => setVerificationMethod(null)}
+                                            onSendMobileOtp={handleSendMobileOtp}
+                                            onSendEmailOtp={handleSendEmailOtp}
+                                            onReSendMobileOtp={handleResendMobileOtp}
+                                            onReSendEmailOtp={handleResendEmailOtp}
+                                            onVerifyMobileOtp={handleVerifyMobileOtp}
+                                            onVerifyEmailOtp={handleVerifyEmailOtp}
+                                            onComplete={handleComplete}
                                             onModeChange={handleModeChange}
-                                            validateEmail={validateEmail}
-                                            validatePhone={validatePhone}
                                         />
                                     ) : (
                                         <LoginForm
@@ -335,9 +397,7 @@ export function Login() {
                                             onModeChange={handleModeChange}
                                         />
                                     )}
-
                                 </div>
-
                             </Card>
                         </motion.div>
                     )}
