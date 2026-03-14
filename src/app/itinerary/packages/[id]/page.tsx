@@ -7,12 +7,6 @@ interface Props {
   searchParams: Promise<{ tripType?: string }>
 }
 
-export function generateStaticParams() {
-  return travelPackages.map((pkg) => ({
-    id: pkg.id,
-  }))
-}
-
 export default async function PackagePage({ params, searchParams }: Props) {
   const { id } = await params
   const { tripType } = await searchParams
