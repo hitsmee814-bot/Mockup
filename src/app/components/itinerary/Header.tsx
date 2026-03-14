@@ -14,8 +14,10 @@ export const Header = forwardRef<HTMLElement>((props, ref) => {
     const { toggleSidebar } = useSidebar()
 
     return (
-        <header ref={ref}
-            className="fixed top-0 left-0 right-0 h-20 bg-[#3FB8FF] backdrop-blur-md border-b border-slate-200 z-50">
+        <header
+            ref={ref}
+            className="fixed top-0 left-0 right-0 h-20 bg-[#3FB8FF] backdrop-blur-md border-b border-slate-200 z-50"
+        >
 
             <button
                 onClick={toggleSidebar}
@@ -24,8 +26,7 @@ export const Header = forwardRef<HTMLElement>((props, ref) => {
                 <Menu className="h-6 w-6 text-white" />
             </button>
 
-            <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4">
-
+            <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4 pl-14">
                 <div
                     className="relative w-[160px] h-10 cursor-pointer"
                     onClick={() => router.push('/')}
@@ -38,19 +39,24 @@ export const Header = forwardRef<HTMLElement>((props, ref) => {
                     />
                 </div>
 
-                <div className="hidden md:flex items-center gap-4">
-                    <PremiumButton className="mb-0 flex items-center w-fit">
-                        Login
+                <div className="flex items-center gap-2 md:gap-4">
+
+                    <PremiumButton
+                        className="mb-0 flex items-center justify-center md:gap-2 px-3 md:px-4"
+                        onClick={() => router.push('/auth')}
+                    >
                         <LogIn size={18} />
+                        <span className="hidden md:inline">Login</span>
                     </PremiumButton>
 
                     <PremiumButton
                         variant="secondary"
-                        className="mb-0 flex items-center w-fit"
+                        className="mb-0 flex items-center justify-center md:gap-2 px-3 md:px-4"
                     >
-                        Book Demo
                         <HiOutlineBriefcase size={18} />
+                        <span className="hidden md:inline">Book Demo</span>
                     </PremiumButton>
+
                 </div>
 
             </div>

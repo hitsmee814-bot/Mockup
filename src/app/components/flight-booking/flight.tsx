@@ -7,7 +7,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { SearchForm } from "./search-form"
 import { CompactSearchBar } from "./compact-search-bar"
 import { FlightResults } from "./flight-results"
-import { Plane } from "lucide-react"
+import { Plane, PlaneTakeoff } from "lucide-react"
 
 export function Flight() {
     console.log('Hi')
@@ -63,7 +63,7 @@ export function Flight() {
 
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-b from-[#3FB8FF]/15 via-white to-[#FBAB18]/10 p-4 md:p-8">
+            <div className="min-h-screen p-4 md:p-8">
                 {searching && (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -79,33 +79,20 @@ export function Flight() {
 
                 {!showResults ? (
                     <>
-                        <motion.div
-                            variants={container}
-                            initial="hidden"
-                            animate="show"
-                            className="flex flex-col gap-2 mb-8"
-                        >
-                            <motion.h1
-                                variants={item}
-                                className="text-3xl md:text-4xl flex gap-2 items-center font-semibold text-gray-900 tracking-tight"
-                            >
-                                Flights <Plane />
-                            </motion.h1>
-
-                            <motion.p
-                                variants={item}
-                                className="text-gray-500 text-sm md:text-base"
-                            >
-                                Book your flight tickets at the best fares and explore destinations worldwide.
-                            </motion.p>
-                        </motion.div>
-                        <motion.div
-                            variants={formAnimation}
-                            initial="hidden"
-                            animate="show"
-                        >
+                        <div className="space-y-8">
+                            <div className="text-center space-y-2 pt-4">
+                                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-1.5 rounded-full border border-primary/20">
+                                    <PlaneTakeoff className="size-3.5" /> Book Your Flight
+                                </div>
+                                <h1 className="text-4xl font-extrabold tracking-tight">
+                                    Fly Anywhere, <span className="text-primary">Anytime</span>
+                                </h1>
+                                <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                                    Search hundreds of airlines and find the best fares for your next trip — one-way, return or multi-city.
+                                </p>
+                            </div>
                             <SearchForm onSearch={handleSearch} />
-                        </motion.div>
+                        </div>
                     </>
                 ) : (
                     <motion.div

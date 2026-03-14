@@ -3,7 +3,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { ItinerarySidebar } from "./Sidebar/ItinerarySideBar"
 
-import Packages from "../packages/Packages"
 import { Suspense, useEffect, useRef, useState } from "react"
 import { usePathname } from "next/navigation"
 
@@ -12,10 +11,22 @@ import Cabs from "../cabs/Cabs"
 import AISmartBot from "../ai-smart-bot/AISmartBot"
 import { Flight } from "../flight-booking/flight"
 import { Header } from "./Header"
+import { Packages } from "../packages/Packages"
 
 export default function ItenaryBuilder() {
+
+    const pathname = usePathname()
+
     const [activeTab, setActiveTab] = useState("packages")
 
+    // ✅ sync tab with route
+    useEffect(() => {
+        if (pathname.includes("/packages")) setActiveTab("packages")
+        else if (pathname.includes("/flights")) setActiveTab("flights")
+        else if (pathname.includes("/hotels")) setActiveTab("hotels")
+        else if (pathname.includes("/cabs")) setActiveTab("cabs")
+        else if (pathname.includes("/ai")) setActiveTab("ai")
+    }, [pathname])
 
     const headerRef = useRef<HTMLElement | null>(null)
     const [headerHeight, setHeaderHeight] = useState(0)
@@ -25,6 +36,7 @@ export default function ItenaryBuilder() {
             setHeaderHeight(headerRef.current.offsetHeight)
         }
     }, [])
+
     const tabs: any = {
         packages: <Packages />,
         flights: (

@@ -14,9 +14,9 @@ import { otpService } from "@/services/otpService"
 import { toast } from "sonner"
 import logoPrimary from "../../assets/images/final logo Bonhomiee white without.png"
 import Image from "next/image"
-import { LogIn } from "lucide-react"
 import { HiOutlineBriefcase } from "react-icons/hi"
 import { Spinner } from "@/components/ui/spinner"
+import { LogIn, Menu, X } from "lucide-react"
 
 export function Login() {
     const router = useRouter()
@@ -37,7 +37,7 @@ export function Login() {
     const [phoneError, setPhoneError] = useState("")
     const [selectedCountry, setSelectedCountry] = useState(countries[0])
     const [loading, setLoading] = useState(false)
-
+    const [menuOpen, setMenuOpen] = useState(false)
     const emailRegex = /^(?:[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})$/;
 
     const validateEmail = (value: string) => {
@@ -255,8 +255,50 @@ export function Login() {
                         </PremiumButton>
                     </div>
 
+                    <button
+                        onClick={() => setMenuOpen(true)}
+                        className="md:hidden text-white"
+                    >
+                        <Menu size={28} />
+                    </button>
+
                 </div>
             </header>
+            <AnimatePresence>
+                {menuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-[#3FB8FF] z-[9999] flex flex-col pt-28 px-8"
+                    >
+                        <button
+                            onClick={() => setMenuOpen(false)}
+                            className="absolute top-6 right-6 text-white"
+                        >
+                            <X size={28} />
+                        </button>
+
+                        <div className="flex flex-col gap-6">
+
+                            <button
+                                onClick={() => setMenuOpen(false)}
+                                className="text-center py-4 rounded-lg bg-[#FBAB18] text-white font-semibold"
+                            >
+                                Login
+                            </button>
+
+                            <button
+                                onClick={() => setMenuOpen(false)}
+                                className="text-center py-4 rounded-lg bg-[#FBAB18] text-white font-semibold"
+                            >
+                                Book Demo
+                            </button>
+
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
