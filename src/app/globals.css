@@ -64,7 +64,6 @@ body {
     --chart-4: oklch(0.66 0.24 300);
     --chart-5: oklch(0.68 0.23 25);
 
-
     --sidebar: oklch(1 0 0);
     --sidebar-foreground: oklch(0.23 0.03 29);
 
@@ -226,4 +225,23 @@ body {
 
 [data-sonner-toast][data-type="error"] [data-icon] {
     color: #ff656d;
+}
+
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #00AFEF transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #00AFEF;
+  border-radius: 9999px;
 }

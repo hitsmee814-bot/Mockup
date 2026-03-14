@@ -10,6 +10,7 @@ import { FlightResults } from "./flight-results"
 import { Plane } from "lucide-react"
 
 export function Flight() {
+    console.log('Hi')
     const router = useRouter()
     const searchParams = useSearchParams()
     const [searching, setSearching] = useState(false)

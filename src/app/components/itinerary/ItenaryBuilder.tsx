@@ -2,66 +2,65 @@
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { ItinerarySidebar } from "./Sidebar/ItinerarySideBar"
+
 import Packages from "../packages/Packages"
-import { useState, useEffect, Suspense } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { usePathname } from "next/navigation"
-import { RightSideLoader } from "@/app/utils/RightSideSpinner"
+
 import Hotels from "../hotels/hotels"
 import Cabs from "../cabs/Cabs"
 import AISmartBot from "../ai-smart-bot/AISmartBot"
 import { Flight } from "../flight-booking/flight"
+import { Header } from "./Header"
 
 export default function ItenaryBuilder() {
+    const [activeTab, setActiveTab] = useState("packages")
 
-    const pathname = usePathname()
 
-    const getTabFromUrl = () => {
-        const tab = pathname.split("/")[2]
-        return tab || "packages"
-    }
-
-    const [activeTab, setActiveTab] = useState(getTabFromUrl())
-    const [loading, setLoading] = useState(false)
+    const headerRef = useRef<HTMLElement | null>(null)
+    const [headerHeight, setHeaderHeight] = useState(0)
 
     useEffect(() => {
-        setActiveTab(getTabFromUrl())
-    }, [pathname])
-
-    const changeTab = (tab: string) => {
-        setLoading(true)
-
-        setTimeout(() => {
-            setActiveTab(tab)
-            setLoading(false)
-        }, 400)
-    }
-
-    let Content: React.ReactNode = null
-
-    if (activeTab === "packages") Content = <Packages />
-
-    if (activeTab === "flights")
-        Content = (
+        if (headerRef.current) {
+            setHeaderHeight(headerRef.current.offsetHeight)
+        }
+    }, [])
+    const tabs: any = {
+        packages: <Packages />,
+        flights: (
             <Suspense fallback={<div className="p-8">Loading flights...</div>}>
                 <Flight />
             </Suspense>
-        )
+        ),
+        hotels: <Hotels />,
+        cabs: <Cabs />,
+        ai: <AISmartBot />
+    }
 
-    if (activeTab === "hotels") Content = <Hotels />
-    if (activeTab === "cabs") Content = <Cabs />
-    if (activeTab === "ai") Content = <AISmartBot />
+    const Content = tabs[activeTab] ?? <Packages />
 
     return (
         <SidebarProvider defaultOpen={false}>
-            <div className="flex h-screen w-full overflow-hidden">
-                <ItinerarySidebar activeTab={activeTab} changeTab={changeTab} />
+            <div className="flex flex-col h-screen w-full">
 
-                <SidebarInset>
-                    <main className="relative p-0 bg-gray-50 h-full overflow-y-auto">
-                        <RightSideLoader loading={loading} />
-                        {Content}
-                    </main>
-                </SidebarInset>
+                <Header ref={headerRef} />
+
+                <div
+                    className="flex flex-1 overflow-hidden"
+                    style={{ marginTop: headerHeight }}
+                >
+                    <ItinerarySidebar
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                    />
+
+                    <SidebarInset className="flex flex-col flex-1">
+                        <main className="flex-1 overflow-y-auto bg-gray-50">
+                            {Content}
+                        </main>
+                    </SidebarInset>
+
+                </div>
             </div>
         </SidebarProvider>
     )
