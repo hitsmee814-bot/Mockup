@@ -1,9 +1,8 @@
+import Hotels from "@/app/components/hotels/hotels";
 import ItenaryBuilder from "@/app/components/itinerary/ItenaryBuilder";
 
 export default function HotelsPage() {
   return (
-    <main className="min-h-screen bg-gray-50">
-      <ItenaryBuilder />
-    </main>
+    <Hotels/>
   )
 }

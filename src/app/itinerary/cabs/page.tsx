@@ -1,9 +1,8 @@
+import Cabs from "@/app/components/cabs/Cabs";
 import ItenaryBuilder from "@/app/components/itinerary/ItenaryBuilder";
 
 export default function CabsPage() {
   return (
-    <main className="min-h-screen bg-gray-50">
-      <ItenaryBuilder />
-    </main>
+    <Cabs/>
   )
 }

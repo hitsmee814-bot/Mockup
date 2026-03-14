@@ -58,7 +58,7 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
     if (selectedDuration) params.set("duration", selectedDuration); else params.delete("duration")
     if (selectedCategories.length) params.set("categories", selectedCategories.join(",")); else params.delete("categories")
     if (minRating) params.set("rating", String(minRating)); else params.delete("rating")
-    router.push(`/packages?${params.toString()}`)
+    router.push(`/itinerary/packages?${params.toString()}`)
     onClose()
   }
 
@@ -66,7 +66,7 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
     reset()
     const params = new URLSearchParams(searchParams.toString())
     ;["people", "budget", "dest", "duration", "categories", "rating"].forEach(k => params.delete(k))
-    router.push(`/packages?${params.toString()}`)
+    router.push(`/itinerary/packages?${params.toString()}`)
     onClose()
   }
 
@@ -85,7 +85,6 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
             className="fixed right-0 top-0 h-full w-full max-w-sm bg-white border-l border-gray-100 z-50 flex flex-col overflow-hidden"
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
               <h2 className="font-extrabold text-base text-gray-800">Advanced Filters</h2>
               <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer text-gray-500">
@@ -93,10 +92,8 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
               </button>
             </div>
 
-            {/* Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-7">
 
-              {/* People */}
               <div>
                 <label className={labelClass}><Users className="size-3.5" style={{ color: "#3FB8FF" }} /> Number of People</label>
                 <div className="flex items-center gap-4">
@@ -109,7 +106,6 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
                 </div>
               </div>
 
-              {/* Budget */}
               <div>
                 <label className={labelClass}><DollarSign className="size-3.5" style={{ color: "#3FB8FF" }} /> Max Budget</label>
                 <input type="range" min={5000} max={250000} step={5000} value={budget}
@@ -121,7 +117,6 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
                 </div>
               </div>
 
-              {/* Destination */}
               <div>
                 <label className={labelClass}><MapPin className="size-3.5" style={{ color: "#3FB8FF" }} /> Destination</label>
                 <div className="flex flex-wrap gap-2">
@@ -132,7 +127,6 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
                 </div>
               </div>
 
-              {/* Duration */}
               <div>
                 <label className={labelClass}><Calendar className="size-3.5" style={{ color: "#3FB8FF" }} /> Duration</label>
                 <div className="flex flex-wrap gap-2">
@@ -143,7 +137,6 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
                 </div>
               </div>
 
-              {/* Categories */}
               <div>
                 <label className={labelClass}><Tag className="size-3.5" style={{ color: "#3FB8FF" }} /> Trip Type</label>
                 <div className="flex flex-wrap gap-2">
@@ -154,7 +147,6 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
                 </div>
               </div>
 
-              {/* Rating */}
               <div>
                 <label className={labelClass}><Star className="size-3.5" style={{ color: "#3FB8FF" }} /> Minimum Rating</label>
                 <div className="flex gap-2">
@@ -168,7 +160,6 @@ export function FilterDrawer({ open, onClose }: FilterDrawerProps) {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="px-5 py-4 border-t border-gray-100 flex gap-3 shrink-0">
               <button onClick={resetAndApply}
                 className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer">

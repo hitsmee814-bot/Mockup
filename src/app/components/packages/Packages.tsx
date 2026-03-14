@@ -73,7 +73,7 @@ export function Packages() {
     const params = new URLSearchParams(searchParams.toString())
     if (cat === "All") params.delete("tripType")
     else params.set("tripType", cat)
-    router.push(`/packages?${params.toString()}`)
+    router.push(`/itinerary/packages?${params.toString()}`)
   }
 
   const activeFilterCount = [

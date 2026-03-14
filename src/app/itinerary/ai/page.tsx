@@ -1,9 +1,7 @@
-import ItenaryBuilder from "@/app/components/itinerary/ItenaryBuilder";
+import AISmartBot from "@/app/components/ai-smart-bot/AISmartBot";
 
 export default function AIPage() {
   return (
-    <main className="min-h-screen bg-gray-50">
-      <ItenaryBuilder />
-    </main>
+    <AISmartBot/>
   )
 }

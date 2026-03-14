@@ -22,21 +22,20 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
   const discount = Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100)
 
   const backHref = tripType
-    ? `/packages?tripType=${encodeURIComponent(tripType)}`
-    : "/packages"
+    ? `/itinerary/packages?tripType=${encodeURIComponent(tripType)}`
+    : "/itinerary/packages"
 
   const bookingHref = tripType
-    ? `/packages/${pkg.id}/booking?tripType=${encodeURIComponent(tripType)}`
-    : `/packages/${pkg.id}/booking`
+    ? `/itinerary/packages/${pkg.id}/booking?tripType=${encodeURIComponent(tripType)}`
+    : `/itinerary/packages/${pkg.id}/booking`
 
   const breadcrumbLabel = tripType ?? "All"
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Breadcrumb */}
       <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2">
         <nav className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Link href="/packages" className="transition-colors hover:text-[#3FB8FF]">Itineraries</Link>
+          <Link href="/itinerary/packages" className="transition-colors hover:text-[#3FB8FF]">Itineraries</Link>
           <ChevronRight className="size-3 shrink-0" />
           <Link href={backHref} className="capitalize transition-colors hover:text-[#3FB8FF]">{breadcrumbLabel}</Link>
           <ChevronRight className="size-3 shrink-0" />
@@ -110,7 +109,7 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
                   transition={{ delay: 0.2 + i * 0.06 }}
                 >
                   <Link
-                    href={`/packages?tripType=${encodeURIComponent(cat)}`}
+                    href={`/itinerary/packages?tripType=${encodeURIComponent(cat)}`}
                     className="text-xs font-semibold px-3 py-1 rounded-full border transition-all hover:shadow-md inline-block"
                     style={{ background: "#3FB8FF10", color: "#3FB8FF", borderColor: "#3FB8FF30" }}
                   >

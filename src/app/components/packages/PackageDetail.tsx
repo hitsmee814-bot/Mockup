@@ -75,10 +75,8 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
               </motion.div>
             </div>
 
-            {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
-              {/* Price + CTA */}
               <motion.div
                 className="flex items-center justify-between rounded-2xl p-4 border border-gray-100 bg-gray-50"
                 initial={{ opacity: 0, y: 12 }}
@@ -91,7 +89,7 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                   <p className="text-xs text-gray-400">per person</p>
                 </div>
                 <motion.button
-                  onClick={() => { onClose(); router.push(`/packages/${pkg.id}/booking`) }}
+                  onClick={() => { onClose(); router.push(`/itinerary/packages/${pkg.id}/booking`) }}
                   className="text-white font-bold px-5 py-2.5 rounded-xl text-sm cursor-pointer"
                   style={{ background: "#3FB8FF" }}
                   whileHover={{ scale: 1.03, boxShadow: "0 4px 16px 0 rgba(63,184,255,0.3)" }}
@@ -101,7 +99,6 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 </motion.button>
               </motion.div>
 
-              {/* Categories */}
               <motion.div
                 className="flex flex-wrap gap-2"
                 initial={{ opacity: 0 }}
@@ -115,7 +112,6 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 ))}
               </motion.div>
 
-              {/* Description */}
               <motion.p
                 className="text-sm text-gray-500 leading-relaxed"
                 initial={{ opacity: 0 }}
@@ -125,7 +121,6 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 {pkg.shortDescription}
               </motion.p>
 
-              {/* Inclusions */}
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
                 <h3 className="font-bold text-sm mb-3 flex items-center gap-2 text-gray-800">
                   <CheckCircle2 className="size-4" style={{ color: "#3FB8FF" }} /> What&apos;s Included

@@ -1,9 +1,5 @@
-import ItenaryBuilder from "@/app/components/itinerary/ItenaryBuilder";
+import { Packages } from "@/app/components/packages/Packages"
 
 export default function PackagesPage() {
-  return (
-    <main className="min-h-screen bg-gray-50">
-      <ItenaryBuilder />
-    </main>
-  )
+  return <Packages />
 }
