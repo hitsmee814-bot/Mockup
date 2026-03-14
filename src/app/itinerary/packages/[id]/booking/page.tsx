@@ -3,8 +3,8 @@ import { travelPackages } from "@/app/components/packages/data"
 import { notFound } from "next/navigation"
 
 interface Props {
-  params: { id: string }
-  searchParams?: { tripType?: string }
+  params: Promise<{ id: string }>
+  searchParams?: Promise<{ tripType?: string }>
 }
 
 export function generateStaticParams() {
@@ -13,9 +13,10 @@ export function generateStaticParams() {
   }))
 }
 
-export default function BookingPage({ params, searchParams }: Props) {
-  const { id } = params
-  const tripType = searchParams?.tripType
+export default async function BookingPage({ params, searchParams }: Props) {
+  const { id } = await params
+  const { tripType } = (await searchParams) ?? {}
+
   const pkg = travelPackages.find((p) => p.id === id)
   if (!pkg) notFound()
 
