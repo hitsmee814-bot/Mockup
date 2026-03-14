@@ -18,7 +18,6 @@ export default async function BookingPage({ params }: Props) {
   if (!pkg) notFound()
 
   return (
-    // We wrap this in Suspense because BookingForm will now use useSearchParams()
     <Suspense fallback={<div>Loading booking form...</div>}>
       <BookingForm pkg={pkg} />
     </Suspense>
