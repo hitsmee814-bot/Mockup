@@ -120,7 +120,7 @@ export function Login() {
             setLoading(true)
 
             let response
-            response = await otpService.sendEmailOtp(email)
+            response = await otpService.sendEmailOtp(verificationEmail)
             if (response?.message) {
                 setEmailOtpSent(true)
                 toast.success(response?.message || "OTP sent successfully", { position: "top-right" })
