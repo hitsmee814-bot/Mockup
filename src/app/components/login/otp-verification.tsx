@@ -224,7 +224,7 @@ export function OTPVerification({
                 </motion.div>
             )}
 
-            {mobileVerified && !emailVerified && (emailRequired || !verificationEmail) && (
+            {mobileVerified && !emailVerified && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
                     {!emailOtpSent ? (
                         <>
@@ -247,10 +247,12 @@ export function OTPVerification({
                                     autoFocus
                                 />
 
-                                {verificationEmailError && <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-red-600">
-                                    <CircleAlert className="h-3.5 w-3.5" />
-                                    {verificationEmailError}
-                                </p>}
+                                {verificationEmailError && (
+                                    <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-red-600">
+                                        <CircleAlert className="h-3.5 w-3.5" />
+                                        {verificationEmailError}
+                                    </p>
+                                )}
                             </div>
                             <PremiumButton
                                 variant="primary"
@@ -279,7 +281,11 @@ export function OTPVerification({
                                     <InputOTP maxLength={6} value={emailOtp} onChange={onEmailOtpChange} autoFocus>
                                         <InputOTPGroup>
                                             {[0, 1, 2, 3, 4, 5].map((i) => (
-                                                <InputOTPSlot key={i} index={i} className="bg-white border-[#CAD8FF] text-[#04257E] h-14 w-14 text-xl" />
+                                                <InputOTPSlot
+                                                    key={i}
+                                                    index={i}
+                                                    className="bg-white border-[#CAD8FF] text-[#04257E] h-14 w-14 text-xl"
+                                                />
                                             ))}
                                         </InputOTPGroup>
                                     </InputOTP>
@@ -315,6 +321,7 @@ export function OTPVerification({
                     )}
                 </motion.div>
             )}
+
 
             {/* {isCustomer && mobileVerified && !verificationEmail && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
