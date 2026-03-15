@@ -1,14 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, ChangeEvent, FormEvent, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, ChangeEvent, FormEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
-import logovar from "../../assets/images/logoPrimary.png"
-import UIpic from "../../assets/images/agent-signup.jpg"
+import logovar from "../../assets/images/logoPrimary.png";
+import UIpic from "../../assets/images/agent-signup.jpg";
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
+import { PremiumButton } from "../../utils/PremiumButton";
+
+// Shadcn UI Imports
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* ---------------- TYPES ---------------- */
 
@@ -29,6 +41,10 @@ interface FormState {
 interface ErrorState {
   [key: string]: string;
 }
+
+/* ---------------- CONSTANTS ---------------- */
+const INPUT_STYLING = "mt-2 h-12 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]";
+const LABEL_STYLING = "text-slate-700";
 
 /* ---------------- MODERN TOOLTIP ---------------- */
 
@@ -82,16 +98,22 @@ export default function AgentSignup(): JSX.Element {
   const [mandatoryError, setMandatoryError] = useState("");
   const [strengthLabel, setStrengthLabel] = useState("");
   const [strengthColor, setStrengthColor] = useState("");
-  
+
   const [isChecking, setIsChecking] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
 
-  /* PREVENT COPY PASTE LOGIC */
+  useLayoutEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   const preventCopyPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
   };
 
-  /* NAME IN PASSWORD CHECK */
   const isNameInPassword = (p: string, currentForm: FormState) => {
     const lowerP = p.toLowerCase();
     const nameParts = [currentForm.firstName, currentForm.middleName, currentForm.lastName, currentForm.agencyName]
@@ -100,7 +122,6 @@ export default function AgentSignup(): JSX.Element {
     return nameParts.some(name => name.length > 0 && lowerP.includes(name));
   };
 
-  /* REFINED TRIVIAL SEQUENCE DETECTION */
   const isTrivialPassword = (p: string) => {
     if (p.length < 3) return false;
     const lowerP = p.toLowerCase();
@@ -123,14 +144,14 @@ export default function AgentSignup(): JSX.Element {
   const passwordValidCriteria = (p: string) =>
     /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(p);
 
-  /* PASSWORD STRENGTH LOGIC */
+
   useEffect(() => {
     if (!form.password || !passwordValidCriteria(form.password) || isNameInPassword(form.password, form)) {
       setStrengthLabel("");
       setStrengthColor("");
       return;
     }
-    
+
     if (isTrivialPassword(form.password)) {
       setStrengthLabel("weak password");
       setStrengthColor("text-red-600");
@@ -153,18 +174,16 @@ export default function AgentSignup(): JSX.Element {
   const emailValid = (e: string) => {
     const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!basicRegex.test(e)) return { valid: false, errorType: "syntax" };
-    
+
     const parts = e.split('@');
     const domainPart = parts[1].split('.')[0];
-    
-    // Check for uppercase characters in domain
+
     if (/[A-Z]/.test(domainPart)) {
-        return { valid: false, errorType: "casing" };
+      return { valid: false, errorType: "casing" };
     }
 
-    // Check for special characters in domain (only lowercase letters and numbers allowed)
     if (!/^[a-z0-9]+$/.test(domainPart)) {
-        return { valid: false, errorType: "syntax" };
+      return { valid: false, errorType: "syntax" };
     }
 
     return { valid: true, errorType: "" };
@@ -183,9 +202,13 @@ export default function AgentSignup(): JSX.Element {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    handleValueChange(name, value);
+  };
+
+  const handleValueChange = (name: string, value: string) => {
     const updatedForm = { ...form, [name]: value };
     setForm(updatedForm);
-    
+
     setMandatoryError("");
     if (name === "username") setUsernameStatus(null);
     if (name === "confirmPassword" && value.length > 0) setShowPassword(false);
@@ -193,68 +216,68 @@ export default function AgentSignup(): JSX.Element {
     let fieldError = "";
 
     if (value) {
-        if (name === "username") {
-            const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
-            const forbiddenChars = /[&=_'\-+,<>]/;
-            const doublePeriod = /\.\./;
-            const lengthValid = value.length >= 6 && value.length <= 16;
-            const endsWithPeriod = value.endsWith('.');
+      if (name === "username") {
+        const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
+        const forbiddenChars = /[&=_'\-+,<>]/;
+        const doublePeriod = /\.\./;
+        const lengthValid = value.length >= 6 && value.length <= 16;
+        const endsWithPeriod = value.endsWith('.');
 
-            if (!allowedChars.test(value)) {
-                fieldError = "Username must start with a letter and only contain letters, numbers, or periods.";
-            } else if (forbiddenChars.test(value)) {
-                fieldError = "Username cannot contain characters like &, =, _, ', -, +, ,, or brackets.";
-            } else if (doublePeriod.test(value)) {
-                fieldError = "Username cannot contain more than one period in a row.";
-            } else if (!lengthValid) {
-                fieldError = "Username must be between 6 and 16 characters.";
-            } else if (endsWithPeriod) {
-                fieldError = "Username cannot end with a period.";
-            }
+        if (!allowedChars.test(value)) {
+          fieldError = "Username must start with a letter and only contain letters, numbers, or periods.";
+        } else if (forbiddenChars.test(value)) {
+          fieldError = "Username cannot contain characters like &, =, _, ', -, +, ,, or brackets.";
+        } else if (doublePeriod.test(value)) {
+          fieldError = "Username cannot contain more than one period in a row.";
+        } else if (!lengthValid) {
+          fieldError = "Username must be between 6 and 16 characters.";
+        } else if (endsWithPeriod) {
+          fieldError = "Username cannot end with a period.";
         }
-        if (name === "email") {
-            const validation = emailValid(value);
-            if (!validation.valid) {
-                fieldError = validation.errorType === "casing" 
-                    ? "Email domain must be in lowercase" 
-                    : "Please enter a valid email address";
-            }
+      }
+      if (name === "email") {
+        const validation = emailValid(value);
+        if (!validation.valid) {
+          fieldError = validation.errorType === "casing"
+            ? "Email domain must be in lowercase"
+            : "Please enter a valid email address";
         }
-        if (name === "phone") {
-            fieldError = validatePhoneNumber(value, updatedForm.countryCode);
+      }
+      if (name === "phone") {
+        fieldError = validatePhoneNumber(value, updatedForm.countryCode);
+      }
+      if (name === "password") {
+        if (!passwordValidCriteria(value)) {
+          fieldError = "Password criteria not fulfilled yet.";
+        } else if (isNameInPassword(value, updatedForm)) {
+          fieldError = " Agency name or First name or Middle name or Last name cannot be used in password setting ";
         }
-        if (name === "password") {
-            if (!passwordValidCriteria(value)) {
-                fieldError = "Password criteria not fulfilled yet.";
-            } else if (isNameInPassword(value, updatedForm)) {
-                fieldError = " Agency name or First name or Middle name or Last name cannot be used in password setting ";
-            }
+      }
+      if (name === "confirmPassword") {
+        if (value !== updatedForm.password) {
+          fieldError = "The passwords you entered do not match.";
         }
-        if (name === "confirmPassword") {
-            if (value !== updatedForm.password) {
-                fieldError = "The passwords you entered do not match.";
-            }
-        }
+      }
     }
 
     setErrors(prev => {
-        const newErrs = { ...prev };
-        if (!value) {
-            delete newErrs[name];
-        } else if (fieldError) {
-            newErrs[name] = fieldError;
-        } else {
-            delete newErrs[name];
-        }
+      const newErrs = { ...prev };
+      if (!value) {
+        delete newErrs[name];
+      } else if (fieldError) {
+        newErrs[name] = fieldError;
+      } else {
+        delete newErrs[name];
+      }
 
-        if (name === "password" && updatedForm.confirmPassword) {
-            if (updatedForm.confirmPassword !== value) {
-                newErrs.confirmPassword = "The passwords you entered do not match.";
-            } else {
-                delete newErrs.confirmPassword;
-            }
+      if (name === "password" && updatedForm.confirmPassword) {
+        if (updatedForm.confirmPassword !== value) {
+          newErrs.confirmPassword = "The passwords you entered do not match.";
+        } else {
+          delete newErrs.confirmPassword;
         }
-        return newErrs;
+      }
+      return newErrs;
     });
   };
 
@@ -263,12 +286,12 @@ export default function AgentSignup(): JSX.Element {
     const cleanAgency = form.agencyName.replace(/[^a-zA-Z]/g, "").slice(0, 9);
     const timestamp = Date.now().toString().slice(-6);
     const newUsername = `${cleanAgency}${timestamp}`.toLowerCase();
-    
+
     setForm(prev => ({ ...prev, username: newUsername }));
     setErrors(prev => {
-        const newErrs = { ...prev };
-        delete newErrs.username;
-        return newErrs;
+      const newErrs = { ...prev };
+      delete newErrs.username;
+      return newErrs;
     });
     setUsernameStatus(null);
   };
@@ -277,12 +300,12 @@ export default function AgentSignup(): JSX.Element {
     if (!form.username || errors.username) return;
     setIsChecking(true);
     return new Promise((resolve) => {
-        setTimeout(() => {
-            setIsChecking(false);
-            const status = form.username.toLowerCase().includes("taken") ? "unavailable" : "available";
-            setUsernameStatus(status);
-            resolve(status);
-        }, 1200);
+      setTimeout(() => {
+        setIsChecking(false);
+        const status = form.username.toLowerCase().includes("taken") ? "unavailable" : "available";
+        setUsernameStatus(status);
+        resolve(status);
+      }, 1200);
     });
   };
 
@@ -295,16 +318,16 @@ export default function AgentSignup(): JSX.Element {
 
     if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
       setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
-      
+
       const newFieldErrors: ErrorState = { ...errors };
-      emptyFields.forEach(f => { 
-        newFieldErrors[f] = "Required"; 
+      emptyFields.forEach(f => {
+        newFieldErrors[f] = "Required";
       });
-      
+
       if (strengthLabel === "weak password" && !newFieldErrors.password) {
         newFieldErrors.password = "A Medium or Strong password is required to continue.";
       }
-      
+
       setErrors(newFieldErrors);
       if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -329,18 +352,27 @@ export default function AgentSignup(): JSX.Element {
 
   return (
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden">
+      {/* Standard React way to inject CSS safely to fix the flash */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        html, body { 
+          overflow: hidden !important; 
+          scrollbar-width: none !important; 
+        }
+        body::-webkit-scrollbar { display: none !important; width: 0 !important; }
+      `}} />
+
       <div className="bg-white shadow-sm px-6 py-3 flex items-center shrink-0 z-20">
         <div onClick={() => router.push("/")} className="flex items-center gap-2 cursor-pointer">
-          <Image src={logovar} alt="logo" width={32} height={32}/>
+          <Image src={logovar} alt="logo" width={32} height={32} />
           <h1 className="text-lg font-bold text-[#00AFEF]">Bonhomiee</h1>
         </div>
       </div>
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
-        <div className="bg-white w-full max-w-4xl h-full max-h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 overflow-hidden">
+        <div className="bg-white w-full max-w-4xl h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 overflow-hidden">
 
           <div className="hidden md:block relative">
-            <Image src={UIpic} alt="Agent Signup" fill className="object-cover"/>
+            <Image src={UIpic} alt="Agent Signup" fill className="object-cover" />
             <div className="absolute inset-0 bg-blue-900/10"></div>
           </div>
 
@@ -368,59 +400,93 @@ export default function AgentSignup(): JSX.Element {
               )}
 
               <div className="mb-4">
-                <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
+                <Label className={LABEL_STYLING}>
                   Agency Name<span className="text-red-500 ml-1">*</span>
-                </label>
-                <div className="flex gap-2 mt-1">
-                  <input name="agencyName" value={form.agencyName} onChange={handleChange} placeholder="Enter agency name"
-                    className={`flex-grow border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] ${errors.agencyName ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
-                  <button type="button" onClick={generateUsername} disabled={!form.agencyName}
-                    className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider">
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    name="agencyName"
+                    value={form.agencyName}
+                    onChange={handleChange}
+                    placeholder="Enter agency name"
+                    className={`${INPUT_STYLING} flex-grow ${errors.agencyName ? 'border-red-600' : ''}`}
+                  />
+                  <PremiumButton
+                    type="button"
+                    variant="accent"
+                    onClick={generateUsername}
+                    disabled={!form.agencyName}
+                    className="mt-2"
+                  >
                     Generate
-                  </button>
+                  </PremiumButton>
                 </div>
                 <ErrorMessage message={errors.agencyName} />
               </div>
 
-              <InputField label="First Name" name="firstName" placeholder="Enter first name" required form={form} errors={errors} handleChange={handleChange}/>
-              <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} errors={errors} handleChange={handleChange}/>
-              <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} errors={errors} handleChange={handleChange}/>
+              <InputField label="First Name" name="firstName" placeholder="Enter first name" required form={form} errors={errors} handleChange={handleChange} />
+              <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} errors={errors} handleChange={handleChange} />
+              <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} errors={errors} handleChange={handleChange} />
 
               <div className="mb-4">
-                <InputWithError label="Email" name="email" placeholder="Enter email address" required tooltip="Enter a valid email address like name@example.com" form={form} errors={errors} handleChange={handleChange}/>
+                <InputWithError label="Email" name="email" placeholder="Enter email address" required tooltip="Enter a valid email address like name@example.com" form={form} errors={errors} handleChange={handleChange} />
                 <ErrorMessage message={errors.email} />
               </div>
 
               <div className="mb-4">
-                <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center mb-1">
+                <Label className={`${LABEL_STYLING} flex items-center`}>
                   Phone Number<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Enter exactly 10 digits."/>
-                </label>
-                <div className="flex">
-                  <select name="countryCode" value={form.countryCode} onChange={handleChange}
-                    className="border border-[#00AFEF] rounded-l-[4px] px-2 text-[12px] text-[#1A1A1A] bg-gray-50 outline-none">
-                    <option value="+91">🇮🇳 +91</option>
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+44">🇬🇧 +44</option>
-                  </select>
-                  <input name="phone" value={form.phone} onChange={handleChange} placeholder="Enter phone number"
-                    className={`w-full border border-l-0 rounded-r-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF] ${errors.phone ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
+                  <Tooltip text="Enter exactly 10 digits." />
+                </Label>
+                <div className="flex gap-3 items-center">
+                  <div className="mt-2 w-[110px]">
+                    <Select
+                      value={form.countryCode}
+                      onValueChange={(val) => handleValueChange("countryCode", val)}
+                    >
+                      <SelectTrigger className={`w-24 !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]  border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"}`}>
+                        <SelectValue placeholder="Code" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="+91">🇮🇳 +91</SelectItem>
+                        <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                        <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Input
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                    placeholder="Enter phone number"
+                    className={`${INPUT_STYLING} flex-grow ${errors.phone ? 'border-red-600' : ''}`}
+                  />
                 </div>
                 <ErrorMessage message={errors.phone} />
               </div>
 
               <div className="mb-4">
-                <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
+                <Label className={`${LABEL_STYLING} flex items-center`}>
                   Username<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc."/>
-                </label>
-                <div className="flex gap-2 mt-1">
-                  <input name="username" value={form.username} onChange={handleChange} placeholder="Enter or generate username"
-                    className={`flex-grow border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] ${errors.username ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
-                  <button type="button" onClick={checkUsername} disabled={!form.username || isChecking || !!errors.username}
-                    className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1">
+                  <Tooltip text="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc." />
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    name="username"
+                    value={form.username}
+                    onChange={handleChange}
+                    placeholder="Enter or generate username"
+                    className={`${INPUT_STYLING} flex-grow ${errors.username ? 'border-red-600' : ''}`}
+                  />
+                  <PremiumButton
+                    type="button"
+                    variant="info"
+                    onClick={checkUsername}
+                    disabled={!form.username || isChecking || !!errors.username}
+                    className="mt-2"
+                  >
                     {isChecking ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
-                  </button>
+                  </PremiumButton>
                 </div>
                 <ErrorMessage message={errors.username} />
                 {usernameStatus === "available" && !errors.username && (
@@ -436,27 +502,31 @@ export default function AgentSignup(): JSX.Element {
               </div>
 
               <div className="mb-4">
-                <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
+                <Label className={`${LABEL_STYLING} flex items-center`}>
                   Password<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character."/>
-                </label>
-                <div className="relative mt-1">
-                  <input type={showPassword ? "text" : "password"} name="password"
+                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character." />
+                </Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
                     onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
-                    value={form.password} onChange={handleChange} placeholder="Enter password"
-                    className={`w-full border rounded-[4px] px-3 py-2 pr-10 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] ${errors.password ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Enter password"
+                    className={`${INPUT_STYLING} pr-10 ${errors.password ? 'border-red-600' : ''}`}
+                  />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition-colors">
-                    {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+                    className="absolute right-3 top-[60%] -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition-colors">
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                
+
                 {strengthLabel && !errors.password && (
                   <div className="mt-2.5 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
                     <div className="h-1.5 flex-grow bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full transition-all duration-500 ${
-                            strengthLabel === 'weak password' ? 'w-1/3 bg-red-500' :
-                            strengthLabel === 'medium password' ? 'w-2/3 bg-yellow-500' : 'w-full bg-green-500'
+                      <div className={`h-full transition-all duration-500 ${strengthLabel === 'weak password' ? 'w-1/3 bg-red-500' :
+                          strengthLabel === 'medium password' ? 'w-2/3 bg-yellow-500' : 'w-full bg-green-500'
                         }`} />
                     </div>
                     <span className={`text-[11px] font-extrabold uppercase tracking-widest ${strengthColor}`}>
@@ -468,32 +538,46 @@ export default function AgentSignup(): JSX.Element {
               </div>
 
               <div className="mb-4">
-                <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
-                    Re-Type Password<span className="text-red-500 ml-1">*</span>
-                </label>
-                <input type="password" name="confirmPassword"
+                <Label className={LABEL_STYLING}>
+                  Re-Type Password<span className="text-red-500 ml-1">*</span>
+                </Label>
+                <Input
+                  type="password"
+                  name="confirmPassword"
                   onFocus={() => setShowPassword(false)}
                   onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
-                  value={form.confirmPassword} onChange={handleChange} placeholder="Re-enter password"
-                  className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#00AFEF] mt-1 ${errors.confirmPassword ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Re-enter password"
+                  className={`${INPUT_STYLING} ${errors.confirmPassword ? 'border-red-600' : ''}`}
+                />
                 <ErrorMessage message={errors.confirmPassword} />
               </div>
 
-              <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} errors={errors} handleChange={handleChange}/>
+              <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} errors={errors} handleChange={handleChange} />
             </div>
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
 
             <div className="px-8 py-6 shrink-0 bg-white">
               <div className="grid grid-cols-2 gap-4">
-                <button type="button" onClick={()=>router.push("/")} 
-                  className="w-full bg-[#E62800] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
+                <PremiumButton
+                  type="button"
+                  onClick={() => router.push("/")}
+                  variant="destructive"
+                  size="lg"
+                  className="w-full"
+                >
                   Cancel
-                </button>
-                <button type="submit" 
-                  className="w-full bg-[#00AFEF] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
+                </PremiumButton>
+                <PremiumButton
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                >
                   Register
-                </button>
+                </PremiumButton>
               </div>
             </div>
           </form>
@@ -515,13 +599,18 @@ interface InputFieldProps {
   handleChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-const InputField = ({label,name,required,placeholder,form,errors,handleChange}:InputFieldProps) => (
+const InputField = ({ label, name, required, placeholder, form, errors, handleChange }: InputFieldProps) => (
   <div className="mb-4">
-    <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
+    <Label className={LABEL_STYLING}>
       {label}{required && <span className="text-red-500 ml-1">*</span>}
-    </label>
-    <input name={name} value={form[name as keyof FormState]} onChange={handleChange} placeholder={placeholder}
-      className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1 ${errors[name] ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
+    </Label>
+    <Input
+      name={name}
+      value={form[name as keyof FormState]}
+      onChange={handleChange}
+      placeholder={placeholder}
+      className={`${INPUT_STYLING} ${errors[name] ? 'border-red-600' : ''}`}
+    />
     <ErrorMessage message={errors[name]} />
   </div>
 );
@@ -530,13 +619,18 @@ interface InputWithErrorProps extends InputFieldProps {
   tooltip?: string;
 }
 
-const InputWithError = ({label,name,required,placeholder,tooltip,form,errors,handleChange}:InputWithErrorProps) => (
+const InputWithError = ({ label, name, required, placeholder, tooltip, form, errors, handleChange }: InputWithErrorProps) => (
   <div>
-    <label className="font-medium text-[12px] text-[#1A1A1A] flex items-center">
+    <Label className={`${LABEL_STYLING} flex items-center`}>
       {label}{required && <span className="text-red-500 ml-1">*</span>}
-      {tooltip && <Tooltip text={tooltip}/>}
-    </label>
-    <input name={name} value={form[name as keyof FormState]} onChange={handleChange} placeholder={placeholder}
-      className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 focus:ring-[#00AFEF] mt-1 ${errors[name] ? 'border-red-600' : 'border-[#00AFEF]'}`}/>
+      {tooltip && <Tooltip text={tooltip} />}
+    </Label>
+    <Input
+      name={name}
+      value={form[name as keyof FormState]}
+      onChange={handleChange}
+      placeholder={placeholder}
+      className={`${INPUT_STYLING} ${errors[name] ? 'border-red-600' : ''}`}
+    />
   </div>
 );

@@ -9,7 +9,20 @@ import { passwordStrength } from "check-password-strength";
 import logovar from "../../assets/images/logoPrimary.png";
 import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg";
 
-/* Using full metadata for strict validation */
+/* PREMIUM BUTTON IMPORT */
+import { PremiumButton } from "../../utils/PremiumButton";
+
+/* SHADCN UI IMPORTS */
+import { Input as ShadInput } from "@/components/ui/input";
+import { Label as ShadLabel } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
 
 /* TYPES */
@@ -27,6 +40,13 @@ type FormType = {
 type ErrorType = {
   [key: string]: string;
 };
+
+/* COUNTRY LIST */
+const countries = [
+  { code: "IN", label: "🇮🇳 +91" },
+  { code: "US", label: "🇺🇸 +1" },
+  { code: "GB", label: "🇬🇧 +44" },
+];
 
 /* TOOLTIP COMPONENT */
 const Tooltip: React.FC<{ text: string }> = ({ text }) => (
@@ -67,9 +87,11 @@ type InputProps = {
   value: string;
   error?: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  autoFocus?: boolean;
 };
 
-const Input: React.FC<InputProps> = ({
+const CustomInput: React.FC<InputProps> = ({
   name,
   label,
   required,
@@ -78,20 +100,25 @@ const Input: React.FC<InputProps> = ({
   value,
   error,
   onChange,
+  type = "text",
+  autoFocus
 }) => (
   <div className="mb-4">
-    <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
+    <ShadLabel htmlFor={name} className="text-slate-700 flex items-center">
       {label}
       {required && <span className="text-red-500 ml-1">*</span>}
       {tooltip && <Tooltip text={tooltip} />}
-    </label>
-    <input
+    </ShadLabel>
+    <ShadInput
+      id={name}
       name={name}
+      type={type}
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 mt-1 ${
-        error ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+      autoFocus={autoFocus}
+      className={`mt-2 h-12 bg-white text-slate-900  placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${
+        error ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"
       }`}
     />
     <ErrorMessage message={error} />
@@ -120,9 +147,30 @@ export default function CustomerSignup(): JSX.Element {
   const [strengthColor, setStrengthColor] = useState<string>("");
   const [countryCode, setCountryCode] = useState<CountryCode>("IN");
 
-  /* Username Availability States */
   const [isChecking, setIsChecking] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalScrollbarWidth = document.body.style.scrollbarWidth;
+  
+    document.body.style.overflow = "hidden";
+    document.body.style.scrollbarWidth = "none";
+  
+    const style = document.createElement("style");
+    style.innerHTML = `
+      body::-webkit-scrollbar {
+        width: 0px;
+        background: white;
+      }
+    `;
+    document.head.appendChild(style);
+  
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.scrollbarWidth = originalScrollbarWidth;
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const containsNamePart = (p: string) => {
     const lowerP = p.toLowerCase();
@@ -206,7 +254,6 @@ export default function CustomerSignup(): JSX.Element {
     return "";
   };
 
-  /* CHECK USERNAME FUNCTIONALITY */
   const checkUsername = () => {
     if (!form.username || errors.username) return;
     setIsChecking(true);
@@ -220,7 +267,7 @@ export default function CustomerSignup(): JSX.Element {
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "confirmPassword") setShowPassword(false);
 
@@ -241,7 +288,7 @@ export default function CustomerSignup(): JSX.Element {
     if (name === "phone" && value) fieldError = validatePhoneNumber(value, countryCode);
     
     if (name === "username") {
-        setUsernameStatus(null); // Reset availability status on change
+        setUsernameStatus(null);
         const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
         const forbiddenChars = /[&=_'\-+,<>]/;
         const doublePeriod = /\.\./;
@@ -279,11 +326,10 @@ export default function CustomerSignup(): JSX.Element {
     setErrors(prev => ({ ...prev, [name]: fieldError }));
   };
 
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCode = e.target.value as CountryCode;
-    setCountryCode(newCode);
+  const handleCountryChange = (value: CountryCode) => {
+    setCountryCode(value);
     if (form.phone) {
-      setErrors(prev => ({ ...prev, phone: validatePhoneNumber(form.phone, newCode) }));
+      setErrors(prev => ({ ...prev, phone: validatePhoneNumber(form.phone, value) }));
     }
   };
 
@@ -314,7 +360,6 @@ export default function CustomerSignup(): JSX.Element {
       return;
     }
 
-    /* Auto-Check Logic if Button was forgotten */
     let currentStatus = usernameStatus;
     if (currentStatus === null) {
       currentStatus = await checkUsername() as "available" | "unavailable";
@@ -333,7 +378,11 @@ export default function CustomerSignup(): JSX.Element {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden">
+    <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden
+    [scrollbar-width:none]
+[&::-webkit-scrollbar]:w-0
+[&::-webkit-scrollbar-track]:bg-white
+[&::-webkit-scrollbar-thumb]:bg-white">
       <div className="bg-white shadow-sm px-6 py-3 flex items-center shrink-0 z-20">
         <div onClick={() => router.push("/")} className="flex items-center gap-2 cursor-pointer">
           <Image src={logovar} alt="logo" width={32} height={32} />
@@ -374,63 +423,68 @@ export default function CustomerSignup(): JSX.Element {
                 </div>
               )}
 
-              <Input name="firstName" label="First Name" required value={form.firstName} error={errors.firstName} onChange={handleChange} placeholder="Enter first name" />
-              <Input name="middleName" label="Middle Name (Optional)" value={form.middleName} error={errors.middleName} onChange={handleChange} placeholder="Enter middle name" />
-              <Input name="lastName" label="Last Name" required value={form.lastName} error={errors.lastName} onChange={handleChange} placeholder="Enter last name" />
+              <CustomInput name="firstName" label="First Name" required value={form.firstName} error={errors.firstName} onChange={handleChange} placeholder="Enter first name" autoFocus />
+              <CustomInput name="middleName" label="Middle Name (Optional)" value={form.middleName} error={errors.middleName} onChange={handleChange} placeholder="Enter middle name" />
+              <CustomInput name="lastName" label="Last Name" required value={form.lastName} error={errors.lastName} onChange={handleChange} placeholder="Enter last name" />
 
-              <Input name="email" label="Email" required tooltip="Enter a valid email address like name@example.com" value={form.email} error={errors.email} onChange={handleChange} placeholder="Enter email" />
+              <CustomInput name="email" label="Email" required tooltip="Enter a valid email address like name@example.com" value={form.email} error={errors.email} onChange={handleChange} placeholder="Enter email" type="email" />
 
               <div className="mb-4">
-                <label className="font-medium text-[12px] flex items-center text-[#1A1A1A] mb-1">
+                <ShadLabel className="text-slate-700 flex items-center">
                   Phone Number<span className="text-red-500 ml-1">*</span>
                   <Tooltip text="Enter exactly 10 digits." />
-                </label>
-                <div className="flex">
-                  <select 
-                    value={countryCode}
-                    onChange={handleCountryChange}
-                    className="border border-[#00AFEF] rounded-l-[4px] px-2 text-[12px] text-[#1A1A1A] bg-gray-50 outline-none">
-                    <option value="IN">🇮🇳 +91</option>
-                    <option value="US">🇺🇸 +1</option>
-                    <option value="GB">🇬🇧 +44</option>
-                  </select>
-                  <input
+                </ShadLabel>
+                <div className="flex gap-2 mt-2">
+                  <Select value={countryCode} onValueChange={(v) => handleCountryChange(v as CountryCode)}>
+                    <SelectTrigger className={`w-24 !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]  border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"}`}>
+                      <SelectValue placeholder="Code" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      {countries.map((c) => (
+                        <SelectItem key={c.code} value={c.code}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <ShadInput
                     name="phone"
                     maxLength={10}
                     value={form.phone}
                     onChange={handleChange}
                     placeholder="Enter phone number"
-                    className={`w-full border border-l-0 rounded-r-[4px] px-3 py-2 text-sm outline-none focus:ring-1 transition-all ${
-                      errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                    className={`flex-grow !h-12 bg-white text-slate-900  placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${
+                      errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"
                     }`}
                   />
                 </div>
                 <ErrorMessage message={errors.phone} />
               </div>
 
-              {/* USERNAME FIELD WITH CHECK BUTTON (EXACTLY AS AGENT UI) */}
               <div className="mb-4">
-                <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
+                <ShadLabel className="text-slate-700 flex items-center">
                   Username<span className="text-red-500 ml-1">*</span>
                   <Tooltip text="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc." />
-                </label>
-                <div className="flex gap-2 mt-1">
-                  <input
+                </ShadLabel>
+                <div className="flex gap-2 mt-2">
+                  <ShadInput
                     name="username"
                     value={form.username}
                     onChange={handleChange}
                     placeholder="Enter username"
-                    className={`flex-grow border rounded-[4px] px-3 py-2 text-sm outline-none transition-all focus:ring-1 ${
-                      errors.username ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                    className={`flex-grow h-12 bg-white text-slate-900  placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${
+                      errors.username ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"
                     }`}
                   />
-                  <button 
+                  <PremiumButton 
                     type="button" 
+                    variant="info"
                     onClick={checkUsername} 
                     disabled={!form.username || isChecking || !!errors.username}
-                    className="bg-[#00AFEF] text-white px-4 py-2 rounded-[4px] text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1">
-                    {isChecking ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
-                  </button>
+                    className="h-12"
+                    icon={isChecking ? <Loader2 size={12} className="animate-spin" /> : null}>
+                    CHECK
+                  </PremiumButton>
                 </div>
                 <ErrorMessage message={errors.username} />
                 {usernameStatus === "available" && !errors.username && (
@@ -446,12 +500,12 @@ export default function CustomerSignup(): JSX.Element {
               </div>
 
               <div className="mb-4">
-                <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
+                <ShadLabel className="text-slate-700 flex items-center">
                   Password<span className="text-red-500 ml-1">*</span>
                   <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character." />
-                </label>
-                <div className="relative mt-1">
-                  <input
+                </ShadLabel>
+                <div className="relative mt-2">
+                  <ShadInput
                     type={showPassword ? "text" : "password"}
                     name="password"
                     onCopy={preventCopyPaste}
@@ -459,8 +513,8 @@ export default function CustomerSignup(): JSX.Element {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="Enter password"
-                    className={`w-full border rounded-[4px] px-3 py-2 pr-10 text-sm outline-none transition-all focus:ring-1 ${
-                      (errors.password || strengthLabel === "weak password") ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                    className={`w-full h-12 bg-white text-slate-900  pr-10 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${
+                      (errors.password || strengthLabel === "weak password") ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"
                     }`}
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
@@ -485,10 +539,10 @@ export default function CustomerSignup(): JSX.Element {
               </div>
 
               <div className="mb-2">
-                <label className="font-medium text-[12px] flex items-center text-[#1A1A1A]">
+                <ShadLabel className="text-slate-700 flex items-center">
                   Re-Type Password<span className="text-red-500 ml-1">*</span>
-                </label>
-                <input
+                </ShadLabel>
+                <ShadInput
                   type="password"
                   name="confirmPassword"
                   onPaste={preventCopyPaste}
@@ -496,8 +550,8 @@ export default function CustomerSignup(): JSX.Element {
                   value={form.confirmPassword}
                   onChange={handleChange}
                   placeholder="Re-enter password"
-                  className={`w-full border rounded-[4px] px-3 py-2 text-sm outline-none focus:ring-1 mt-1 ${
-                    errors.confirmPassword ? "border-red-500 ring-1 ring-red-500" : "border-[#00AFEF] focus:ring-[#00AFEF]"
+                  className={`mt-2 h-12 bg-white text-slate-900  placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${
+                    errors.confirmPassword ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"
                   }`}
                 />
                 <ErrorMessage message={errors.confirmPassword} />
@@ -508,14 +562,21 @@ export default function CustomerSignup(): JSX.Element {
 
             <div className="px-8 py-6 shrink-0 bg-white">
               <div className="grid grid-cols-2 gap-4">
-                <button type="button" onClick={() => router.push("/")}
-                  className="w-full bg-[#E62800] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
+                <PremiumButton 
+                  type="button" 
+                  variant="destructive"
+                  size="lg"
+                  onClick={() => router.push("/")}
+                  className="w-full">
                   Cancel
-                </button>
-                <button type="submit"
-                  className="w-full bg-[#00AFEF] text-white font-bold py-2.5 rounded-[4px] transition-all active:scale-95">
+                </PremiumButton>
+                <PremiumButton 
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full">
                   Register
-                </button>
+                </PremiumButton>
               </div>
             </div>
           </form>
