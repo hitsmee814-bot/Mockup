@@ -40,7 +40,7 @@ export function ItinerarySidebar() {
       collapsible="icon"
       className="bg-white border-r top-20 bottom-0"
     >
-      <SidebarContent>
+      <SidebarContent className="bg-white">
         {navigation.map((group) => (
           <SidebarGroup key={group.groupLabel}>
             {group.groupLabel && (
@@ -103,7 +103,7 @@ ${
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-[#3FB8FF20]">
+      <SidebarFooter className="p-4 h-16 lg:h-[8rem] border-t border-[#3FB8FF20] bg-white">
         <div className="text-xs text-[#3FB8FF] group-data-[collapsible=icon]:hidden">
           Smart Travel Builder
         </div>
