@@ -68,7 +68,7 @@ export function ItinerarySidebar() {
                             router.push(`/itinerary/${item.key}`)
 
                             if (state === "expanded") {
-                              toggleSidebar()
+                                toggleSidebar()
                             }
                           }}
                           className={`
