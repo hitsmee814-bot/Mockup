@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card } from "@/components/ui/card"
-import { motion,  } from "framer-motion"
+import { motion, Variants } from "framer-motion"
 import { DateRange } from "react-day-picker"
+import { Search } from "lucide-react"
 import { AirportCombobox } from "./airport-combobox"
 import { ClassCombobox } from "./class-combobox"
 import { PassengerSelector } from "./passenger-selector"
@@ -16,6 +17,19 @@ import { MultiCityFlights } from "./multi-city-flights"
 
 interface SearchFormProps {
   onSearch: (params: { from: string; to: string; tripType: string; departDate?: string; returnDate?: string; adults: number; children: number; infants: number; class: string }) => void
+}
+export const fieldVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.06,
+      type: "spring" as const,
+      stiffness: 200,
+      damping: 20,
+    },
+  }),
 }
 
 export function SearchForm({ onSearch }: SearchFormProps) {
@@ -51,73 +65,85 @@ export function SearchForm({ onSearch }: SearchFormProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
       className="max-w-7xl mx-auto"
     >
-      <Card className="p-4 md:p-8">
-        <RadioGroup value={tripType} onValueChange={setTripType} className="flex flex-wrap gap-4 md:gap-6 mb-6">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="roundtrip" id="roundtrip" />
-            <Label htmlFor="roundtrip" className="cursor-pointer">Round Trip</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="oneway" id="oneway" />
-            <Label htmlFor="oneway" className="cursor-pointer">One Way</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="multicity" id="multicity" />
-            <Label htmlFor="multicity" className="cursor-pointer">Multi City</Label>
-          </div>
-        </RadioGroup>
+      <Card className="p-5 md:p-8 border border-gray-100 shadow-lg bg-white">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+          <RadioGroup value={tripType} onValueChange={setTripType} className="flex flex-wrap gap-4 md:gap-6 mb-6">
+            {[
+              { value: "roundtrip", label: "Round Trip" },
+              { value: "oneway", label: "One Way" },
+              { value: "multicity", label: "Multi City" },
+            ].map((t) => (
+              <motion.div key={t.value} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex items-center space-x-2">
+                <RadioGroupItem value={t.value} id={t.value} />
+                <Label htmlFor={t.value} className="cursor-pointer">{t.label}</Label>
+              </motion.div>
+            ))}
+          </RadioGroup>
+        </motion.div>
 
         {tripType === "multicity" ? (
           <MultiCityFlights />
         ) : (
           <div className="flex flex-col md:flex-row gap-3 mb-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 min-w-0">
-              <Label className="text-sm font-medium mb-2 block">From</Label>
-              <AirportCombobox value={from} onChange={setFrom} open={fromOpen} onOpenChange={setFromOpen} className="h-11" />
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 min-w-0">
-              <Label className="text-sm font-medium mb-2 block">To</Label>
-              <AirportCombobox value={to} onChange={setTo} open={toOpen} onOpenChange={setToOpen} className="h-11" />
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 md:flex-[1.5] min-w-0">
-              <Label className="text-sm font-medium mb-2 block">
-                {tripType === "roundtrip" ? "Dates" : "Date"}
-              </Label>
-              <DatePicker
-                mode={tripType === "roundtrip" ? "range" : "single"}
-                date={singleDate}
-                dateRange={date}
-                onDateChange={setSingleDate}
-                onDateRangeChange={setDate}
-                className="w-full h-11 justify-start text-left font-normal"
-              />
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 min-w-0">
-              <Label className="text-sm font-medium mb-2 block">Passengers</Label>
-              <PassengerSelector
-                adults={adults}
-                children={children}
-                infants={infants}
-                onAdultsChange={setAdults}
-                onChildrenChange={setChildren}
-                onInfantsChange={setInfants}
-                open={passengersOpen}
-                onOpenChange={setPassengersOpen}
-                className="w-full h-11 justify-start text-left font-normal"
-              />
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 min-w-0">
-              <Label className="text-sm font-medium mb-2 block">Class</Label>
-              <ClassCombobox value={flightClass} onChange={setFlightClass} open={classOpen} onOpenChange={setClassOpen} className="h-11" />
-            </motion.div>
+            {[
+              { idx: 0, label: "From", content: <AirportCombobox value={from} onChange={setFrom} open={fromOpen} onOpenChange={setFromOpen} className="h-11" /> },
+              { idx: 1, label: "To", content: <AirportCombobox value={to} onChange={setTo} open={toOpen} onOpenChange={setToOpen} className="h-11" /> },
+              { idx: 2, label: tripType === "roundtrip" ? "Dates" : "Date", flex: "flex-[1.5]", content: (
+                <DatePicker
+                  mode={tripType === "roundtrip" ? "range" : "single"}
+                  date={singleDate}
+                  dateRange={date}
+                  onDateChange={setSingleDate}
+                  onDateRangeChange={setDate}
+                  className="w-full h-11 justify-start text-left font-normal"
+                />
+              )},
+              { idx: 3, label: "Passengers", content: (
+                <PassengerSelector
+                  adults={adults}
+                  children={children}
+                  infants={infants}
+                  onAdultsChange={setAdults}
+                  onChildrenChange={setChildren}
+                  onInfantsChange={setInfants}
+                  open={passengersOpen}
+                  onOpenChange={setPassengersOpen}
+                  className="w-full h-11 justify-start text-left font-normal"
+                />
+              )},
+              { idx: 4, label: "Class", content: <ClassCombobox value={flightClass} onChange={setFlightClass} open={classOpen} onOpenChange={setClassOpen} className="h-11" /> },
+            ].map((field) => (
+              <motion.div
+                key={field.idx}
+                custom={field.idx}
+                variants={fieldVariants}
+                initial="hidden"
+                animate="show"
+                className={`${field.flex || "flex-1"} min-w-0`}
+              >
+                <Label className="text-sm font-medium mb-2 block">{field.label}</Label>
+                {field.content}
+              </motion.div>
+            ))}
           </div>
         )}
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-          <Button className="w-full h-11 font-semibold" onClick={handleSubmit}>Search Flights</Button>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <Button
+            className="w-full h-12 font-semibold text-base gap-2 shadow-md hover:shadow-lg transition-shadow text-white"
+            style={{ background: "#3FB8FF" }}
+            onClick={handleSubmit}
+          >
+            <Search className="h-4 w-4" />
+            Search Flights
+          </Button>
         </motion.div>
       </Card>
     </motion.div>

@@ -32,7 +32,6 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
             className="fixed right-0 top-0 h-full w-full max-w-xl bg-white border-l border-gray-100 z-50 flex flex-col overflow-hidden"
           >
-            {/* Hero image */}
             <div className="relative h-56 shrink-0 bg-gray-100 overflow-hidden">
               <motion.img
                 src={pkg.image}
@@ -137,7 +136,6 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 </div>
               </motion.div>
 
-              {/* Itinerary */}
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <h3 className="font-bold text-sm mb-4 flex items-center gap-2 text-gray-800">
                   <Calendar className="size-4" style={{ color: "#3FB8FF" }} /> Day-by-Day Itinerary

@@ -19,7 +19,6 @@ export function ItineraryStepper({ itinerary, packageId }: ItineraryStepperProps
 
   return (
     <div className="relative">
-      {/* Animated progress line */}
       <div className="absolute left-[18px] top-0 bottom-0 w-px bg-gray-100 z-0" />
       <motion.div
         className="absolute left-[18px] top-0 w-px z-[1]"
@@ -66,7 +65,6 @@ export function ItineraryStepper({ itinerary, packageId }: ItineraryStepperProps
                   </motion.button>
                 </div>
 
-                {/* Card */}
                 <div className="flex-1 min-w-0 pb-3">
                   <motion.div
                     onClick={() => toggle(day.day)}
@@ -79,7 +77,6 @@ export function ItineraryStepper({ itinerary, packageId }: ItineraryStepperProps
                     }}
                     layout
                   >
-                    {/* Header row */}
                     <div className="flex items-center gap-3 px-3 sm:px-4 py-3 bg-white">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -102,7 +99,6 @@ export function ItineraryStepper({ itinerary, packageId }: ItineraryStepperProps
                       </motion.div>
                     </div>
 
-                    {/* Expandable content */}
                     <AnimatePresence initial={false}>
                       {isOpen && (
                         <motion.div
@@ -133,7 +129,6 @@ export function ItineraryStepper({ itinerary, packageId }: ItineraryStepperProps
                               </motion.div>
                             )}
 
-                            {/* Description */}
                             <motion.p
                               className="text-xs text-gray-500 leading-relaxed"
                               initial={{ opacity: 0 }}
@@ -143,7 +138,6 @@ export function ItineraryStepper({ itinerary, packageId }: ItineraryStepperProps
                               {day.description}
                             </motion.p>
 
-                            {/* Highlights */}
                             <motion.div
                               className="flex flex-wrap gap-1.5"
                               initial={{ opacity: 0, y: 6 }}
@@ -165,7 +159,6 @@ export function ItineraryStepper({ itinerary, packageId }: ItineraryStepperProps
                               ))}
                             </motion.div>
 
-                            {/* Tips */}
                             {day.tips && day.tips.length > 0 && (
                               <motion.div
                                 className="rounded-xl px-3 py-2.5 border space-y-1.5"
