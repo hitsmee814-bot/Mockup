@@ -180,7 +180,7 @@ export function FlightCard({ flight, index, expandedFlight, setExpandedFlight }:
                 <div className="text-xs text-gray-400 mb-0.5">from</div>
                 <div className="text-3xl font-extrabold" style={{ color: "#3FB8FF" }}>${flight.price}</div>
                 <div className="text-xs text-gray-400 mb-3">per person</div>
-                <Button className="w-full mb-2 shadow-sm text-white" style={{ background: "#3FB8FF" }} size="lg" onClick={() => router.push(`/flight/${flight.id}`)}>Select Flight</Button>
+                <Button className="w-full mb-2 shadow-sm text-white" style={{ background: "#3FB8FF" }} size="lg" onClick={() => router.push(`/itinerary/flights/${flight.id}`)}>Select Flight</Button>
                 <Button
                   variant="ghost"
                   size="sm"

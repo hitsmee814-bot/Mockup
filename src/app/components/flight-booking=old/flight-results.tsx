@@ -42,7 +42,7 @@ export function FlightResults() {
   const [expandedFlight, setExpandedFlight] = useState<number | null>(null)
   
   const dates = generateDates(dateOffset)
-  const maxOffset = 90 // 3 months
+  const maxOffset = 90
 
   return (
     <div className="space-y-4">
