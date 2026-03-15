@@ -1,10 +1,17 @@
-import { FlightDetail } from "@/app/components/flight-booking"
+import { dummyFlights, FlightDetail } from "@/app/components/flight-booking"
 
-export async function generateStaticParams() {
-  const ids = ['f123', 'f456'];
-  return ids.map(id => ({ id }));
+export function generateStaticParams() {
+  return dummyFlights.map(flight => ({
+    id: flight.id.toString(),
+  }))
 }
 
-export default function FlightDetailPage({ params }: { params: { id: string } }) {
-  return <FlightDetail id={params.id} />
+interface Props {
+  params: Promise<{ id: string }>
+}
+
+export default async function FlightDetailPage({ params }: Props) {
+  const { id } = await params
+
+  return <FlightDetail id={id} />
 }
