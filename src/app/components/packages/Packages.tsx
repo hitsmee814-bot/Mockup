@@ -103,7 +103,6 @@ export function Packages() {
     <div className="min-h-screen bg-white px-3 sm:px-4 py-6 sm:py-10">
       <div className="max-w-7xl mx-auto space-y-8">
 
-        {/* Header */}
         <div className="text-center space-y-3">
           <motion.div
             className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-1.5 rounded-full border"

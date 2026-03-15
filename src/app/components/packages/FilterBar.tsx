@@ -45,7 +45,7 @@ export function FilterBar({ active, search, onFilter, onSearch, onOpenFilters, h
         </motion.button>
       </div>
 
-      <div className="flex overflow-x-auto sm:flex-wrap sm:justify-center gap-2 pb-1 sm:pb-0 no-scrollbar">
+      <div className="flex overflow-hidden sm:flex-wrap sm:justify-center gap-2 pb-1 sm:pb-0 no-scrollbar">
         {TOP_CATEGORIES.map(cat => {
           const isActive = !hasDrawerFilters && active === cat
           return (

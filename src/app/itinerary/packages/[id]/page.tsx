@@ -1,5 +1,6 @@
 import { travelPackages } from "@/app/components/packages/data"
 import { PackageDetailPage } from "@/app/components/packages/PackageDetailPage"
+import { Spinner } from "@/components/ui/spinner"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
@@ -18,7 +19,13 @@ export default async function PackagePage({ params }: Props) {
   if (!pkg) notFound()
 
   return (
-    <Suspense fallback={<div>Loading package details...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-64">
+          <Spinner className="w-12 h-12 text-primary" />
+        </div>
+      }
+    >
       <PackageDetailPage pkg={pkg} />
     </Suspense>
   )
