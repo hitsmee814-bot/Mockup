@@ -229,19 +229,28 @@ body {
 
 
 * {
-  scrollbar-width: thin;
-  scrollbar-color: #00AFEF transparent;
+    scrollbar-width: thin;
+    scrollbar-color: #00AFEF transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 6px;
+    width: 6px;
 }
 
 *::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #00AFEF;
-  border-radius: 9999px;
+    background-color: #00AFEF;
+    border-radius: 9999px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

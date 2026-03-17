@@ -1,3 +1,4 @@
+import HelpWidget from "./components/help-widget";
 import BackgroundCurve from "./ext/BackgroundCurve";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Toaster />
         {/* <Header /> */}
         {children}
+        <HelpWidget/>
       </body>
     </html>
   );
