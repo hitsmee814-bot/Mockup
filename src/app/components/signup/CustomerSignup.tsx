@@ -149,6 +149,7 @@ export default function CustomerSignup(): JSX.Element {
 
   const [isChecking, setIsChecking] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
+  
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     const originalScrollbarWidth = document.body.style.scrollbarWidth;
@@ -391,8 +392,10 @@ export default function CustomerSignup(): JSX.Element {
       </div>
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
-        <div className="bg-white w-full max-w-4xl h-full max-h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 overflow-hidden">
+        {/* Dynamic grid setup: 1 column for mobile, 2 for medium screens (md) and above */}
+        <div className="bg-white w-full max-w-4xl h-full max-h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-1 md:grid-cols-2 overflow-hidden transition-all duration-300">
           
+          {/* Image is hidden on mobile screens, shown only on medium screens and up */}
           <div className="hidden md:block relative">
             <Image src={UIpic} alt="Signup" fill className="object-cover" />
             <div className="absolute inset-0 bg-blue-900/10"></div>

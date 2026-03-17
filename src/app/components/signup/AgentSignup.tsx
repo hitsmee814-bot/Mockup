@@ -480,7 +480,7 @@ export default function AgentSignup(): JSX.Element {
                   />
                   <PremiumButton
                     type="button"
-                    variant="info"
+                    variant="accent"
                     onClick={checkUsername}
                     disabled={!form.username || isChecking || !!errors.username}
                     className="mt-2"
