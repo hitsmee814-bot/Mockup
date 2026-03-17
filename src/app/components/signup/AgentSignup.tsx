@@ -369,7 +369,7 @@ export default function AgentSignup(): JSX.Element {
       </div>
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
-        <div className="bg-white w-full max-w-4xl h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 overflow-hidden">
+        <div className="bg-white w-full max-w-4xl h-full max-h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-1 md:grid-cols-2 overflow-hidden transition-all duration-300">
 
           <div className="hidden md:block relative">
             <Image src={UIpic} alt="Agent Signup" fill className="object-cover" />
