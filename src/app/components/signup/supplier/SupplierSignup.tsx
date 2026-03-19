@@ -748,7 +748,7 @@ const validateStep3 = () => {
                      <div className="mx-12 mb-5 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>   
 
             {/* body*/}
-       <div  className="flex-1  overflow-y-auto   px-1 pb-2    
+       <div  className="flex-1  overflow-y-auto touch-pan-y  px-1 pb-2    
        
         scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent
               [&::-webkit-scrollbar]:w-1.5
