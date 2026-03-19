@@ -352,7 +352,6 @@ export default function AgentSignup(): JSX.Element {
 
   return (
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden">
-      {/* Standard React way to inject CSS safely to fix the flash */}
       <style dangerouslySetInnerHTML={{ __html: `
         html, body { 
           overflow: hidden !important; 
@@ -369,8 +368,10 @@ export default function AgentSignup(): JSX.Element {
       </div>
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
-        <div className="bg-white w-full max-w-4xl h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-2 overflow-hidden">
+        {/* MODIFIED: dynamic grid columns and responsive height/width */}
+        <div className="bg-white w-full max-w-4xl h-full md:h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-1 md:grid-cols-2 overflow-hidden transition-all duration-300">
 
+          {/* MODIFIED: hidden on mobile, visible on medium+ screens */}
           <div className="hidden md:block relative">
             <Image src={UIpic} alt="Agent Signup" fill className="object-cover" />
             <div className="absolute inset-0 bg-blue-900/10"></div>
@@ -480,7 +481,7 @@ export default function AgentSignup(): JSX.Element {
                   />
                   <PremiumButton
                     type="button"
-                    variant="info"
+                    variant="accent"
                     onClick={checkUsername}
                     disabled={!form.username || isChecking || !!errors.username}
                     className="mt-2"
