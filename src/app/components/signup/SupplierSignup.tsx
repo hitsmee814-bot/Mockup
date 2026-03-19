@@ -11,6 +11,9 @@ import { passwordStrength } from 'check-password-strength'
 import Image from "next/image";
 import logo from "../../assets/images/logoPrimary.png"
 import supplierPic from "../../assets/images/traveling-concept-with-landmarks.jpg"
+import { Input as ShadInput } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 
 import {
@@ -117,7 +120,7 @@ const COUNTRY_CODES = [
   { code: '+1', label: 'US' },
   { code: '+44', label: 'UK' },
   { code: '+91', label: 'IN' },
-  { code: '+61', label: 'AU' },
+  
 ]
 
 const REG_COUNTRIES = [
@@ -886,14 +889,22 @@ const validateStep3 = () => {
               <div className="space-y-3">            
                 {step === 1 && (
                   <>
-                    <Input
-                    label="First Name"
+                    <Label htmlFor="firstName" className="text-slate-700">
+                    First Name <span className="text-red-500">*</span>
+                  </Label>
+                    <ShadInput
+                    id="firstName"
+                    name="firstName"
+                    type="text"
                     required
                     placeholder="Enter first name"
-                    name="firstName"
                     value={form.firstName}
                     onChange={handleChange}
-                    className={getStep1BorderClass(true, false, form.firstName)}
+                    autoFocus
+                    className={`h-12 bg-white  border border-slate-300 text-slate-900
+                    placeholder:text-slate-400
+                    focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+                    ${getStep1BorderClass(true, false, form.firstName)}`}
                     />
                     <ErrorMessage
                       message={
@@ -902,18 +913,30 @@ const validateStep3 = () => {
                           : undefined
                       }
                     />
-                   
-                    <Input label="Middle Name (optional)" placeholder="Enter middle name" name="middleName"   value={form.middleName} onChange={handleChange} />
+                    <Label htmlFor="firstName" className="text-slate-700">
+                    Middle Name (optional)
+                  </Label>
+                    <ShadInput  placeholder="Enter middle name" id= "middleName" type="text" name="middleName"   value={form.middleName} onChange={handleChange} 
+                    className="h-12 bg-white border-slate-300 text-slate-900
+                    placeholder:text-slate-400
+                    focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]" />
                     
-                    <Input
-                    label="Last Name"
+                  <Label htmlFor="lastName" className="text-slate-700">
+                    Last Name <span className="text-red-500">*</span>
+                  </Label>
+                    <ShadInput
+                    id="lastName"
+                    name="lastName"
+                    type="text"
                     required
                     placeholder="Enter last name"
-                    name="lastName"
                     value={form.lastName}
                     onChange={handleChange}
-                    className={getStep1BorderClass(true, false, form.lastName)}
-                  />
+                    className={` h-12 bg-white  border border-slate-300 text-slate-900
+                  placeholder:text-slate-400
+                  focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+                  ${getStep1BorderClass(true, false, form.lastName)}`}/>   
+                 
                    <ErrorMessage
                       message={
                         step1Submitted && !form.lastName.trim()
@@ -921,17 +944,27 @@ const validateStep3 = () => {
                           : undefined
                       }
                     />
-                    <Input
-                        label="Email"
-                        required
-                        placeholder="Enter email"
-                        name="email"
-                        //autoComplete="off"
-                        value={form.email}
-                        onChange={handleChange}
-                        tooltip="Enter a valid email address like name@example.com"
-                        className={getStep1BorderClass(true, !!emailError, form.email)}
-                      />
+
+                    <Label htmlFor="email" className="text-slate-700">
+                    Email <span className="text-red-500">*</span>
+
+                    <TooltipIcon
+                          id="tooltip-email"
+                          content="Enter a valid email address like name@example.com" /></Label>
+                
+                    <ShadInput
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="Enter email"
+                    value={form.email}
+                    onChange={handleChange}
+                    className={`h-12 bg-white  border border-slate-300 text-slate-900
+                    placeholder:text-slate-400
+                   focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+                    ${getStep1BorderClass(true, false, form.email)}`}/>   
+                  
                      <ErrorMessage
                         message={
                           emailError ||
@@ -943,14 +976,13 @@ const validateStep3 = () => {
 
                       {/* PHONE */}
                       <div >
-                          <label className={`${labelClass} flex items-center gap-1`}>
-                            Phone Number <span className="text-red-500">*</span>
 
-                            <TooltipIcon
+                         <Label htmlFor="phone" className="text-slate-700">
+                          Phone Number <span className="text-red-500">*</span>                                                
+                          <TooltipIcon
                           id="tooltip-phone"
-                          content="Please enter valid phone number"
-                        />
-                          </label>
+                          content="Please enter valid phone number" /></Label>
+                          
                           <div
                               className={`flex h-[38px] rounded border bg-white
                                 ${
@@ -960,24 +992,41 @@ const validateStep3 = () => {
                                 }
                               `}
                             >
-                            <select
-                              name="countryCode"
-                              value={form.countryCode}
-                              onChange={handleChange}
-                               className="px-3 text-[12px] border-r border-[#9ec5e5]">
-                              {COUNTRY_CODES.map(c => (
-                                <option key={c.code} value={c.code}>
+                             <Select
+                            value={form.countryCode}
+                            onValueChange={(value) =>
+                              handleChange({
+                                target: { name: "countryCode", value },
+                              } as React.ChangeEvent<HTMLInputElement>)
+                            }
+                          >
+
+                            <SelectTrigger   className="w-24 !h-12 bg-white border-slate-300 text-slate-900 
+                            focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]">
+                              <SelectValue placeholder="Code" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              {COUNTRY_CODES.map((c) => (
+                                <SelectItem key={c.code} value={c.code}>
                                   {c.label} {c.code}
-                                </option>
+                                </SelectItem>
                               ))}
-                              </select>
-                              <input
-                                name="phone"                      
+                            </SelectContent>
+
+                          </Select>
+
+                              <ShadInput
+                                name="phone"   
+                                id="phone"
+                                type='tel '                   
                                 value={form.phone}
                                 onChange={handleChange}                                
                                 placeholder="Enter phone number"
                                 maxLength={10}
-                                className="flex-1 h-full px-3 text-[12px] text-black caret-black outline-none"
+                                className="flex-1 h-12 bg-white border-slate-300 text-slate-900
+                                placeholder:text-slate-400
+                                focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
                                 inputMode="numeric"/>
                           </div>
                             <ErrorMessage
@@ -989,7 +1038,31 @@ const validateStep3 = () => {
                             }
                           />
                       </div>
-                                                                                   
+
+                      <Label htmlFor="username" className="text-slate-700">
+                    Username <span className="text-red-500">*</span>
+                     <TooltipIcon
+                          id="tooltip-username"
+                          content="Must start with a letter, followed by underscores or numbers. 6–16 characters allowed." />
+                  </Label>
+                    <ShadInput
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    placeholder="Enter username"
+                    value={form.username}
+                    onChange={handleChange}                    
+                    className={`h-12 bg-white  border border-slate-300 text-slate-900
+                    placeholder:text-slate-400
+                    focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+                    ${getStep1BorderClass(true, !!usernameError, form.username)}`} />
+
+
+
+
+
+
                        
                         <Input
                           label="Username"
