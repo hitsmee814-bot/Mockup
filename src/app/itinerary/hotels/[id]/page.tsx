@@ -1,7 +1,5 @@
-import { HotelDetail } from "@/app/components/hotel-booking"
-import { use } from "react"
+import { HotelDetail } from "@/app/components/hotel-booking";
 
-export default function HotelDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
-  return <HotelDetail id={id} />
+export default function HotelDetailPage({ params }: { params: { id: string } }) {
+  return <HotelDetail id={params.id} />
 }
