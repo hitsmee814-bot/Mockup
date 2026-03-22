@@ -1,5 +1,11 @@
-import { HotelDetail } from "@/app/components/hotel-booking";
+import { HotelDetail } from "@/app/components/hotel-booking"
 
-export default function HotelDetailPage({ params }: { params: { id: string } }) {
-  return <HotelDetail id={params.id} />
+export default async function HotelDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+
+  return <HotelDetail id={id} />
 }
