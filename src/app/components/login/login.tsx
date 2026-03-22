@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card } from "@/components/ui/card"
-import { isValidPhoneNumber } from "libphonenumber-js"
+import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js"
 import { userTypes } from "./constants"
 import { UserTypeCard } from "./user-type-card"
-import { OTPVerification, countries } from "./otp-verification"
+import { OTPVerification } from "./otp-verification"
 import { LoginForm } from "./login-form"
 import { PremiumButton } from "@/app/utils/PremiumButton"
 import { otpService } from "@/services/otpService"
@@ -17,6 +17,14 @@ import Image from "next/image"
 import { HiOutlineBriefcase } from "react-icons/hi"
 import { Spinner } from "@/components/ui/spinner"
 import { LogIn, Menu, X } from "lucide-react"
+import { lookupService } from "@/services/countriesService"
+
+type Country = {
+    code: string
+    name: string
+    dialCode: string
+    flag: string
+}
 
 export function Login() {
     const router = useRouter()
@@ -35,11 +43,12 @@ export function Login() {
     const [emailError, setEmailError] = useState("")
     const [verificationEmailError, setVerificationEmailError] = useState("")
     const [phoneError, setPhoneError] = useState("")
-    const [selectedCountry, setSelectedCountry] = useState(countries[0])
     const [loading, setLoading] = useState(false)
     const [menuOpen, setMenuOpen] = useState(false)
     const emailRegex = /^(?:[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})$/;
 
+    const [countries, setCountries] = useState<Country[]>([])
+    const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
     const validateEmail = (value: string) => {
         if (value && !emailRegex.test(value)) {
             return "Please enter a valid email address"
@@ -47,27 +56,59 @@ export function Login() {
         return ""
     }
 
-    const validatePhone = (value: string, countryCode: string) => {
-        if (!value) return ""
+    useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                const res = await lookupService.getPhoneCodes()
 
-        try {
-            const country = countries.find(c => c.code === countryCode)
-            if (!country) return "Invalid country"
+                const formatted = res.map((c: any) => ({
+                    code: c.iso2,
+                    name: c.iso2,
+                    dialCode: c.phone_code,
+                    flag: getFlagEmoji(c.iso2),
+                }))
 
-            const fullNumber = `${country.dialCode}${value}`
+                setCountries(formatted)
 
-            console.log(fullNumber)
-            console.log(countryCode)
+                const india = formatted.find((c: any) => c.code === "IN") || formatted[0]
+                setSelectedCountry(india)
 
-            if (!isValidPhoneNumber(fullNumber, countryCode as "IN" | "FR" | "US")) {
-                return "Please enter a valid phone number"
+            } catch (e) {
+                console.error(e)
             }
+        }
 
-            return ""
-        } catch {
+        fetchCountries()
+    }, [])
+    const getFlagEmoji = (code: string) =>
+        code.toUpperCase().replace(/./g, c =>
+            String.fromCodePoint(127397 + c.charCodeAt(0))
+        )
+
+const validatePhone = (value: string, countryCode: string) => {
+    if (!value) return ""
+
+    try {
+        const country = countries.find(c => c.code === countryCode)
+        if (!country) return "Invalid country"
+
+        const fullNumber = `${country.dialCode}${value}`
+
+        const phoneNumber = parsePhoneNumberFromString(fullNumber)
+
+        if (!phoneNumber || !phoneNumber.isValid()) {
             return "Please enter a valid phone number"
         }
+
+        if (phoneNumber.country !== countryCode) {
+            return "Phone number does not match selected country"
+        }
+
+        return ""
+    } catch {
+        return "Please enter a valid phone number"
     }
+}
 
     const handleSendMobileOtp = async () => {
         try {
@@ -75,7 +116,7 @@ export function Login() {
             setLoading(true)
 
             let response
-            const fullMobile = `${selectedCountry.dialCode}${mobile}`
+            const fullMobile = `${selectedCountry?.dialCode}${mobile}`
             response = await otpService.sendMobileOtp(fullMobile)
 
 
@@ -137,7 +178,7 @@ export function Login() {
 
             setLoading(true)
 
-            const fullMobile = `${selectedCountry.dialCode}${mobile}`
+            const fullMobile = `${selectedCountry?.dialCode}${mobile}`
             const response = await otpService.verifyMobileOtp(fullMobile, mobileOtp)
 
             if (response?.status) {
@@ -386,7 +427,7 @@ export function Login() {
                                         </PremiumButton>
                                     </div>
 
-                                    {isSignup ? (
+                                    {isSignup && selectedCountry ? (
                                         <OTPVerification
                                             userType={selectedType!}
                                             mobile={mobile}
@@ -397,13 +438,18 @@ export function Login() {
                                             emailOtpSent={emailOtpSent}
                                             mobileVerified={mobileVerified}
                                             emailVerified={emailVerified}
-                                            selectedCountry={selectedCountry}
+                                            countries={countries}
+                                            selectedCountry={selectedCountry!}
+                                            onCountryChange={(country) => {
+                                                setSelectedCountry(country)
+                                                setPhoneError(validatePhone(mobile, country.code))
+                                            }}
                                             verificationEmailError={verificationEmailError}
                                             phoneError={phoneError}
                                             gradient="from-[#3FB8FF] to-[#FBAB18]"
                                             onMobileChange={(value) => {
                                                 setMobile(value)
-                                                setPhoneError(validatePhone(value, selectedCountry.code))
+                                                setPhoneError(validatePhone(value, selectedCountry!.code))
                                             }}
                                             onEmailChange={(value) => {
                                                 setVerificationEmail(value)
@@ -411,10 +457,6 @@ export function Login() {
                                             }}
                                             onMobileOtpChange={setMobileOtp}
                                             onEmailOtpChange={setEmailOtp}
-                                            onCountryChange={(country) => {
-                                                setSelectedCountry(country)
-                                                setPhoneError(validatePhone(mobile, country.code))
-                                            }}
                                             onSendMobileOtp={handleSendMobileOtp}
                                             onSendEmailOtp={handleSendEmailOtp}
                                             onReSendMobileOtp={handleResendMobileOtp}

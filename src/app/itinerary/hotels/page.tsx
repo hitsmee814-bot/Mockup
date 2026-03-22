@@ -1,8 +1,12 @@
-import Hotels from "@/app/components/hotels/hotels";
-import ItenaryBuilder from "@/app/components/itinerary/ItenaryBuilder";
+import { HotelBooking } from "@/app/components/hotel-booking";
+import { Spinner } from "@/components/ui/spinner";
+import { Suspense } from "react";
 
-export default function HotelsPage() {
-  return (
-    <Hotels/>
-  )
-}
+export default function HotelPage() {
+    <Suspense fallback={
+                <div className="flex justify-center items-center h-64">
+                    <Spinner className="w-12 h-12 text-primary" />
+                </div>
+            }>
+      <HotelBooking />
+    </Suspense>}

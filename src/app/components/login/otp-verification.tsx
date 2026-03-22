@@ -6,12 +6,15 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { CheckCircle2, Circle, CircleAlert } from "lucide-react"
 import { PremiumButton } from "@/app/utils/PremiumButton"
 import { useEffect, useState } from "react"
+import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox"
+import { CountryCodeCombobox } from "./CountryCodeCombobox"
 
-const countries = [
-    { code: "IN", name: "India", dialCode: "+91", flag: "🇮🇳" },
-    { code: "FR", name: "France", dialCode: "+33", flag: "🇫🇷" },
-    { code: "US", name: "America", dialCode: "+1", flag: "🇺🇸" },
-]
+type Country = {
+    code: string
+    name: string
+    dialCode: string
+    flag: string
+}
 
 interface OTPVerificationProps {
     userType: string
@@ -23,7 +26,9 @@ interface OTPVerificationProps {
     emailOtpSent: boolean
     mobileVerified: boolean
     emailVerified: boolean
-    selectedCountry: typeof countries[0]
+    countries: Country[]
+    selectedCountry: Country
+    onCountryChange: (country: Country) => void
     verificationEmailError: string
     phoneError: string
     gradient: string
@@ -31,7 +36,6 @@ interface OTPVerificationProps {
     onEmailChange: (value: string) => void
     onMobileOtpChange: (value: string) => void
     onEmailOtpChange: (value: string) => void
-    onCountryChange: (country: typeof countries[0]) => void
     onSendMobileOtp: () => void
     onSendEmailOtp: () => void
     onReSendMobileOtp: () => void
@@ -53,6 +57,7 @@ export function OTPVerification({
     mobileVerified,
     emailVerified,
     selectedCountry,
+    countries,
     verificationEmailError,
     phoneError,
     gradient,
@@ -87,6 +92,7 @@ export function OTPVerification({
     const emailRequired = !isCustomer
     const canComplete = mobileVerified && (isCustomer ? (!verificationEmail || emailVerified) : emailVerified)
     const [mobileResendTimer, setMobileResendTimer] = useState(30)
+    const [open, setOpen] = useState(false)
     useEffect(() => {
         if (mobileResendTimer === 0) return
 
@@ -124,7 +130,6 @@ export function OTPVerification({
                 )}
             </div>
 
-            {/* Mobile Verification */}
             {!mobileVerified && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
                     {!mobileOtpSent ? (
@@ -132,23 +137,14 @@ export function OTPVerification({
                             <div>
                                 <Label htmlFor="mobile" className="text-[#04257E]">Mobile Number</Label>
                                 <div className="flex gap-2 mt-2">
-                                    <Select value={selectedCountry.code} onValueChange={(code) => {
-                                        const country = countries.find(c => c.code === code)!
-                                        onCountryChange(country)
-                                    }}>
-                                        <SelectTrigger
-                                            className="w-24 !h-12 bg-white border-slate-300 text-slate-900 
-        focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
-                                        >                      <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {countries.map((country) => (
-                                                <SelectItem key={country.code} value={country.code}>
-                                                    {country.flag} {country.dialCode}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <CountryCodeCombobox
+                                        countries={countries}
+                                        value={selectedCountry}
+                                        onChange={onCountryChange}
+                                        open={open}
+                                        onOpenChange={setOpen}
+                                        className="w-30 h-12"
+                                    />
                                     <Input
                                         id="mobile"
                                         type="tel"
@@ -361,5 +357,3 @@ export function OTPVerification({
         </div>
     )
 }
-
-export { countries }
