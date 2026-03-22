@@ -1,6 +1,8 @@
 import { HotelBilling } from "@/app/components/hotel-booking"
 import { hotels } from "@/app/components/hotel-booking/data"
-import { use } from "react"
+import { use, Suspense } from "react"
+import { notFound } from "next/navigation"
+import { Spinner } from "@/components/ui/spinner"
 
 export function generateStaticParams() {
   return hotels.map((hotel) => ({
@@ -15,5 +17,19 @@ export default function HotelBillingPage({
 }) {
   const { id } = use(params)
 
-  return <HotelBilling id={id} />
+  const hotel = hotels.find((h) => h.id === id)
+
+  if (!hotel) notFound()
+
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-64">
+          <Spinner className="w-12 h-12 text-primary" />
+        </div>
+      }
+    >
+      <HotelBilling id={id} />
+    </Suspense>
+  )
 }
