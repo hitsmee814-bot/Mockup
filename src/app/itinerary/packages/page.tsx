@@ -2,7 +2,7 @@
 
 import { Packages } from "@/app/components/packages/Packages"
 import { Suspense } from "react"
-import { Spinner } from "@/components/ui/spinner" // adjust path if needed
+import { Spinner } from "@/components/ui/spinner"
 
 export default function PackagesPage() {
     return (
