@@ -58,3 +58,57 @@ export const validateEmail = (value: string) => {
 
   return ""
 }
+
+
+type TaxValidationResult = {
+  isValid: boolean
+  error: string
+}
+
+
+//Later VAT regex will be changed asccording to country of registration
+const VAT_REGEX_BY_COUNTRY = {
+  UK: /^GB\d{9}(\d{3})?$/,
+  DE: /^DE\d{9}$/,
+  FR: /^FR[A-HJ-NP-Z0-9]{2}\d{9}$/,
+}
+//---------------Later--------------- 
+
+
+const TAX_FORMATS: Record<
+  string,
+  { regex: RegExp; error: string }
+> = {
+  GST: {
+    regex: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+    error: "Please enter valid GST number",
+  },
+  PAN: {
+     regex: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+    error: "Please enter valid PAN number",
+  },
+  VAT: {
+    regex: /^[A-Z0-9]{8,12}$/,
+    error: "Please enter valid VAT number",
+  },
+}
+
+export const validateTaxId = (
+  value: string,
+  docType: string
+): TaxValidationResult => {
+  if (!docType || !value) {
+    return { isValid: true, error: "" }
+  }
+
+  const rule = TAX_FORMATS[docType]
+  if (!rule) {
+    return { isValid: true, error: "" }
+  }
+
+  if (!rule.regex.test(value.toUpperCase())) {
+    return { isValid: false, error: rule.error }
+  }
+
+  return { isValid: true, error: "" }
+}
