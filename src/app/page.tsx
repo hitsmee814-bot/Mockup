@@ -19,7 +19,7 @@ export default function HomePage() {
       <Hero />
       {/* <FloatingCardsSection /> */}
       {/* Keep below carousel cards */}
-        {/* <CoverflowCarousel/> */}
+        <CoverflowCarousel/>
 
       <VacationDestinations />
       {/* <CriticalServices /> */}
