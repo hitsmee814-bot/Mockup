@@ -21,6 +21,10 @@ import { validatePhone } from "./supplierSignupValidation"
 import { validateUsername } from "./supplierSignupValidation"
 import ServiceTypeSelect from "./ServiceTypeSelect"
 import { FileInput, MultiFileInput } from "./FileHandlers"
+import { validateTaxId } from "./supplierSignupValidation"
+import { countryListService } from "@/services/countryListService";
+import { docTypelookupService } from "@/services/docTypes";
+
 
 import {
   Combobox,
@@ -97,28 +101,7 @@ type FormData = {
     const blockContextMenu = (e: React.MouseEvent<HTMLInputElement>) => {
      e.preventDefault()
     }
-    const TAX_FORMATS: Record<string,
-    { label: string; placeholder: string; regex: RegExp; error: string }> = {
-      GST: {
-      label: 'GST Number',
-      placeholder: 'Enter GST Number',
-      regex: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-      error: 'Please enter valid GST number',
-    },
-     PAN: {
-      label: 'PAN Number',
-      placeholder: 'Enter PAN Number',
-      regex: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-      error: 'Please enter valid PAN number',
-    },
-      VAT: {
-      label: 'VAT Number',
-      placeholder: 'Enter VAT Number',
-      regex: /^[A-Z0-9]{8,12}$/,
-      error: 'Please enter valid VAT number',
-    },
-  }
-
+ 
 const labelClass = "text-[12px] font-medium text-[#1A1A1A]"; 
 const errorTextClass = "text-[11px] font-semibold text-red-600";
 const inputTextClass = "text-[12px] text-black";
@@ -134,14 +117,7 @@ const COUNTRY_CODES = [
   
 ]
 
-const REG_COUNTRIES = [
-  'United States',
-  'United Kingdom',
-  'India',
-  'Canada',
-  'Australia',
-  'Germany',
-]
+
 const dropdownInputClass =
   `${inputClass} flex items-center justify-between cursor-pointer`
 
@@ -342,7 +318,20 @@ export default function SupplierSignup() {
       const serviceDropdownRef = useRef<HTMLDivElement>(null)
       const [showPassword, setShowPassword] = useState(false)
       const [hidePasswordEye, setHidePasswordEye] = useState(0)   
-      const [open, setOpen] = useState(false)   
+      const [open, setOpen] = useState(false)  
+
+   type Country = {
+  name: string;
+};
+const [countries, setCountries] = useState<Country[]>([]);
+
+type DocType = {
+  document_type: string;
+  description: string;
+  category: string;
+};
+
+const [docTypes, setDocTypes] = useState<DocType[]>([]);
 
       useEffect(() => {
         setShowPassword(false)
@@ -353,7 +342,7 @@ export default function SupplierSignup() {
       const [passwordError, setPasswordError] = useState('')
       const [usernameError, setUsernameError] = useState('')
       const [show, setShow] = useState(false)
-            const [submitted, setSubmitted] = useState({
+      const [submitted, setSubmitted] = useState({
         step1: false,
         step2: false,
         step3: false,
@@ -370,7 +359,38 @@ export default function SupplierSignup() {
       const [websiteError, setWebsiteError] = useState('')
       const [tradeLicenseNumberError, setTradeLicenseNumberError] = useState('')
       const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')        
-  
+useEffect(() => {
+  const fetchCountries = async () => {
+    try {
+      const res = await countryListService.getCountries();
+          console.log("API Response:", res);
+      console.log("API Data:", res?.data);
+       setCountries(res || []);
+
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+    }
+  };
+
+  fetchCountries();
+}, []);
+      useEffect(() => {
+  const fetchDocTypes = async () => {
+    try {
+      const res = await docTypelookupService.getDocTypes();
+
+      console.log("Doc Types:", res);
+
+      // res is already array
+      setDocTypes(res || []);
+
+    } catch (error) {
+      console.error("Error fetching doc types:", error);
+    }
+  };
+
+  fetchDocTypes();
+}, []);
       const [form, setForm] = useState<FormData>({
           firstName: '',
           middleName: '',
@@ -574,22 +594,6 @@ const validateWebsiteLive = (value: string) => {
     setWebsiteError('Please enter a valid website URL')
   } else {
     setWebsiteError('')
-  }
-}
-const validateTaxIdLive = (value: string, docType: string) => {
-  // If either is missing → no error yet
-  if (!docType || !value) {
-    setTaxIdError('')
-    return
-  }
-
-  const rule = TAX_FORMATS[docType]
-  if (!rule) return
-
-  if (!rule.regex.test(value.toUpperCase())) {
-    setTaxIdError(rule.error)
-  } else {
-    setTaxIdError('')
   }
 }
 
@@ -1124,27 +1128,44 @@ const validateStep3 = () => {
     }))
   }
 >
- <SelectTrigger
-   className={`w-full !h-12 bg-white  border border-slate-300 
-   text-slate-900   placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 
-    focus:ring-[#3FB8FF] ${getBorderClass(
-  submitted.step2,
-  true,
-  form.countryOfRegistration,
-  false)
-      }`}>
-  <SelectValue placeholder="Select country" />
-</SelectTrigger>
+  <SelectTrigger
+    className={`w-full !h-12 bg-white border border-slate-300 
+    text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] 
+    focus:ring-1 focus:ring-[#3FB8FF] ${getBorderClass(
+      submitted.step2,
+      true,
+      form.countryOfRegistration,
+      false
+    )}`}
+  >
+    <SelectValue placeholder="Select country" />
+  </SelectTrigger>
 
-  <SelectContent  position="popper" className="bg-white border-slate-200 z-50">
-    {REG_COUNTRIES.map((country) => (
-      <SelectItem key={country} value={country}>
-        {country}
+<SelectContent
+  position="popper"
+  side="bottom"
+  align="start"
+ sideOffset={6}
+ avoidCollisions={false}
+    className="bg-white border-slate-200 z-[9999]"
+>
+  
+  {countries.length === 0 ? (
+    <SelectItem value="loading" disabled>
+      Loading countries...
+    </SelectItem>
+  ) : (
+    countries.map((country) => (
+      <SelectItem
+        key={country.name}
+        value={country.name}
+      >
+        {country.name}
       </SelectItem>
-    ))}
-  </SelectContent>
+    ))
+  )}
+</SelectContent>
 </Select>
-
                 </div>
                      <ErrorMessage
                     message={
@@ -1358,9 +1379,7 @@ const validateStep3 = () => {
 
                   <Label  className="text-slate-700">
                     Tax Document Type  <span className="text-red-500">*</span>                    
-                  </Label>
-                   
-                   
+                  </Label>                                
 
                       <div className="relative">
                            <Select
@@ -1385,10 +1404,28 @@ const validateStep3 = () => {
     <SelectValue placeholder="Select document type" />
   </SelectTrigger>
 
-  <SelectContent position="popper" className="bg-white border-slate-200 z-[999]">
-    <SelectItem value="GST">GST</SelectItem>
-    <SelectItem value="PAN">PAN</SelectItem>
-    <SelectItem value="VAT">VAT</SelectItem>
+   <SelectContent
+    position="popper"
+    side="bottom"
+    align="start"
+    sideOffset={6}
+    avoidCollisions={false}
+    className="bg-white border-slate-200 z-[999]"
+  >
+    {docTypes.length === 0 ? (
+      <SelectItem value="loading" disabled>
+        Loading document types...
+      </SelectItem>
+    ) : (
+      docTypes.map((doc) => (
+        <SelectItem
+          key={doc.document_type}
+          value={doc.document_type}   // stored value
+        >
+          {doc.description}           
+        </SelectItem>
+      ))
+    )}
   </SelectContent>
 </Select>
 
@@ -1420,7 +1457,8 @@ const validateStep3 = () => {
         ...prev,
         panTaxId: value,
       }))
-      validateTaxIdLive(value, form.taxDocType)
+    const result = validateTaxId(value, form.taxDocType)
+    setTaxIdError(result.error)
     }}
     className="h-12 bg-white border border-slate-300 text-slate-900
       placeholder:text-slate-400
