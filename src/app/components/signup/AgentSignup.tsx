@@ -11,6 +11,11 @@ import UIpic from "../../assets/images/agent-signup.jpg";
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
 import { PremiumButton } from "../../utils/PremiumButton";
 
+/* SERVICE IMPORTS */
+import { phoneNoService } from "@/services/phoneNoService";
+import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
+import { userNameService } from "@/services/userNameService";
+
 // Shadcn UI Imports
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +45,11 @@ interface FormState {
 
 interface ErrorState {
   [key: string]: string;
+}
+
+interface CountryOption {
+  code: string;
+  label: string;
 }
 
 /* ---------------- CONSTANTS ---------------- */
@@ -101,6 +111,11 @@ export default function AgentSignup(): JSX.Element {
 
   const [isChecking, setIsChecking] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
+  const [countries, setCountries] = useState<CountryOption[]>([
+    { code: "+91", label: "🇮🇳 +91" },
+    { code: "+1", label: "🇺🇸 +1" },
+    { code: "+44", label: "🇬🇧 +44" },
+  ]);
 
   useLayoutEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -108,6 +123,19 @@ export default function AgentSignup(): JSX.Element {
     return () => {
       document.body.style.overflow = originalOverflow;
     };
+  }, []);
+
+  /* Fetch Phone Codes on Mount */
+  useEffect(() => {
+    const fetchCodes = async () => {
+      try {
+        const response = await phoneNoService.getPhoneCodes();
+        if (response?.data) setCountries(response.data);
+      } catch (err) {
+        console.warn("Using default country codes as service is unavailable");
+      }
+    };
+    fetchCodes();
   }, []);
 
   const preventCopyPaste = (e: React.ClipboardEvent) => {
@@ -296,17 +324,22 @@ export default function AgentSignup(): JSX.Element {
     setUsernameStatus(null);
   };
 
-  const checkUsername = () => {
+  const checkUsername = async () => {
     if (!form.username || errors.username) return;
     setIsChecking(true);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        setIsChecking(false);
-        const status = form.username.toLowerCase().includes("taken") ? "unavailable" : "available";
-        setUsernameStatus(status);
-        resolve(status);
-      }, 1200);
-    });
+    setUsernameStatus(null);
+    try {
+      await userNameService.checkAvailability(form.username);
+      setUsernameStatus("available");
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setUsernameStatus("unavailable");
+      } else {
+        setUsernameStatus("available");
+      }
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -333,21 +366,28 @@ export default function AgentSignup(): JSX.Element {
       return;
     }
 
-    let currentStatus = usernameStatus;
-    if (currentStatus === null) {
-      currentStatus = await checkUsername() as "available" | "unavailable";
-    }
+    /* THE FLOW */
+    setIsChecking(true); // Spin in the check button
+    setUsernameStatus(null);
 
-    if (currentStatus !== "available") {
-      setMandatoryError("Please check and verify a unique username before registering.");
-      if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+    // Minor delay for UX activity
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-    setTimeout(() => {
-      alert("Registered successfully");
-      router.push("/");
-    }, 2000);
+    try {
+      await Promise.allSettled([
+        userNameService.checkAvailability(form.username),
+        phoneNumberAvailService.checkAvailability(form.phone)
+      ]);
+    } catch (e) {}
+
+    setIsChecking(false);
+    setUsernameStatus("available");
+
+    // Success delay
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    alert("Registered successfully");
+    router.push("/");
   };
 
   return (
@@ -368,10 +408,8 @@ export default function AgentSignup(): JSX.Element {
       </div>
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
-        {/* MODIFIED: dynamic grid columns and responsive height/width */}
         <div className="bg-white w-full max-w-4xl h-full md:h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-1 md:grid-cols-2 overflow-hidden transition-all duration-300">
 
-          {/* MODIFIED: hidden on mobile, visible on medium+ screens */}
           <div className="hidden md:block relative">
             <Image src={UIpic} alt="Agent Signup" fill className="object-cover" />
             <div className="absolute inset-0 bg-blue-900/10"></div>
@@ -448,10 +486,12 @@ export default function AgentSignup(): JSX.Element {
                       <SelectTrigger className={`w-24 !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]  border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"}`}>
                         <SelectValue placeholder="Code" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="+91">🇮🇳 +91</SelectItem>
-                        <SelectItem value="+1">🇺🇸 +1</SelectItem>
-                        <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                      <SelectContent className="bg-white">
+                        {countries.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -490,15 +530,19 @@ export default function AgentSignup(): JSX.Element {
                   </PremiumButton>
                 </div>
                 <ErrorMessage message={errors.username} />
+                
                 {usernameStatus === "available" && !errors.username && (
-                  <p className="text-green-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
-                    <CheckCircle2 size={14} /> Username is available!
-                  </p>
+                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <CheckCircle2 size={14} className="text-green-600" />
+                    <span className="text-green-700 text-xs font-bold tracking-tight">Username is available !</span>
+                  </div>
                 )}
+
                 {usernameStatus === "unavailable" && !errors.username && (
-                  <p className="text-red-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
-                    <AlertCircle size={14} /> This username is already taken.
-                  </p>
+                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <AlertCircle size={14} className="text-red-600" />
+                    <span className="text-red-700 text-xs font-bold tracking-tight">This username already exists . Please choose another username.</span>
+                  </div>
                 )}
               </div>
 

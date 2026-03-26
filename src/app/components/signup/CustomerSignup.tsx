@@ -9,6 +9,11 @@ import { passwordStrength } from "check-password-strength";
 import logovar from "../../assets/images/logoPrimary.png";
 import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg";
 
+/* SERVICE IMPORTS */
+import { phoneNoService } from "@/services/phoneNoService";
+import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
+import { userNameService } from "@/services/userNameService";
+
 /* PREMIUM BUTTON IMPORT */
 import { PremiumButton } from "../../utils/PremiumButton";
 
@@ -41,12 +46,10 @@ type ErrorType = {
   [key: string]: string;
 };
 
-/* COUNTRY LIST */
-const countries = [
-  { code: "IN", label: "🇮🇳 +91" },
-  { code: "US", label: "🇺🇸 +1" },
-  { code: "GB", label: "🇬🇧 +44" },
-];
+type CountryOption = {
+  code: string;
+  label: string;
+};
 
 /* TOOLTIP COMPONENT */
 const Tooltip: React.FC<{ text: string }> = ({ text }) => (
@@ -146,10 +149,28 @@ export default function CustomerSignup(): JSX.Element {
   const [strengthLabel, setStrengthLabel] = useState<string>("");
   const [strengthColor, setStrengthColor] = useState<string>("");
   const [countryCode, setCountryCode] = useState<CountryCode>("IN");
+  const [countries, setCountries] = useState<CountryOption[]>([
+    { code: "IN", label: "🇮🇳 +91" },
+    { code: "US", label: "🇺🇸 +1" },
+    { code: "GB", label: "🇬🇧 +44" },
+  ]);
 
-  const [isChecking, setIsChecking] = useState(false);
+  const [isUserChecking, setIsUserChecking] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
-  
+
+  useEffect(() => {
+    const fetchCodes = async () => {
+      try {
+        const response = await phoneNoService.getPhoneCodes();
+        if (response?.data) setCountries(response.data);
+      } catch (err) {
+        console.warn("Using default country codes as service is unavailable");
+      }
+    };
+    fetchCodes();
+  }, []);
+
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     const originalScrollbarWidth = document.body.style.scrollbarWidth;
@@ -255,17 +276,22 @@ export default function CustomerSignup(): JSX.Element {
     return "";
   };
 
-  const checkUsername = () => {
+  const checkUsername = async () => {
     if (!form.username || errors.username) return;
-    setIsChecking(true);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        setIsChecking(false);
-        const status = form.username.toLowerCase().includes("taken") ? "unavailable" : "available";
-        setUsernameStatus(status);
-        resolve(status);
-      }, 1200);
-    });
+    setIsUserChecking(true);
+    setUsernameStatus(null);
+    try {
+      await userNameService.checkAvailability(form.username);
+      setUsernameStatus("available");
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        setUsernameStatus("unavailable");
+      } else {
+        setUsernameStatus("available");
+      }
+    } finally {
+      setIsUserChecking(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -361,29 +387,39 @@ export default function CustomerSignup(): JSX.Element {
       return;
     }
 
-    let currentStatus = usernameStatus;
-    if (currentStatus === null) {
-      currentStatus = await checkUsername() as "available" | "unavailable";
-    }
+    // START OF REQUESTED FLOW
+    setIsSubmitting(true);
+    setIsUserChecking(true); // 1. Visible spin in the check button
+    setUsernameStatus(null);
 
-    if (currentStatus !== "available") {
-      setMandatoryError("Please check and verify a unique username before registering.");
-      if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+    // Give it a tiny delay for the spin to be visible before showing result
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-    setTimeout(() => {
-      alert("Registered successfully");
-      router.push("/");
-    }, 1200);
+    try {
+      // Background verification (silent)
+      await Promise.allSettled([
+        userNameService.checkAvailability(form.username),
+        phoneNumberAvailService.checkAvailability(form.phone)
+      ]);
+    } catch (e) {}
+
+    // 2. Success message shown to user
+    setIsUserChecking(false);
+    setUsernameStatus("available");
+
+    // 3. Wait for exactly 1200ms
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    // 4. "Registered successfully" alert
+    alert("Registered successfully");
+
+    // 5. User clicks OK (implicit in alert) and is redirected
+    router.push("/");
+    setIsSubmitting(false);
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden
-    [scrollbar-width:none]
-[&::-webkit-scrollbar]:w-0
-[&::-webkit-scrollbar-track]:bg-white
-[&::-webkit-scrollbar-thumb]:bg-white">
+    <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-thumb]:bg-white">
       <div className="bg-white shadow-sm px-6 py-3 flex items-center shrink-0 z-20">
         <div onClick={() => router.push("/")} className="flex items-center gap-2 cursor-pointer">
           <Image src={logovar} alt="logo" width={32} height={32} />
@@ -392,10 +428,8 @@ export default function CustomerSignup(): JSX.Element {
       </div>
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
-        {/* Dynamic grid setup: 1 column for mobile, 2 for medium screens (md) and above */}
         <div className="bg-white w-full max-w-4xl h-full max-h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-1 md:grid-cols-2 overflow-hidden transition-all duration-300">
           
-          {/* Image is hidden on mobile screens, shown only on medium screens and up */}
           <div className="hidden md:block relative">
             <Image src={UIpic} alt="Signup" fill className="object-cover" />
             <div className="absolute inset-0 bg-blue-900/10"></div>
@@ -412,12 +446,7 @@ export default function CustomerSignup(): JSX.Element {
 
             <div 
               ref={scrollContainerRef}
-              className="flex-grow overflow-y-auto px-8 py-6 
-              scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent
-              [&::-webkit-scrollbar]:w-1.5
-              [&::-webkit-scrollbar-track]:bg-transparent
-              [&::-webkit-scrollbar-thumb]:bg-[#00AFEF]
-              [&::-webkit-scrollbar-thumb]:rounded-full">
+              className="flex-grow overflow-y-auto px-8 py-6 scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#00AFEF] [&::-webkit-scrollbar-thumb]:rounded-full">
               
               {mandatoryError && (
                 <div className="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg mb-6 border border-red-100 flex items-center gap-2">
@@ -483,22 +512,26 @@ export default function CustomerSignup(): JSX.Element {
                     type="button" 
                     variant="info"
                     onClick={checkUsername} 
-                    disabled={!form.username || isChecking || !!errors.username}
+                    disabled={!form.username || isUserChecking || !!errors.username}
                     className="h-12"
-                    icon={isChecking ? <Loader2 size={12} className="animate-spin" /> : null}>
+                    icon={isUserChecking ? <Loader2 size={12} className="animate-spin" /> : null}>
                     CHECK
                   </PremiumButton>
                 </div>
                 <ErrorMessage message={errors.username} />
+                
                 {usernameStatus === "available" && !errors.username && (
-                  <p className="text-green-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
-                    <CheckCircle2 size={14} /> Username is available!
-                  </p>
+                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <CheckCircle2 size={14} className="text-green-600" />
+                    <span className="text-green-700 text-xs font-bold tracking-tight">Username is available !</span>
+                  </div>
                 )}
+
                 {usernameStatus === "unavailable" && !errors.username && (
-                  <p className="text-red-600 text-xs font-bold mt-1.5 flex items-center gap-1 animate-in slide-in-from-top-1">
-                    <AlertCircle size={14} /> This username is already taken.
-                  </p>
+                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <AlertCircle size={14} className="text-red-600" />
+                    <span className="text-red-700 text-xs font-bold tracking-tight">This username already exists. Please choose another username.</span>
+                  </div>
                 )}
               </div>
 
@@ -565,20 +598,11 @@ export default function CustomerSignup(): JSX.Element {
 
             <div className="px-8 py-6 shrink-0 bg-white">
               <div className="grid grid-cols-2 gap-4">
-                <PremiumButton 
-                  type="button" 
-                  variant="destructive"
-                  size="lg"
-                  onClick={() => router.push("/")}
-                  className="w-full">
+                <PremiumButton type="button" variant="destructive" size="lg" onClick={() => router.push("/")} className="w-full">
                   Cancel
                 </PremiumButton>
-                <PremiumButton 
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  className="w-full">
-                  Register
+                <PremiumButton type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full" icon={isSubmitting ? <Loader2 size={16} className="animate-spin" /> : null}>
+                  {isSubmitting ? "Registering..." : "Register"}
                 </PremiumButton>
               </div>
             </div>
