@@ -51,9 +51,12 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
                     <Breadcrumb>
                         <BreadcrumbList className="text-xs text-gray-400">
                             <BreadcrumbItem>
-                                <BreadcrumbLink href="/itinerary/packages" className="cursor-pointer">
+                                <BreadcrumbLink
+                                    className="cursor-pointer"
+                                    onClick={() => router.push("/itinerary/packages")}
+                                    >
                                     Itineraries
-                                </BreadcrumbLink>
+                                    </BreadcrumbLink>
                             </BreadcrumbItem>
 
                             <BreadcrumbSeparator>
@@ -61,9 +64,12 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
                             </BreadcrumbSeparator>
 
                             <BreadcrumbItem>
-                                <BreadcrumbLink href={backHref} className="cursor-pointer capitalize">
+                                <BreadcrumbLink
+                                    className="cursor-pointer capitalize"
+                                    onClick={() => router.push(backHref)}
+                                    >
                                     {breadcrumbLabel}
-                                </BreadcrumbLink>
+                                    </BreadcrumbLink>
                             </BreadcrumbItem>
 
                             <BreadcrumbSeparator>
