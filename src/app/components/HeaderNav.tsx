@@ -7,6 +7,7 @@ import { Menu, X, ChevronDown, LogIn } from "lucide-react"
 import logoPrimary from "../assets/images/final logo Bonhomiee white without.png"
 import { PremiumButton } from "../utils/PremiumButton"
 import { HiOutlineBriefcase } from "react-icons/hi"
+import { SearchDialog } from "./common/SearchDialog"
 
 
 type NavChild = {
@@ -200,6 +201,7 @@ export default function HeaderNav({
 
           <div className="hidden md:flex items-center gap-4">
             <PremiumButton
+            size="sm"
               variant={isScrolled ? "ghost" : "primary"}
               onClick={onAuthOpen}
               className="mb-0 flex items-center w-fit-content"
@@ -208,6 +210,7 @@ export default function HeaderNav({
               <LogIn size={18} />
             </PremiumButton>
             <PremiumButton
+            size="sm"
               variant="secondary"
               onClick={onAuthOpen}
               className="mb-0 flex items-center w-fit-content"
@@ -215,6 +218,7 @@ export default function HeaderNav({
               Book Demo
               <HiOutlineBriefcase size={18} />
             </PremiumButton>
+            <SearchDialog/>
           </div>
 
           <button

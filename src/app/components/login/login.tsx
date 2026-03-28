@@ -215,14 +215,20 @@ const validatePhone = (value: string, countryCode: string) => {
                 toast.success(response.detail || "Email OTP verified successfully", {
                     position: "top-right",
                 })
-
+                
                 setEmailVerified(true)
                 setEmailOtpSent(false)
                 setEmailOtp("")
 
-                if (selectedType) {
-                    router.push(`/signup/${selectedType}`)
-                }
+                const token = btoa(JSON.stringify({
+                email: verificationEmail,
+                verified: true,
+                ts: Date.now()
+                }))
+
+                document.cookie = `verifyToken_${selectedType}=${token}; path=/`
+
+                router.push(`/signup/${selectedType}`)
 
             } else {
                 toast.error(response?.detail || "Invalid OTP", {
@@ -240,10 +246,17 @@ const validatePhone = (value: string, countryCode: string) => {
     }
 
     const handleComplete = () => {
-        if (selectedType) {
-            router.push(`/signup/${selectedType}`)
-        }
-    }
+    if (!selectedType) return
+    const token = btoa(JSON.stringify({
+        mobile: mobile,
+        verified: true,
+        ts: Date.now()
+    }))
+
+    document.cookie = `verifyToken_${selectedType}=${token}; path=/`
+
+    router.push(`/signup/${selectedType}`)
+}
 
     const handleSubmit = () => {
         console.log("Login", { type: selectedType, email, password })
@@ -343,26 +356,31 @@ const validatePhone = (value: string, countryCode: string) => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-7xl relative z-10"
-            >
-                <div className="text-center mb-12">
-                    <motion.h1
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-5xl md:text-6xl font-bold mb-4 text-[#3FB8FF]"
-                    >
-                        Welcome Back
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-lg text-[#0E40C7]"
-                    >
-                        {selectedType ? `Continue as ${selectedUserType?.label}` : "Select your account type to continue"}
-                    </motion.p>
-                </div>
+                className="w-full max-w-7xl relative z-10 mt-[5rem] sm:mt-0"
+            ><div className="text-center mb-12">
+                <motion.h1
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 text-[#3FB8FF]"
+                >
+                    Welcome Back
+                </motion.h1>
+
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-sm sm:text-base md:text-lg text-[#0E40C7]"
+                >
+
+                    <span className="hidden sm:block">
+                        {selectedType
+                            ? `Continue as ${selectedUserType?.label}`
+                            : "Select your account type to continue"}
+                    </span>
+                </motion.p>
+            </div>
 
                 <AnimatePresence mode="wait">
                     {!selectedType ? (

@@ -7,7 +7,8 @@
 'use client'
 
 import SupplierSignup from '@/app/components/signup/supplier/SupplierSignup'
+import { AuthGuard } from '@/app/guards/AuthGuard'
 
 export default function SupplierSignupPage() {
-  return <SupplierSignup />
+  return (<AuthGuard>< SupplierSignup /></AuthGuard>)
 }

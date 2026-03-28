@@ -1,7 +1,7 @@
-import AISmartBot from "@/app/components/ai-smart-bot/AISmartBot";
+import { SmartAi } from "@/app/components/ai-chat/SmartAi";
 
 export default function AIPage() {
   return (
-    <AISmartBot/>
+    <SmartAi/>
   )
 }
