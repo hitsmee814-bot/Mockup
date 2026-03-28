@@ -10,6 +10,7 @@ import Footer from "./components/Footer"
 import VacationDestinations from "./components/package-carousel/PackageCards"
 import RoadmapTimeline from "./components/RoadMap/RoadMap"
 import CoverflowCarousel from "./components/package-carousel/CarouselCards"
+import TopPackages from "./components/TopPackages"
 
 export default function HomePage() {
 
@@ -20,6 +21,7 @@ export default function HomePage() {
       {/* <FloatingCardsSection /> */}
       {/* Keep below carousel cards */}
         <CoverflowCarousel/>
+        <TopPackages/>
 
       <VacationDestinations />
       {/* <CriticalServices /> */}
