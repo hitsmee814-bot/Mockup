@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { Menu, X, ChevronDown, LogIn } from "lucide-react"
+import { Menu, X, ChevronDown, LogIn, User2 } from "lucide-react"
 import logoPrimary from "../assets/images/final logo Bonhomiee white without.png"
 import { PremiumButton } from "../utils/PremiumButton"
 import { HiOutlineBriefcase } from "react-icons/hi"
 import { SearchDialog } from "./common/SearchDialog"
+import { useAuth } from "../context/AuthContext"
 
 
 type NavChild = {
@@ -69,6 +70,7 @@ export default function HeaderNav({
   const [scrollRatio, setScrollRatio] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [hovered, setHovered] = useState<string | null>(null)
+  const { isLoggedIn, logout } = useAuth()
 
   const isScrolled = enableScrollBg ? scrollRatio > 0.6 : true
   useEffect(() => {
@@ -199,27 +201,38 @@ export default function HeaderNav({
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
+            {isLoggedIn ? (
+                <PremiumButton
+                size="sm"
+                onClick={logout}
+                variant={isScrolled ? "ghost" : "primary"}
+                >
+                Profile
+                <User2 size={18}/>
+                </PremiumButton>
+            ) : (
+                <PremiumButton
+                size="sm"
+                variant={isScrolled ? "ghost" : "primary"}
+                onClick={onAuthOpen}
+                >
+                Login
+                <LogIn size={18} />
+                </PremiumButton>
+            )}
+
             <PremiumButton
-            size="sm"
-              variant={isScrolled ? "ghost" : "primary"}
-              onClick={onAuthOpen}
-              className="mb-0 flex items-center w-fit-content"
+                size="sm"
+                variant="secondary"
+                onClick={onAuthOpen}
             >
-              Login
-              <LogIn size={18} />
+                Book Demo
+                <HiOutlineBriefcase size={18} />
             </PremiumButton>
-            <PremiumButton
-            size="sm"
-              variant="secondary"
-              onClick={onAuthOpen}
-              className="mb-0 flex items-center w-fit-content"
-            >
-              Book Demo
-              <HiOutlineBriefcase size={18} />
-            </PremiumButton>
-            <SearchDialog/>
-          </div>
+
+            <SearchDialog />
+            </div>
 
           <button
             onClick={() => setMenuOpen(true)}
@@ -278,25 +291,33 @@ export default function HeaderNav({
               ))}
 
               <div className="pt-10 flex flex-col gap-4">
-                <button
-                  onClick={() => {
+                <span>{isLoggedIn}</span>
+                {isLoggedIn ? (
+                <PremiumButton size="sm">
+                    Profile
+                </PremiumButton>
+                ) : (
+                <PremiumButton
+                    onClick={() => {
                     setMenuOpen(false)
                     onAuthOpen?.()
-                  }}
-                  className="text-center py-3 rounded-lg bg-[#FBAB18] text-white"
-                >
-                  Login
-                </button>
+                    }}
+                    size="sm"
+>
+                    Login
+                </PremiumButton>
+                )}
 
-                <button
+                <PremiumButton
+                size="sm"
                   onClick={() => {
                     setMenuOpen(false)
                     onAuthOpen?.()
                   }}
-                  className="text-center py-3 bg-[#FBAB18] text-white rounded-lg font-semibold"
                 >
                   Book Demo
-                </button>
+                  <User2 size={18}/>
+                </PremiumButton>
               </div>
             </nav>
           </motion.div>

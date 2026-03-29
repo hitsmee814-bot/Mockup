@@ -1,4 +1,5 @@
 import HelpWidget from "./components/help-widget";
+import { AuthProvider } from "./context/AuthContext";
 import BackgroundCurve from "./ext/BackgroundCurve";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
@@ -15,7 +16,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <BackgroundCurve />
         <Toaster />
         {/* <Header /> */}
+        
+        <AuthProvider>
         {children}
+        </AuthProvider>
+        
         <HelpWidget/>
       </body>
     </html>

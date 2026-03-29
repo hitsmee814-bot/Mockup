@@ -3,16 +3,17 @@
 import Image from "next/image"
 import logoPrimary from "../../assets/images/final logo Bonhomiee white without.png"
 import { PremiumButton } from "@/app/utils/PremiumButton"
-import { LogIn, Menu } from "lucide-react"
+import { LogIn, Menu, User, User2 } from "lucide-react"
 import { HiOutlineBriefcase } from "react-icons/hi"
 import { useRouter } from "next/navigation"
 import { useSidebar } from "@/components/ui/sidebar"
 import { forwardRef } from "react"
+import { useAuth } from "@/app/context/AuthContext"
 
 export const Header = forwardRef<HTMLElement>((props, ref) => {
     const router = useRouter()
     const { toggleSidebar } = useSidebar()
-
+    const { isLoggedIn, logout } = useAuth()
     return (
         <header
             ref={ref}
@@ -39,19 +40,29 @@ export const Header = forwardRef<HTMLElement>((props, ref) => {
                     />
                 </div>
 
+                    {isLoggedIn}
                 <div className="flex items-center gap-2 md:gap-4">
-
+                    {isLoggedIn ? (
                     <PremiumButton
-                        className="mb-0 flex items-center justify-center md:gap-2 px-3 md:px-4"
+                        size="sm"
+                        onClick={logout}
+                    >
+                        Profile
+                        <User2 size={18}/>
+                    </PremiumButton>
+                    ) : (
+                    <PremiumButton
+                        size="sm"
                         onClick={() => router.push('/auth')}
                     >
                         <LogIn size={18} />
                         <span className="hidden md:inline">Login</span>
                     </PremiumButton>
+                    )}
 
                     <PremiumButton
                         variant="secondary"
-                        className="mb-0 flex items-center justify-center md:gap-2 px-3 md:px-4"
+                        size="sm"
                     >
                         <HiOutlineBriefcase size={18} />
                         <span className="hidden md:inline">Book Demo</span>

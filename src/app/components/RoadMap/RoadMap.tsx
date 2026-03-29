@@ -133,8 +133,8 @@ export default function RoadmapTimeline() {
           </p>
 
           <PremiumButton
+          size="sm"
             variant="secondary"
-            className="mb-4 mx-auto flex items-center justify-center gap-2"
           >
             Get in touch
             <Handshake className="w-4 h-4" />

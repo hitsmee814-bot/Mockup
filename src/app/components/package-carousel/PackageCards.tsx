@@ -52,7 +52,7 @@ export default function VacationDestinations() {
         </div>
 
         <div className="flex justify-center mb-20">
-          <div className="flex p-1.5 bg-white border border-slate-200 rounded-2xl shadow-sm relative">
+          <div className="flex p-1.5 bg-white border border-slate-200 rounded-xl shadow-sm relative">
             <ToggleButton
               label="Domestic"
               active={isDomestic}
@@ -149,7 +149,7 @@ function Card({ dest }: { dest: any }) {
             {dest.price}
           </span>
 
-          <PremiumButton variant="primary">
+          <PremiumButton variant="primary" size="sm">
             Book Now
           </PremiumButton>
         </div>
@@ -162,7 +162,7 @@ function ToggleButton({ label, active, onClick, activeColor }: any) {
   return (
     <button
       onClick={onClick}
-      className={`relative px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-colors duration-300 ${active ? "text-white" : "text-slate-400"
+      className={`relative px-6 py-2 rounded-xl text-sm font-bold uppercase tracking-wider transition-colors duration-300 ${active ? "text-white" : "text-slate-400"
         }`}
     >
       <span className="relative z-20 flex items-center gap-2">

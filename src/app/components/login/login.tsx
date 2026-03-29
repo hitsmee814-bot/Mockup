@@ -18,6 +18,7 @@ import { HiOutlineBriefcase } from "react-icons/hi"
 import { Spinner } from "@/components/ui/spinner"
 import { LogIn, Menu, X } from "lucide-react"
 import { lookupService } from "@/services/countriesService"
+import { useAuth } from "@/app/context/AuthContext"
 
 type Country = {
     code: string
@@ -55,6 +56,8 @@ export function Login() {
         }
         return ""
     }
+
+    const { login } = useAuth()
 
     useEffect(() => {
         const fetchCountries = async () => {
@@ -259,9 +262,14 @@ const validatePhone = (value: string, countryCode: string) => {
 }
 
     const handleSubmit = () => {
-        console.log("Login", { type: selectedType, email, password })
+        setLoading(true);
+        setTimeout(() => {
+            toast.success("Welcome Back", { position: "top-right" })
+            console.log("Login", { type: selectedType, email, password })
+            login()
+            router.push('/itinerary/packages')
+        }, 3000);
     }
-
     const handleModeChange = () => {
         setIsSignup(!isSignup)
         setMobile("")
@@ -294,31 +302,16 @@ const validatePhone = (value: string, countryCode: string) => {
                         />
                     </div>
 
-                    <div className="hidden md:flex items-center gap-4">
-                        <PremiumButton className="mb-0 flex items-center w-fit">
-                            Login
-                            <LogIn size={18} />
-                        </PremiumButton>
-
-                        <PremiumButton
-                            variant="secondary"
-                            className="mb-0 flex items-center w-fit"
-                        >
-                            Book Demo
-                            <HiOutlineBriefcase size={18} />
-                        </PremiumButton>
-                    </div>
-
-                    <button
+                    {/* <button
                         onClick={() => setMenuOpen(true)}
                         className="md:hidden text-white"
                     >
                         <Menu size={28} />
-                    </button>
+                    </button> */}
 
                 </div>
             </header>
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {menuOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -352,7 +345,7 @@ const validatePhone = (value: string, countryCode: string) => {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -405,11 +398,54 @@ const validatePhone = (value: string, countryCode: string) => {
                         >
                             <Card className="p-10 border-[#CAD8FF] bg-white shadow-xl relative overflow-hidden">
                                 {loading && (
-                                    <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-50">
-                                        <Spinner />
-                                    </div>
-                                )}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-xl"
+                                    >
+                                        <motion.div
+                                        initial={{ scale: 0.9, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.25 }}
+                                        className="flex flex-col items-center gap-4"
+                                        >
+                                        <motion.div
+                                            animate={{ y: [0, -8, 0] }}
+                                            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                                        >
+                                            <div className="relative">
+                                            <motion.div
+                                                className="absolute inset-0 rounded-full bg-[#3FB8FF]/20 blur-xl"
+                                                animate={{ scale: [1, 1.4, 1] }}
+                                                transition={{ duration: 1.4, repeat: Infinity }}
+                                            />
+                                            <div className="h-8 w-8 rounded-full bg-[#3FB8FF]" />
+                                            </div>
+                                        </motion.div>
 
+                                        <div className="text-center">
+                                            <p className="text-sm font-semibold text-[#0E40C7]">
+                                            Please wait...
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                            Processing your request
+                                            </p>
+                                        </div>
+
+                                        <div className="flex gap-1">
+                                            {[0, 1, 2].map((i) => (
+                                            <motion.div
+                                                key={i}
+                                                className="h-1.5 w-1.5 rounded-full bg-[#3FB8FF]"
+                                                animate={{ opacity: [0.3, 1, 0.3] }}
+                                                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                                            />
+                                            ))}
+                                        </div>
+                                        </motion.div>
+                                    </motion.div>
+                                    )}
                                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#3FB8FF] to-[#FBAB18]" />
                                 <div className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18] opacity-5 rounded-full blur-3xl" />
 

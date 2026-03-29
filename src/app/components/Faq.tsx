@@ -121,7 +121,7 @@ export default function FaqSection() {
 
                   <PremiumButton
                     variant="primary"
-                    className="mb-0 flex items-center w-fit-content"
+                    size="sm"
                   >
                     Chat with us
                   </PremiumButton>

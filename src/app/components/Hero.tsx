@@ -57,6 +57,7 @@ export default function Hero() {
 
                   <PremiumButton
                     variant="primary"
+                    size="sm"
                     onClick={() => router.push("/itinerary")}
                     className="mb-4 flex items-center w-fit-content"
                   >
