@@ -1,5 +1,107 @@
 import { parsePhoneNumberFromString } from "libphonenumber-js"
 
+/* ================= PASSWORD VALIDATION ================= */
+
+import { passwordStrength } from "check-password-strength"
+
+/* Strong password rule */
+ 
+ export const STRONG_PASSWORD =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
+
+/* Check if password contains personal names */
+export const containsPersonalName = (
+  password: string,
+  firstName: string,
+  middleName: string,
+  lastName: string
+): boolean => {
+  const pwd = password.toLowerCase()
+
+  return [firstName, middleName, lastName]
+    .filter(Boolean)
+    .some(name => pwd.includes(name.toLowerCase()))
+}
+
+/* Validate password */
+export const validatePassword = (
+  password: string,
+  firstName: string,
+  middleName: string,
+  lastName: string
+) => {
+  if (!password) {
+    return {
+      error: "",
+      strength: null,
+    }
+  }
+
+  /* Rule 1 — Strong password */
+  if (!STRONG_PASSWORD.test(password)) {
+    return {
+      error:
+        "The password does not yet meet the required criteria.",
+      strength: null,
+    }
+  }
+
+  /* Rule 2 — No personal names */
+  if (
+    containsPersonalName(
+      password,
+      firstName,
+      middleName,
+      lastName
+    )
+  ) {
+    return {
+      error:
+        "Password should not contain your first, middle, or last name.",
+      strength: null,
+    }
+  }
+
+  /* Rule 3 — Strength calculation */
+  const strength = passwordStrength(password)
+
+  return {
+    error: "",
+    strength,
+  }
+}
+
+/* Confirm password validation */
+export const validateConfirmPassword = (
+  password: string,
+  confirmPassword: string
+) => {
+  if (!password && !confirmPassword) return ""
+
+  if (!confirmPassword) return ""
+
+  if (password !== confirmPassword) {
+    return "Passwords do not match"
+  }
+
+  return ""
+}
+
+export  const WEBSITE_REGEX =
+/^(https?:\/\/)?(?:(?:www\.)|(?!w+\.))([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?::\d{1,5})?(?:\/[^\s]*)?$/
+
+export const validateWebsiteLive = (value: string) => {
+  // Empty → no error yet
+  if (!value) {
+    return ''
+  }
+
+  if (!WEBSITE_REGEX.test(value)) {
+    return 'Please enter a valid website URL'
+  } else {
+    return ''
+  }
+}
+
 export const validateUsername = (value: string) => {
   if (!value) return ""
 
@@ -111,4 +213,142 @@ export const validateTaxId = (
   }
 
   return { isValid: true, error: "" }
+}
+
+/* ================= STEP VALIDATIONS ================= */
+
+type FormData = {
+  firstName: string
+  middleName: string
+  lastName: string
+  email: string
+  countryCode: string
+  phone: string
+  username: string
+  password: string
+  confirmPassword: string
+  supplierLegalName: string
+  tradeName: string
+  serviceTypes: string[]
+  countryOfRegistration: string
+  panTaxId: string
+  websiteUrl: string
+  tradeLicense: File | null
+  registrationCert: File | null
+  taxDocType: string
+  taxRegistrationDoc: File | null
+  tradeLicenseNumber: string
+  compRegistrationNumber: string
+}
+
+/* Utility */
+const hasEmptyFields = (
+  fields: (string | any[] | undefined | null)[]
+) => {
+  return fields.some(field => {
+    if (typeof field === "string")
+      return !field.trim()
+
+    if (Array.isArray(field))
+      return field.length === 0
+
+    return !field
+  })
+}
+
+/* STEP 1 */
+export const validateStep1 = (
+  form: FormData,
+  errors: {
+    emailError: string
+    phoneError: string
+    usernameError: string
+    passwordError: string
+    confirmPasswordError: string
+  }
+): "EMPTY" | "INVALID" | "OK" => {
+
+  if (
+    hasEmptyFields([
+      form.firstName,
+      form.lastName,
+      form.email,
+      form.phone,
+      form.username,
+      form.password,
+      form.confirmPassword,
+    ])
+  ) {
+    return "EMPTY"
+  }
+
+  if (
+    errors.emailError ||
+    errors.phoneError ||
+    errors.usernameError ||
+    errors.passwordError ||
+    errors.confirmPasswordError
+  ) {
+    return "INVALID"
+  }
+
+  if (form.password !== form.confirmPassword) {
+    return "INVALID"
+  }
+
+  return "OK"
+}
+
+/* STEP 2 */
+export const validateStep2 = (
+  form: FormData,
+  websiteError: string
+): "EMPTY" | "INVALID" | "OK" => {
+
+  if (
+    hasEmptyFields([
+      form.supplierLegalName,
+      form.tradeName,
+      form.serviceTypes,
+      form.countryOfRegistration,
+      form.websiteUrl,
+    ])
+  ) {
+    return "EMPTY"
+  }
+
+  if (websiteError) {
+    return "INVALID"
+  }
+
+  return "OK"
+}
+
+/* STEP 3 */
+export const validateStep3 = (
+  form: FormData,
+  taxIdError: string
+): "EMPTY" | "INVALID" | "OK" => {
+
+  if (!form.tradeLicenseNumber.trim())
+    return "EMPTY"
+
+  if (!form.compRegistrationNumber.trim())
+    return "EMPTY"
+
+  if (
+    !form.tradeLicense ||
+    !form.registrationCert ||
+    !form.taxDocType ||
+    !form.panTaxId.trim() ||
+    !form.taxRegistrationDoc
+  ) {
+    return "EMPTY"
+  }
+
+  if (taxIdError) {
+    return "INVALID"
+  }
+
+  return "OK"
 }

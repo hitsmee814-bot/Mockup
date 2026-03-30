@@ -1,13 +1,10 @@
 'use client'
 
     /* ================= IMPORTS ================= */
-
-import { parsePhoneNumberFromString } from 'libphonenumber-js' //123
 import React,{ useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
-import { passwordStrength } from 'check-password-strength'
 import Image from "next/image";
 import logo from "../../../assets/images/logoPrimary.png"
 import supplierPic from "../../../assets/images/traveling-concept-with-landmarks.jpg"
@@ -16,41 +13,29 @@ import { Label } from "@/components/ui/label"
 import { PremiumButton } from "../../../utils/PremiumButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import { validateEmail } from "./supplierSignupValidation"
-import { validatePhone } from "./supplierSignupValidation"
-import { validateUsername } from "./supplierSignupValidation"
+import {
+  validateEmail,
+  validatePhone,
+  validateUsername,
+  validatePassword,
+  validateConfirmPassword,
+  validateWebsiteLive
+} from "./supplierSignupValidation"
+import {
+  validateStep1,
+  validateStep2,
+  validateStep3
+} from "./supplierSignupValidation"
+import SupplierDocuments from "./SupplierDocuments"
 import ServiceTypeSelect from "./ServiceTypeSelect"
-import { FileInput, MultiFileInput } from "./FileHandlers"
-import { validateTaxId } from "./supplierSignupValidation"
 import { countryListService } from "@/services/countryListService";
 import { docTypelookupService } from "@/services/docTypes";
-
-
-import {
-  Combobox,
-  ComboboxChip,
-  ComboboxChips,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxValue,
-  useComboboxAnchor,
-} from "@/components/ui/combobox"
-
-import {
-  Upload as UploadIcon,
-  Paperclip,
-  X,
-} from 'lucide-react'
-
-
 
 /* ================= TYPES ================= */
 type NamedDocument = {
   file: File
   name: string
+  identifier?: string   // ✅ NEW
 }
 
 type TooltipIconProps = {
@@ -84,16 +69,8 @@ type FormData = {
 
 }
 
-
-/* ================= CONSTANTS ================= */   
+/* ================= CONSTANTS ================= */    
   
-  
-
-   const WEBSITE_REGEX =
-/^(https?:\/\/)?(?:(?:www\.)|(?!w+\.))([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?::\d{1,5})?(?:\/[^\s]*)?$/
-
-  const STRONG_PASSWORD =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
-
   const blockClipboard = (e: React.ClipboardEvent<HTMLInputElement>) => {
   e.preventDefault()
     }
@@ -101,34 +78,21 @@ type FormData = {
     const blockContextMenu = (e: React.MouseEvent<HTMLInputElement>) => {
      e.preventDefault()
     }
- 
-const labelClass = "text-[12px] font-medium text-[#1A1A1A]"; 
+  
+ const labelClass = "text-[12px] font-medium text-[#1A1A1A]"; 
 const errorTextClass = "text-[11px] font-semibold text-red-600";
 const inputTextClass = "text-[12px] text-black";
 const placeholderClass = "placeholder:text-[12px] placeholder:text-gray-400";
-
 const inputClass = `h-[38px] w-full rounded border border-[#00AFEF] bg-white px-3 
    ${inputTextClass} ${placeholderClass} focus:outline-none`;
-
 const COUNTRY_CODES = [
   { code: '+1', label: 'US' },
   { code: '+44', label: 'UK' },
   { code: '+91', label: 'IN' },
   
 ]
-
-
 const dropdownInputClass =
   `${inputClass} flex items-center justify-between cursor-pointer`
-
-const SERVICE_OPTIONS = [
-  'Hotel',
-  'Flight',
-  'Transport',
-  'Tour',
-  'Visa',
-  'Cruise',
-]
 
 /* ================= STEP INDICATOR ================= */
 function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
@@ -158,9 +122,6 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
     </div>
   )
 }
-
-
-
 
 
 function ErrorMessage({ message }: { message?: string }) {
@@ -213,10 +174,6 @@ const FormErrorBanner = ({ message }: { message?: string }) => {
     </div>
   )
 }
-
-
-
-
 
 function PasswordStrengthMeter({
   strength,
@@ -296,30 +253,27 @@ export function TooltipIcon({ id, content }: TooltipIconProps) {
   )
 }
 
-const containsPersonalName = (
-  password: string,
-  firstName: string,
-  middleName: string,
-  lastName: string
-) => {
-  const pwd = password.toLowerCase()
-
-  return [firstName, middleName, lastName]
-    .filter(Boolean)
-    .some(name => pwd.includes(name.toLowerCase()))
-}
 /* ================= MAIN ================= */
 export default function SupplierSignup() {
 
       const router = useRouter()
-      const serviceAnchorRef = useComboboxAnchor()
-      const dropdownRef = useRef<HTMLDivElement>(null)
-      const serviceTriggerRef = useRef<HTMLDivElement>(null)
-      const serviceDropdownRef = useRef<HTMLDivElement>(null)
       const [showPassword, setShowPassword] = useState(false)
       const [hidePasswordEye, setHidePasswordEye] = useState(0)   
-      const [open, setOpen] = useState(false)  
+      const [uploadedFiles, setUploadedFiles] = useState<{[key: number]: File | null}>({});
+      const [docGroups, setDocGroups] = useState<any[]>([]);
+      const [selectedDocs, setSelectedDocs] = useState<{ [key: number]: any }>({});
 
+        const [multiDocs, setMultiDocs] = useState<{
+    [groupId: number]: any[]
+  }>({});
+
+  const [tempDocs, setTempDocs] = useState<{
+    [groupId: number]: any
+  }>({});
+
+  const [multiFiles, setMultiFiles] = useState<{
+    [groupId: number]: File | null
+  }>({});
    type Country = {
   name: string;
 };
@@ -359,7 +313,7 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
       const [websiteError, setWebsiteError] = useState('')
       const [tradeLicenseNumberError, setTradeLicenseNumberError] = useState('')
       const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')        
-useEffect(() => {
+  useEffect(() => {
   const fetchCountries = async () => {
     try {
       const res = await countryListService.getCountries();
@@ -374,23 +328,48 @@ useEffect(() => {
 
   fetchCountries();
 }, []);
-      useEffect(() => {
-  const fetchDocTypes = async () => {
-    try {
-      const res = await docTypelookupService.getDocTypes();
 
-      console.log("Doc Types:", res);
+const fetchSupplierDocGroups = async () => {
 
-      // res is already array
-      setDocTypes(res || []);
+  try {
 
-    } catch (error) {
-      console.error("Error fetching doc types:", error);
-    }
-  };
+    console.log(
+      "Calling Supplier Document API..."
+    );
 
-  fetchDocTypes();
-}, []);
+    const res =
+      await docTypelookupService.getDocTypes(
+        "SUPPLIER"
+      );
+
+    console.log(
+      "Raw Response:",
+      res
+    );
+
+    // Parse json_agg
+    const groups = JSON.parse(
+      res[0].json_agg
+    );
+
+    console.log(
+      "Parsed Groups:",
+      groups
+    );
+
+    setDocGroups(groups);
+
+  } catch (error) {
+
+    console.error(
+      "Error fetching supplier docs:",
+      error
+    );
+
+  }
+
+};
+
       const [form, setForm] = useState<FormData>({
           firstName: '',
           middleName: '',
@@ -416,9 +395,7 @@ useEffect(() => {
           otherDocs: [],
           })
 
-  /* CLOSE SERVICE DROPDOWN */
-  
-  
+  /* CLOSE SERVICE DROPDOWN */ 
 
   const handleChange = (
       e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> ) => {
@@ -444,56 +421,46 @@ if (name === "countryCode") {
   setPhoneError(validatePhone(form.phone, value))
 }
 
-      if (name === 'websiteUrl') {
-        validateWebsiteLive(value)
-      }
-
-
-if (name === 'password') {
-  setConfirmPasswordError('')
-  setPasswordStrengthInfo(null)
-  setPasswordError('')
-
-  if (!value) {
-    validateConfirmPasswordLive('', form.confirmPassword)
-    return
-  }
-
-  //  Strong password rule
-  if (!STRONG_PASSWORD.test(value)) {
-    setPasswordError(
-      'The password does not yet meet the required criteria.'
-    )
-    validateConfirmPasswordLive(value, form.confirmPassword)
-    return
-  }
-
-  //  NEW: Personal name check
-  if (
-    containsPersonalName(
-      value,
-      form.firstName,
-      form.middleName,
-      form.lastName
-    )
-  ) {
-    setPasswordError(
-      'Password should not contain your first, middle, or last name.'
-    )
-    validateConfirmPasswordLive(value, form.confirmPassword)
-    return
-  }
-
-  // Strength check (only if valid)
-  const result = passwordStrength(value)
-  setPasswordStrengthInfo(result)
-
-  validateConfirmPasswordLive(value, form.confirmPassword)
+   if (name === "website") {
+  const error = validateWebsiteLive(value)
+  setWebsiteError(error)
 }
 
-if (name === 'confirmPassword') {
-  setHidePasswordEye(v => v + 1) // FORCE hide every time
-  validateConfirmPasswordLive(form.password, value)
+if (name === "password") {
+  setConfirmPasswordError("")
+  setPasswordStrengthInfo(null)
+  setPasswordError("")
+
+  const result = validatePassword(
+    value,
+    form.firstName,
+    form.middleName,
+    form.lastName
+  )
+
+  setPasswordError(result.error)
+
+  if (result.strength) {
+    setPasswordStrengthInfo(result.strength)
+  }
+
+  const confirmError = validateConfirmPassword(
+    value,
+    form.confirmPassword
+  )
+
+  setConfirmPasswordError(confirmError)
+}
+
+if (name === "confirmPassword") {
+  setHidePasswordEye(v => v + 1)
+
+  const confirmError = validateConfirmPassword(
+    form.password,
+    value
+  )
+
+  setConfirmPasswordError(confirmError)
 }
   }
 
@@ -536,6 +503,91 @@ if (name === 'confirmPassword') {
   return "border-slate-300"
 }
 
+  const handleAddMultiDocument = (group: any) => {
+
+  const groupId = group.groupid;
+
+  const selected =
+    tempDocs[groupId];
+
+  const file =
+    multiFiles[groupId];
+
+  if (!selected) {
+    alert("Please select document type");
+    return;
+  }
+
+  if (!selected.identifierValue) {
+    alert("Please enter document identifier");
+    return;
+  }
+
+  if (!file) {
+    alert("Please upload file");
+    return;
+  }
+
+  const existing =
+    multiDocs[groupId] || [];
+
+  if (existing.length >= group.max) {
+    alert(
+      `Maximum ${group.max} documents allowed`
+    );
+    return;
+  }
+
+  // Prevent duplicate document type
+  const duplicate =
+    existing.find(
+      (doc: any) =>
+        doc.document_type ===
+        selected.document_type
+    );
+
+  if (duplicate) {
+    alert(
+      "This document type already added"
+    );
+    return;
+  }
+
+  const newDoc = {
+
+    document_type:
+      selected.document_type,
+
+    description:
+      selected.description,
+
+    identifierValue:
+      selected.identifierValue,
+
+    file
+
+  };
+
+  setMultiDocs(prev => ({
+    ...prev,
+    [groupId]: [
+      ...existing,
+      newDoc
+    ]
+  }));
+
+  // Reset temp
+  setTempDocs(prev => ({
+    ...prev,
+    [groupId]: null
+  }));
+
+  setMultiFiles(prev => ({
+    ...prev,
+    [groupId]: null
+  }));
+
+};
 const getTaxNumberBorderClass = () => {
   if (taxIdError) {
     return 'border-red-500'
@@ -556,47 +608,7 @@ const getTaxPanelBorderClass = () => {
     return 'border-red-500'
   }
   return 'border-[#00AFEF]'
-}
-
-       const validateConfirmPasswordLive = (
-          password: string,
-          confirmPassword: string
-        ) => {
-          // If both empty → no error
-          if (!password && !confirmPassword) {
-            setConfirmPasswordError('')
-            return
-          }
-
-          // If confirm empty → no error yet
-          if (!confirmPassword) {
-            setConfirmPasswordError('')
-            return
-          }
-
-          // Mismatch
-          if (password !== confirmPassword) {
-            setConfirmPasswordError('Passwords do not match')
-          } else {
-            setConfirmPasswordError('')
-          }
-        }
-     
-
-const validateWebsiteLive = (value: string) => {
-  // Empty → no error yet
-  if (!value) {
-    setWebsiteError('')
-    return
-  }
-
-  if (!WEBSITE_REGEX.test(value)) {
-    setWebsiteError('Please enter a valid website URL')
-  } else {
-    setWebsiteError('')
-  }
-}
-
+} 
 
  const toggleService = (option: string) => {
   setForm(prev => ({
@@ -606,100 +618,6 @@ const validateWebsiteLive = (value: string) => {
       : [...prev.serviceTypes, option],
   }))
 }
-
-const hasEmptyFields = (fields: (string | any[] | undefined | null)[]) => {
-  return fields.some(field => {
-    if (typeof field === "string") return !field.trim()
-    if (Array.isArray(field)) return field.length === 0
-    return true // handles undefined / null
-  })
-}
-
-const validateStep1 = () => {
-  // 1 Empty mandatory fields
- if (
-  hasEmptyFields([
-    form.firstName,
-    form.lastName,
-    form.email,
-    form.phone,
-    form.username,
-    form.password,
-    form.confirmPassword,
-  ])
-) {
-  return "EMPTY"
-}
-
-  // 2 Invalid fields
-  if (
-    emailError ||
-    phoneError ||
-    usernameError ||
-    passwordError ||
-    confirmPasswordError
-  ) {
-    return 'INVALID'
-  }
-
-  // 3️ Password mismatch safety
-  if (form.password !== form.confirmPassword) {
-    setConfirmPasswordError('Passwords do not match')
-    return 'INVALID'
-  }
-
-  return 'OK'
-}
-
-
-const validateStep2 = () => {
-  if (
-    hasEmptyFields([
-      form.supplierLegalName,
-      form.tradeName,
-      form.serviceTypes,
-      form.countryOfRegistration,
-      form.websiteUrl,
-    ])
-  ) {
-    return "EMPTY"
-  }
-
-  if (websiteError) return "INVALID"
-
-  return "OK"
-}
-const validateStep3 = () => {
-  // 1️ Trade License Number mandatory (set error explicitly)
-  if (!form.tradeLicenseNumber.trim()) {
-  
-    return 'EMPTY'
-  }
-
-   if (!form.compRegistrationNumber.trim()) {
-   
-    return 'EMPTY'
-  }
-  // 2️ Missing other mandatory fields
-  if (
-    !form.tradeLicense ||
-    !form.registrationCert ||
-    !form.taxDocType ||
-    !form.panTaxId.trim() ||
-    !form.taxRegistrationDoc
-  ) {
-    return 'EMPTY'
-    
-  }
-
-  // 3️ Invalid values
-  if (taxIdError) {
-    return 'INVALID'
-  }
-
-  return 'OK'
-}
-
                 const step3FileNames = [
                 form.tradeLicense?.name,
                 form.registrationCert?.name,
@@ -708,8 +626,6 @@ const validateStep3 = () => {
               ]
                 .filter(Boolean)
                 .map(name => name!.toLowerCase())
-
-
 
   return (
     <main className="min-h-screen bg-blue-50 flex items-center justify-center px-4 pt-24 md:pt-20">
@@ -941,8 +857,8 @@ const validateStep3 = () => {
                               ? 'Required'
                               : undefined)
                           }
-                        />
-                            
+                        /> 
+                                                
 
                            <Label htmlFor="password" className="text-slate-700">
   Password <span className="text-red-500">*</span>
@@ -956,13 +872,13 @@ const validateStep3 = () => {
   <ShadInput
     id="password"
     name="password"
-    type={showPassword ? "text" : "password"}   // ✅ only change here
+    type={showPassword ? "text" : "password"}   
     required
     placeholder="Enter strong password"
     autoComplete="new-password"
     value={form.password}
     onChange={(e) => {
-      if (showPassword) setShowPassword(false) // ✅ same as your old logic
+      if (showPassword) setShowPassword(false) 
       handleChange(e)
     }}
     onCopy={blockClipboard}
@@ -985,18 +901,18 @@ const validateStep3 = () => {
   </button>
 </div>
   <ErrorMessage
-                            message={
-                              passwordError ||
-                              (submitted.step1 && !form.password
-                                ? 'Required'
-                                : undefined)
-                            }
-                          />    
-                          
-                          {form.password && !passwordError && (
-                          <PasswordStrengthMeter strength={passwordStrengthInfo} />
-                          )}
-                   
+  message={
+    passwordError ||
+    (submitted.step1 && !form.password
+      ? 'Required'
+      : undefined)
+  }
+/>    
+
+{form.password && !passwordError && (
+<PasswordStrengthMeter strength={passwordStrengthInfo} />
+)}
+               
 
 <Label htmlFor="confirmPassword" className="text-slate-700">
   Re-Type Password <span className="text-red-500">*</span>
@@ -1027,8 +943,6 @@ const validateStep3 = () => {
   ${getBorderClass(submitted.step1, true, form.confirmPassword, !!confirmPasswordError)}`}
 />
 
-  
-
 <ErrorMessage
   message={
     confirmPasswordError ||
@@ -1036,16 +950,13 @@ const validateStep3 = () => {
       ? "Required"
       : undefined)
   }
-/>
-
-                   
-                                        
-                        </>
+/>               
+                  </>
                       )}
 
                 {step === 2 && (
                   <>
-                   <Label htmlFor="supplierLegalName" className="text-slate-700">
+ <Label htmlFor="supplierLegalName" className="text-slate-700">
   Supplier Legal Name <span className="text-red-500">*</span>
 </Label>
 
@@ -1175,10 +1086,7 @@ const validateStep3 = () => {
                     }
                   />   
 
-
-
-
-    <Label htmlFor="websiteUrl" className="text-slate-700">
+  <Label htmlFor="websiteUrl" className="text-slate-700">
   Website URL <span className="text-red-500">*</span>
   <TooltipIcon
     id="tooltip-websiteUrl"
@@ -1214,315 +1122,33 @@ const validateStep3 = () => {
   }/>        
               </>
            )}
-            {step === 3 && (
-            <>
-                {/* TRADE LICENSE PANEL */}
-                     <Label  className="text-slate-700">
-                    Company Trade License <span className="text-red-500">*</span>                    
-                  </Label>
-             
-                <div
-                  className={`border-2 border-dashed rounded bg-white p-4 flex flex-col gap-3
-                    ${
-                      submitted.step3 &&
-                      (!form.tradeLicenseNumber.trim() || !form.tradeLicense)
-                        ? 'border-red-500'
-                        : 'border-[#00AFEF]'
-                    }`}
-                >
-                  {/* Trade License Number */}
+        {step === 3 && (
+    <SupplierDocuments
 
-                   <Label htmlFor="tradeLicenseNumber" className="text-slate-700">
-  Trade license number <span className="text-red-500">*</span>
-  
-</Label>
-                 <ShadInput
-    id="tradeLicenseNumber"
-    name="tradeLicenseNumber"
-    type="text"
-    required
-    placeholder="Trade license number"
-    value={form.tradeLicenseNumber}
-    onChange={e => {
-      setForm(prev => ({
-        ...prev,
-        tradeLicenseNumber: e.target.value,
-      }))
-      setTradeLicenseNumberError('')
-    }}
-    className="h-12 bg-white border border-slate-300 text-slate-900
-      placeholder:text-slate-400
-      focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
+    docGroups={docGroups}
+
+    uploadedFiles={uploadedFiles}
+    setUploadedFiles={setUploadedFiles}
+
+    selectedDocs={selectedDocs}
+    setSelectedDocs={setSelectedDocs}
+
+    tempDocs={tempDocs}
+    setTempDocs={setTempDocs}
+
+    multiFiles={multiFiles}
+    setMultiFiles={setMultiFiles}
+
+    multiDocs={multiDocs}
+    setMultiDocs={setMultiDocs}
+
+    handleAddMultiDocument={handleAddMultiDocument}
+
   />
-
-                  {tradeLicenseNumberError && (
-                    <p className="text-[11px] font-semibold text-red-600">
-                      ⓘ {tradeLicenseNumberError}
-                    </p>
-                  )}
-
-                  {/* Trade License Upload */}
-                  
-                 <FileInput
-                  label="Upload Trade License Certificate"
-                  required
-                  file={form.tradeLicense}
-                  borderClass="border-[#9ec5e5]"
-                  onBeforeSelect={() => {
-                    if (!form.tradeLicenseNumber.trim()) {
-                      setTradeLicenseNumberError('Please enter Trade License Number')
-                      return false   // stop picker
-                    }
-                    return true      //  allow picker
-                  }}
-                  onChange={file => {
-                    setTradeLicenseNumberError('')
-                    setForm(prev => ({ ...prev, tradeLicense: file }))
-                  }}
-
-                  existingFiles={step3FileNames} 
-                />
-                </div>
-
-               {submitted.step3 &&
-                (!form.tradeLicenseNumber.trim() || !form.tradeLicense) && (
-                  <p className="flex items-center gap-1 text-[11px] font-semibold text-red-600 mt-1">
-                    <AlertCircle size={12} className="shrink-0" />
-                    <span>Please upload Company Trade License</span>
-                  </p>
-                )}
-
-                {/* REGISTRATION CERTIFICATE PANEL */}
-                 <Label  className="text-slate-700">
-                   Company Registration Certificate  <span className="text-red-500">*</span>                    
-                  </Label>
-              
-              <div
-                className={`border-2 border-dashed rounded bg-white p-4 flex flex-col gap-3
-                  ${
-                    submitted.step3 &&
-                    (!form.compRegistrationNumber.trim() || !form.registrationCert)
-                      ? 'border-red-500'
-                      : 'border-[#00AFEF]'
-                  }`}
-              >
-                {/* Registration Certificate Number */}
-
-                   <Label htmlFor="compRegistrationNumber" className="text-slate-700">
-                    Company registration number <span className="text-red-500">*</span>                    
-                  </Label>
-                <ShadInput
-    id="compRegistrationNumber"
-    name="compRegistrationNumber"
-    type="text"
-    required
-    placeholder="Company registration number"
-    value={form.compRegistrationNumber}
-    onChange={e => {
-      setForm(prev => ({
-        ...prev,
-        compRegistrationNumber: e.target.value,
-      }))
-      setRegistrationCertNumberError('')
-    }}
-    className="h-12 bg-white border border-slate-300 text-slate-900
-      placeholder:text-slate-400
-      focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
-  />
-
-                {registrationCertNumberError && (
-                  <p className="text-[11px] font-semibold text-red-600">
-                    ⓘ {registrationCertNumberError}
-                  </p>
-                )}
-
-                {/* Registration Certificate Upload */}
-              <FileInput
-                label="Upload Registration Certificate"
-                required
-                file={form.registrationCert}
-                borderClass="border-[#9ec5e5]"
-                onBeforeSelect={() => {
-                  if (!form.compRegistrationNumber.trim()) {
-                    setRegistrationCertNumberError(
-                      'Please enter Company Registration Number'
-                    )
-                    return false   //  block file picker
-                  }
-                  return true      //  allow picker
-                }}
-                onChange={file => {
-                  setRegistrationCertNumberError('')
-                  setForm(prev => ({ ...prev, registrationCert: file }))
-                }}
-                existingFiles={step3FileNames} 
-              />
-              </div>
-              {submitted.step3 &&
-                (!form.compRegistrationNumber.trim() || !form.registrationCert) && (
-                  <p className="flex items-center gap-1 text-[11px] font-semibold text-red-600 mt-1">
-                    <AlertCircle size={12} className="shrink-0" />
-                    <span>Please upload Company Registration Certificate</span>
-                  </p>
-                )}
-
-                {/* PANEL TITLE */}
-
-                 <Label  className="text-slate-700">
-                    Tax Document Details  <span className="text-red-500">*</span>                    
-                  </Label>
-            
-                <div className={`border-2 border-dashed rounded bg-white p-4 flex flex-col gap-4 ${getTaxPanelBorderClass()}`}>
-
-                {/* TAX DOCUMENT TYPE */}
-                <div className="flex flex-col gap-1">
-
-                  <Label  className="text-slate-700">
-                    Tax Document Type  <span className="text-red-500">*</span>                    
-                  </Label>                                
-
-                      <div className="relative">
-                           <Select
-  value={form.taxDocType || undefined}
-  onValueChange={(value) => {
-    setForm((prev) => ({
-      ...prev,
-      taxDocType: value,
-      panTaxId: '',
-      taxRegistrationDoc: null,
-    }))
-
-    setTaxIdError('')
-  }}
->
-  <SelectTrigger
-    className={`w-full !h-12 bg-white border border-slate-300 
-    text-slate-900 placeholder:text-slate-400 
-    focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
-    `}
-  >
-    <SelectValue placeholder="Select document type" />
-  </SelectTrigger>
-
-   <SelectContent
-    position="popper"
-    side="bottom"
-    align="start"
-    sideOffset={6}
-    avoidCollisions={false}
-    className="bg-white border-slate-200 z-[999]"
-  >
-    {docTypes.length === 0 ? (
-      <SelectItem value="loading" disabled>
-        Loading document types...
-      </SelectItem>
-    ) : (
-      docTypes.map((doc) => (
-        <SelectItem
-          key={doc.document_type}
-          value={doc.document_type}   // stored value
-        >
-          {doc.description}           
-        </SelectItem>
-      ))
-    )}
-  </SelectContent>
-</Select>
-
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
-                              ▾
-                            </span>
-                      </div>
-                </div>
-
-                    {/* TAX NUMBER + UPLOAD (ONLY WHEN TYPE SELECTED) */}
-                    {form.taxDocType && (
-                      <>
-                        {/* TAX NUMBER */}
-                    
-<Label htmlFor='panTaxId' className="text-slate-700">
-    {form.taxDocType} Number <span className="text-red-500">*</span>
-  </Label>
-
-  <ShadInput
-    id="panTaxId"
-    name="panTaxId"
-    type="text"
-    required
-    placeholder={`Enter ${form.taxDocType} Number`}
-    value={form.panTaxId}
-    onChange={e => {
-      const value = e.target.value.toUpperCase()
-      setForm(prev => ({
-        ...prev,
-        panTaxId: value,
-      }))
-    const result = validateTaxId(value, form.taxDocType)
-    setTaxIdError(result.error)
-    }}
-    className="h-12 bg-white border border-slate-300 text-slate-900
-      placeholder:text-slate-400
-      focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
-  />
-
-                        {taxIdError && (
-                          <p className={errorTextClass}>ⓘ {taxIdError}</p>                      
-                        )}
-
-                        {/* FILE UPLOAD */}
-                        <FileInput
-                          label={`Upload ${form.taxDocType} Document`}
-                          required
-                          file={form.taxRegistrationDoc}
-                         borderClass="border-[#00AFEF]"
-                          onBeforeSelect={() => {
-                            if (!form.panTaxId.trim()) {
-                              setTaxIdError(
-                                `Please enter ${form.taxDocType} number`
-                              )
-                              return false   //  block file picker
-                            }
-                            return true      // allow picker
-                          }}
-                        onChange={file =>
-                          setForm(prev => ({ ...prev, taxRegistrationDoc: file }))
-                        }
-                        existingFiles={step3FileNames} 
-                      />
-                      </>
-                    )}
-
-             </div>
-
-             {submitted.step3 &&
-              (
-                !form.taxDocType ||
-                !form.panTaxId.trim() ||
-                !form.taxRegistrationDoc
-              ) && (
-                <p className="flex items-center gap-1 text-[11px] font-semibold text-red-600 mt-1">
-                  <AlertCircle size={12} className="shrink-0" />
-                  <span>Please upload Tax Document</span>
-                </p>
-              )}
-
-
-                  <MultiFileInput
-                    label="Other Documents"
-                    files={form.otherDocs}
-                    existingFiles={step3FileNames} 
-                    onChange={files =>
-                      setForm(prev => ({ ...prev, otherDocs: files }))
-                    }
-                  />
-                
-                  </>
-                )}
-                
+)}                
             </div>
           </div>
         
-
             {/* FOOTER – FIXED */}
         <div className="shrink-0 pt-4  border-gray-200">
               {step === 1 && (
@@ -1543,8 +1169,13 @@ const validateStep3 = () => {
                       onClick={() => {
                         setSubmitted(prev => ({ ...prev, step1: true }))
 
-                        const result = validateStep1()
-
+                        const result = validateStep1(form, {
+                              emailError,
+                              phoneError,
+                              usernameError,
+                              passwordError,
+                              confirmPasswordError
+                            })
                         if (result === 'EMPTY') {
                           setError('Kindly fill-up all the mandatory fields.')
                           return
@@ -1557,15 +1188,12 @@ const validateStep3 = () => {
 
                         setError('')
                         setStep(2)
-                      }}
-                    
+                      }}                    
                     >
                       Next
-                  </PremiumButton>
-                                  
+                  </PremiumButton>                                  
                   </div>
                   )}
-
               {step === 2 && (
               <div className="flex justify-between gap-4 pt-4">
 
@@ -1584,38 +1212,52 @@ const validateStep3 = () => {
                      >
                     Back
                   </PremiumButton>
+                  
+                 <PremiumButton
+                    type="button"
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    onClick={async () => {
 
+                      setSubmitted(prev => ({ 
+                        ...prev, 
+                        step2: true 
+                      }))
 
-                  <PremiumButton
-                      type="button"
-                        variant="primary"
-                        size="lg"
-                        className="w-full"
-                  onClick={() => {
-                setSubmitted(prev => ({ ...prev, step2: true }))
+                      const result = validateStep2(
+                        form,
+                        websiteError
+                      )
 
-                 const result = validateStep2()
+                      if (result === 'EMPTY') {
+                        setError(
+                          'Kindly fill-up all the mandatory fields.'
+                        )
+                        return
+                      }
 
-                  if (result === 'EMPTY') {
-                    setError('Kindly fill-up all the mandatory fields.')
-                    return
-                  }
+                      if (result === 'INVALID') {
+                        setError(
+                          'Please fill the mandatory fields correctly'
+                        )
+                        return
+                      }
 
-                  if (result === 'INVALID') {
-                    setError('Please fill the mandatory fields correctly')
-                    return
-                  }
+                      setError('')
 
-                  setError('')
-                  setStep(3)
-                }}
-                     
+                      //  CALL SERVICE HERE
+                      await fetchSupplierDocGroups()
+
+                      //  MOVE TO STEP 3
+                      setStep(3)
+
+                    }}
                   >
                     Next
                   </PremiumButton>
                 </div>
               )}
-
           {step === 3 && (
            <div className="flex justify-between gap-4 pt-4">
 
@@ -1624,9 +1266,7 @@ const validateStep3 = () => {
                         variant="primary"
                         size="lg"
                         className='w-full'
-            onClick={() => setStep(2)}
-            
-          >
+            onClick={() => setStep(2)}   >
             Back
           </PremiumButton>
 
@@ -1634,13 +1274,13 @@ const validateStep3 = () => {
                       type="button"
                         variant="primary"
                         size="lg"
-                        className='w-full'
-          
-           onClick={() => {
-             setSubmitted(prev => ({ ...prev, step3: true }))
-
-            const result = validateStep3()
-
+                        className='w-full'          
+                    onClick={() => {
+                      setSubmitted(prev => ({ ...prev, step3: true }))
+                      const result = validateStep3(
+                        form,
+                        taxIdError
+                      )
             if (result === 'EMPTY') {
               setError('Kindly fill-up all the mandatory fields.')
               return
@@ -1672,10 +1312,6 @@ const validateStep3 = () => {
 }
 
 /* ================= INPUT ================= */
-
-
-
-
   function Input({
   label,
   required = false,

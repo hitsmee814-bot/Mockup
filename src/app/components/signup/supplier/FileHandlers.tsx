@@ -1,5 +1,5 @@
   
-  import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Upload as UploadIcon, Paperclip, X } from "lucide-react"
 import { Tooltip } from "react-tooltip"
   
@@ -164,8 +164,7 @@ type NamedDocument = {
       const [documentName, setDocumentName] = useState('')
       const documentNameRef = useRef<HTMLInputElement>(null)
       const [maxLimitError, setMaxLimitError] = useState('')
-      
-      
+            
 
       const handlePopupFileChange = (
       e: React.ChangeEvent<HTMLInputElement>
@@ -195,7 +194,6 @@ type NamedDocument = {
         return
       }
 
-
   //  Duplicate check across entire Step 3
   const duplicate = filesArray.find(file =>
     existingFiles.includes(file.name.toLowerCase())
@@ -219,17 +217,10 @@ type NamedDocument = {
     e.target.value = ''
     return
   }
-
-
-
-
       //  Valid files
       setPopupError('')
       setTempFiles(filesArray)
     }
-
-
-
 
     useEffect(() => {
     if (open) {
@@ -243,8 +234,6 @@ type NamedDocument = {
   }, [open])
 
 
-
-
   const addFiles = () => {
   // 1️ Document name required
   if (!documentName.trim()) {
@@ -253,14 +242,13 @@ type NamedDocument = {
     return
   }
 
-  // 2️⃣Files mandatory
+  // Files mandatory
   if (tempFiles.length === 0) {
     setPopupError('Please upload at least one document')
     return
   }
 
-
-  // 2️ Duplicate file check vs existing list
+  // Duplicate file check vs existing list
   const existingFileNames = files.map(
     doc => doc.file.name.toLowerCase()
   )
@@ -282,7 +270,7 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
     return
   }
 
-  // 4️ File size validation
+  // File size validation
   const oversized = tempFiles.find(
     file => file.size / (1024 * 1024) > MAX_FILE_SIZE_MB
   )
@@ -292,7 +280,7 @@ if (existingDocNames.includes(documentName.trim().toLowerCase())) {
     return
   }
 
-  // 5️ Max file count
+  //  Max file count
   if (files.length + tempFiles.length > maxFiles) {
     setPopupError(`Maximum ${maxFiles} documents allowed`)
     return
