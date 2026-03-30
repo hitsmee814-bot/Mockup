@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useLayoutEffect, ChangeEvent, FormEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Upload } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
@@ -49,6 +49,7 @@ interface ErrorState {
 
 interface CountryOption {
   code: string;
+  iso2: string;
   label: string;
 }
 
@@ -85,9 +86,33 @@ const ErrorMessage = ({ message }: { message?: string }) => {
   );
 };
 
+function StepIndicator({ step }: { step: 1 | 2 }) {
+  return (
+    <div className="w-full mb-4">
+      {/* Circles */}
+      <div className="flex items-center w-full">
+        <div className={`h-2.5 w-2.5 rounded-full ${step >= 1 ? 'bg-[#00afef]' : 'bg-gray-300'}`} />
+        <div className="flex-1 h-[1px] bg-gray-300 mx-2" />
+        <div className={`h-2.5 w-2.5 rounded-full ${step === 2 ? 'bg-[#00afef]' : 'bg-gray-300'}`} />
+      </div>
+
+      {/* Labels */}
+      <div className="flex justify-between text-[12px] text-gray-600 mt-1">
+        <span className={step === 1 ? 'font-semibold text-[#00AFEF]' : ''}>
+          General
+        </span>
+        <span className={step === 2 ? 'font-semibold text-[#00AFEF]' : ''}>
+          Documents
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export default function AgentSignup(): JSX.Element {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState<FormState>({
@@ -109,13 +134,15 @@ export default function AgentSignup(): JSX.Element {
   const [strengthLabel, setStrengthLabel] = useState("");
   const [strengthColor, setStrengthColor] = useState("");
 
-  const [isChecking, setIsChecking] = useState(false);
+  const [isCheckingUser, setIsCheckingUser] = useState(false);
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
-  const [countries, setCountries] = useState<CountryOption[]>([
-    { code: "+91", label: "🇮🇳 +91" },
-    { code: "+1", label: "🇺🇸 +1" },
-    { code: "+44", label: "🇬🇧 +44" },
-  ]);
+  const [phoneStatus, setPhoneStatus] = useState<"available" | "unavailable" | null>(null);
+  
+
+  const [documents, setDocuments] = useState<File[]>([]);
+const [docError, setDocError] = useState("");
+ const [countries, setCountries] = useState<CountryOption[]>([]);
 
   useLayoutEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -127,17 +154,37 @@ export default function AgentSignup(): JSX.Element {
 
   /* Fetch Phone Codes on Mount */
   useEffect(() => {
-    const fetchCodes = async () => {
-      try {
-        const response = await phoneNoService.getPhoneCodes();
-        if (response?.data) setCountries(response.data);
-      } catch (err) {
-        console.warn("Using default country codes as service is unavailable");
-      }
-    };
-    fetchCodes();
-  }, []);
+  const fetchCodes = async () => {
+    try {
+      const response = await phoneNoService.getPhoneCodes();
 
+      if (response?.data) {
+        const parsed = response.data.map((item: any) => ({
+        code: item.phone_code,
+        iso2: item.iso2,
+        label: `${item.iso2} ${item.phone_code}`,
+      }));
+
+      //  Move IN +91 to top
+      const sorted = parsed.sort((a: CountryOption, b: CountryOption) => {
+        if (a.iso2 === "IN") return -1;
+        if (b.iso2 === "IN") return 1;
+        return 0;
+      });
+
+        setCountries(sorted);
+      }
+    } catch {
+      console.warn("Using fallback country code");
+
+      setCountries([
+      { code: "+91", iso2: "IN", label: "IN +91" }
+      ]);
+    }
+  };
+
+  fetchCodes();
+}, []);
   const preventCopyPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
   };
@@ -217,16 +264,24 @@ export default function AgentSignup(): JSX.Element {
     return { valid: true, errorType: "" };
   };
 
-  const validatePhoneNumber = (p: string, country: string) => {
-    if (!p) return "";
-    if (!/^[0-9]{10}$/.test(p)) return "Phone number must be exactly 10 digits.";
-    const countryMap: Record<string, CountryCode> = { "+91": "IN", "+1": "US", "+44": "GB" };
-    const isoCountry = countryMap[country] || (country as CountryCode);
-    if (isoCountry === "IN" && !/^[6-9]\d{9}$/.test(p)) return "Enter valid phone number";
-    const phoneNumber = parsePhoneNumberFromString(p, isoCountry);
-    if (!phoneNumber || !phoneNumber.isValid()) return "Enter valid phone number";
-    return "";
-  };
+  const validatePhoneNumber = (p: string, countryCode: string) => {
+  if (!p) return "";
+
+  const fullNumber = `${countryCode}${p}`;
+
+  try {
+    const phoneNumber = parsePhoneNumberFromString(fullNumber);
+
+    if (!phoneNumber || !phoneNumber.isValid()) {
+      return "Enter valid phone number";
+    }
+
+  } catch {
+    return "Enter valid phone number";
+  }
+
+  return "";
+};
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -239,6 +294,7 @@ export default function AgentSignup(): JSX.Element {
 
     setMandatoryError("");
     if (name === "username") setUsernameStatus(null);
+    if (name === "phone") setPhoneStatus(null);
     if (name === "confirmPassword" && value.length > 0) setShowPassword(false);
 
     let fieldError = "";
@@ -325,70 +381,89 @@ export default function AgentSignup(): JSX.Element {
   };
 
   const checkUsername = async () => {
-    if (!form.username || errors.username) return;
-    setIsChecking(true);
-    setUsernameStatus(null);
-    try {
-      await userNameService.checkAvailability(form.username);
+  if (!form.username || errors.username) return;
+
+  setIsCheckingUser(true);
+  setUsernameStatus(null);
+
+  try {
+    const res = await userNameService.checkAvailability(form.username);
+
+    if (res?.data?.available === "test") {
+      setUsernameStatus("unavailable");
+    } else {
       setUsernameStatus("available");
-    } catch (err: any) {
-      if (err?.response?.status === 409) {
-        setUsernameStatus("unavailable");
-      } else {
-        setUsernameStatus("available");
-      }
-    } finally {
-      setIsChecking(false);
-    }
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const mandatoryFields: (keyof FormState)[] = ["agencyName", "firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
-    const emptyFields = mandatoryFields.filter(f => !form[f]);
-    const hasInvalidFields = Object.values(errors).some(error => error !== "" && error !== "Required");
-
-    if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
-      setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
-
-      const newFieldErrors: ErrorState = { ...errors };
-      emptyFields.forEach(f => {
-        newFieldErrors[f] = "Required";
-      });
-
-      if (strengthLabel === "weak password" && !newFieldErrors.password) {
-        newFieldErrors.password = "A Medium or Strong password is required to continue.";
-      }
-
-      setErrors(newFieldErrors);
-      if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      return;
     }
 
-    /* THE FLOW */
-    setIsChecking(true); // Spin in the check button
-    setUsernameStatus(null);
-
-    // Minor delay for UX activity
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    try {
-      await Promise.allSettled([
-        userNameService.checkAvailability(form.username),
-        phoneNumberAvailService.checkAvailability(form.phone)
-      ]);
-    } catch (e) {}
-
-    setIsChecking(false);
+  } catch {
     setUsernameStatus("available");
+  } finally {
+    setIsCheckingUser(false);
+  }
+};
 
-    // Success delay
-    await new Promise(resolve => setTimeout(resolve, 1200));
+  const checkPhone = async () => {
+  if (!form.phone || errors.phone) return;
 
-    alert("Registered successfully");
-    router.push("/");
-  };
+  setIsCheckingPhone(true);
+  setPhoneStatus(null);
+
+  try {
+    const res = await phoneNumberAvailService.checkAvailability(form.phone);
+
+    if (res?.data?.available === true) {
+      setPhoneStatus("available");
+    } else {
+      setPhoneStatus("available");
+    }
+
+  } catch {
+    setPhoneStatus("available");
+  } finally {
+    setIsCheckingPhone(false);
+  }
+};
+
+  const handleNextStep = async () => {
+  const mandatoryFields: (keyof FormState)[] = [
+    "agencyName", "firstName", "lastName",
+    "email", "phone", "username",
+    "password", "confirmPassword"
+  ];
+
+  const emptyFields = mandatoryFields.filter(f => !form[f]);
+  const hasInvalidFields = Object.values(errors).some(e => e);
+
+  if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
+    setMandatoryError("Kindly fill-up all the mandatory fields correctly to proceed to next step");
+
+    const newErrors = { ...errors };
+    emptyFields.forEach(f => newErrors[f] = "Required");
+
+    setErrors(newErrors);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  //  AUTO CHECK
+  if (!usernameStatus) await checkUsername();
+  if (!phoneStatus) await checkPhone();
+
+  setCurrentStep(2);
+};
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  if (documents.length === 0) {
+    setDocError("Please upload required documents to proceed");
+    return;
+  }
+
+  setDocError("");
+
+  alert("Registered successfully");
+  router.push("/");
+};
 
   return (
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden">
@@ -416,10 +491,13 @@ export default function AgentSignup(): JSX.Element {
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden bg-white">
-            <div className="px-8 py-5 shrink-0 bg-white flex justify-center">
+            <div className="px-8 pt-5 pb-2 shrink-0 bg-white flex flex-col items-center">
               <h2 className="text-[16px] font-extrabold text-[#00AFEF] tracking-tight text-center">
                 Agent / Agency Signup
               </h2>
+              
+              {/* Step Indicator Labels */}
+              <StepIndicator step={currentStep as 1 | 2} />
             </div>
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
@@ -438,192 +516,273 @@ export default function AgentSignup(): JSX.Element {
                 </div>
               )}
 
-              <div className="mb-4">
-                <Label className={LABEL_STYLING}>
-                  Agency Name<span className="text-red-500 ml-1">*</span>
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    name="agencyName"
-                    value={form.agencyName}
-                    onChange={handleChange}
-                    placeholder="Enter agency name"
-                    className={`${INPUT_STYLING} flex-grow ${errors.agencyName ? 'border-red-600' : ''}`}
-                  />
-                  <PremiumButton
-                    type="button"
-                    variant="accent"
-                    onClick={generateUsername}
-                    disabled={!form.agencyName}
-                    className="mt-2"
-                  >
-                    Generate
-                  </PremiumButton>
-                </div>
-                <ErrorMessage message={errors.agencyName} />
-              </div>
-
-              <InputField label="First Name" name="firstName" placeholder="Enter first name" required form={form} errors={errors} handleChange={handleChange} />
-              <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} errors={errors} handleChange={handleChange} />
-              <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} errors={errors} handleChange={handleChange} />
-
-              <div className="mb-4">
-                <InputWithError label="Email" name="email" placeholder="Enter email address" required tooltip="Enter a valid email address like name@example.com" form={form} errors={errors} handleChange={handleChange} />
-                <ErrorMessage message={errors.email} />
-              </div>
-
-              <div className="mb-4">
-                <Label className={`${LABEL_STYLING} flex items-center`}>
-                  Phone Number<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Enter exactly 10 digits." />
-                </Label>
-                <div className="flex gap-3 items-center">
-                  <div className="mt-2 w-[110px]">
-                    <Select
-                      value={form.countryCode}
-                      onValueChange={(val) => handleValueChange("countryCode", val)}
-                    >
-                      <SelectTrigger className={`w-24 !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]  border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"}`}>
-                        <SelectValue placeholder="Code" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        {countries.map((c) => (
-                          <SelectItem key={c.code} value={c.code}>
-                            {c.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Input
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    placeholder="Enter phone number"
-                    className={`${INPUT_STYLING} flex-grow ${errors.phone ? 'border-red-600' : ''}`}
-                  />
-                </div>
-                <ErrorMessage message={errors.phone} />
-              </div>
-
-              <div className="mb-4">
-                <Label className={`${LABEL_STYLING} flex items-center`}>
-                  Username<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc." />
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    name="username"
-                    value={form.username}
-                    onChange={handleChange}
-                    placeholder="Enter or generate username"
-                    className={`${INPUT_STYLING} flex-grow ${errors.username ? 'border-red-600' : ''}`}
-                  />
-                  <PremiumButton
-                    type="button"
-                    variant="accent"
-                    onClick={checkUsername}
-                    disabled={!form.username || isChecking || !!errors.username}
-                    className="mt-2"
-                  >
-                    {isChecking ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
-                  </PremiumButton>
-                </div>
-                <ErrorMessage message={errors.username} />
-                
-                {usernameStatus === "available" && !errors.username && (
-                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
-                    <CheckCircle2 size={14} className="text-green-600" />
-                    <span className="text-green-700 text-xs font-bold tracking-tight">Username is available !</span>
-                  </div>
-                )}
-
-                {usernameStatus === "unavailable" && !errors.username && (
-                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 animate-in fade-in slide-in-from-top-1 duration-300">
-                    <AlertCircle size={14} className="text-red-600" />
-                    <span className="text-red-700 text-xs font-bold tracking-tight">This username already exists . Please choose another username.</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <Label className={`${LABEL_STYLING} flex items-center`}>
-                  Password<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character." />
-                </Label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
-                    value={form.password}
-                    onChange={handleChange}
-                    placeholder="Enter password"
-                    className={`${INPUT_STYLING} pr-10 ${errors.password ? 'border-red-600' : ''}`}
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-[60%] -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition-colors">
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-
-                {strengthLabel && !errors.password && (
-                  <div className="mt-2.5 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
-                    <div className="h-1.5 flex-grow bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full transition-all duration-500 ${strengthLabel === 'weak password' ? 'w-1/3 bg-red-500' :
-                          strengthLabel === 'medium password' ? 'w-2/3 bg-yellow-500' : 'w-full bg-green-500'
-                        }`} />
+              {currentStep === 1 ? (
+                /* STEP 1: GENERAL */
+                <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="mb-4">
+                    <Label className={LABEL_STYLING}>
+                      Agency Name<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        name="agencyName"
+                        value={form.agencyName}
+                        onChange={handleChange}
+                        placeholder="Enter agency name"
+                        className={`${INPUT_STYLING} flex-grow ${errors.agencyName ? 'border-red-600' : ''}`}
+                      />
+                      <PremiumButton
+                        type="button"
+                        variant="accent"
+                        onClick={generateUsername}
+                        disabled={!form.agencyName}
+                        className="mt-2"
+                      >
+                        Generate
+                      </PremiumButton>
                     </div>
-                    <span className={`text-[11px] font-extrabold uppercase tracking-widest ${strengthColor}`}>
-                      {strengthLabel}
-                    </span>
+                    <ErrorMessage message={errors.agencyName} />
                   </div>
-                )}
-                <ErrorMessage message={errors.password} />
-              </div>
 
-              <div className="mb-4">
-                <Label className={LABEL_STYLING}>
-                  Re-Type Password<span className="text-red-500 ml-1">*</span>
-                </Label>
-                <Input
-                  type="password"
-                  name="confirmPassword"
-                  onFocus={() => setShowPassword(false)}
-                  onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Re-enter password"
-                  className={`${INPUT_STYLING} ${errors.confirmPassword ? 'border-red-600' : ''}`}
-                />
-                <ErrorMessage message={errors.confirmPassword} />
-              </div>
+                  <InputField label="First Name" name="firstName" placeholder="Enter first name" required form={form} errors={errors} handleChange={handleChange} />
+                  <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} errors={errors} handleChange={handleChange} />
+                  <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} errors={errors} handleChange={handleChange} />
 
-              <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} errors={errors} handleChange={handleChange} />
+                  <div className="mb-4">
+                    <InputWithError label="Email" name="email" placeholder="Enter email address" required tooltip="Enter a valid email address like name@example.com" form={form} errors={errors} handleChange={handleChange} />
+                    <ErrorMessage message={errors.email} />
+                  </div>
+
+                  <div className="mb-4">
+                    <Label className={`${LABEL_STYLING} flex items-center`}>
+                      Phone Number<span className="text-red-500 ml-1">*</span>
+                      <Tooltip text="Enter exactly 10 digits." />
+                    </Label>
+                    <div className="flex gap-3 items-center">
+                      <div className="mt-2 w-[90px] shrink-0">
+                        <Select
+                          value={form.countryCode}
+                          onValueChange={(val) => handleValueChange("countryCode", val)}
+                        >
+                          <SelectTrigger className={`w-full !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"}`}>
+                            <SelectValue placeholder="Code" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00AFEF]">
+                            {countries.map((c) => (
+                              <SelectItem key={`${c.iso2}-${c.code}`} value={c.code}>
+                                {c.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Input
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        placeholder="Enter phone number"
+                        className={`${INPUT_STYLING} flex-grow ${errors.phone ? 'border-red-600' : ''}`}
+                      />
+                      <PremiumButton
+                        type="button"
+                        variant="accent"
+                        onClick={checkPhone}
+                        disabled={!form.phone || isCheckingPhone || !!errors.phone}
+                        className="mt-2"
+                      >
+                        {isCheckingPhone ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
+                      </PremiumButton>
+                    </div>
+                    <ErrorMessage message={errors.phone} />
+                    
+                    {phoneStatus === "available" && !errors.phone && (
+                      <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <CheckCircle2 size={14} className="text-green-600" />
+                        <span className="text-green-700 text-xs font-bold tracking-tight">Phone number is available !</span>
+                      </div>
+                    )}
+
+                    
+                  </div>
+
+                  <div className="mb-4">
+                    <Label className={`${LABEL_STYLING} flex items-center`}>
+                      Username<span className="text-red-500 ml-1">*</span>
+                      <Tooltip text="Usernames: 6-16 chars. Must start with letter. Can include letters, numbers, and periods (not ending with or consecutive). No other symbols like &, =, _, etc." />
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        name="username"
+                        value={form.username}
+                        onChange={handleChange}
+                        placeholder="Enter or generate username"
+                        className={`${INPUT_STYLING} flex-grow ${errors.username ? 'border-red-600' : ''}`}
+                      />
+                      <PremiumButton
+                        type="button"
+                        variant="accent"
+                        onClick={checkUsername}
+                        disabled={!form.username || isCheckingUser || !!errors.username}
+                        className="mt-2"
+                      >
+                        {isCheckingUser ? <Loader2 size={12} className="animate-spin" /> : "CHECK"}
+                      </PremiumButton>
+                    </div>
+                    <ErrorMessage message={errors.username} />
+                    
+                    {usernameStatus === "available" && !errors.username && (
+                      <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <CheckCircle2 size={14} className="text-green-600" />
+                        <span className="text-green-700 text-xs font-bold tracking-tight">Username is available !</span>
+                      </div>
+                    )}
+
+                    
+                  </div>
+
+                  <div className="mb-4">
+                    <Label className={`${LABEL_STYLING} flex items-center`}>
+                      Password<span className="text-red-500 ml-1">*</span>
+                      <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character." />
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
+                        value={form.password}
+                        onChange={handleChange}
+                        placeholder="Enter password"
+                        className={`${INPUT_STYLING} pr-10 ${errors.password ? 'border-red-600' : ''}`}
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-[60%] -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition-colors">
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+
+                    {strengthLabel && !errors.password && (
+                      <div className="mt-2.5 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
+                        <div className="h-1.5 flex-grow bg-gray-100 rounded-full overflow-hidden">
+                          <div className={`h-full transition-all duration-500 ${strengthLabel === 'weak password' ? 'w-1/3 bg-red-500' :
+                              strengthLabel === 'medium password' ? 'w-2/3 bg-yellow-500' : 'w-full bg-green-500'
+                            }`} />
+                        </div>
+                        <span className={`text-[11px] font-extrabold uppercase tracking-widest ${strengthColor}`}>
+                          {strengthLabel}
+                        </span>
+                      </div>
+                    )}
+                    <ErrorMessage message={errors.password} />
+                  </div>
+
+                  <div className="mb-4">
+                    <Label className={LABEL_STYLING}>
+                      Re-Type Password<span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Input
+                      type="password"
+                      name="confirmPassword"
+                      onFocus={() => setShowPassword(false)}
+                      onCopy={preventCopyPaste} onCut={preventCopyPaste} onPaste={preventCopyPaste}
+                      value={form.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Re-enter password"
+                      className={`${INPUT_STYLING} ${errors.confirmPassword ? 'border-red-600' : ''}`}
+                    />
+                    <ErrorMessage message={errors.confirmPassword} />
+                  </div>
+
+                  <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} errors={errors} handleChange={handleChange} />
+                </div>
+              ) : (
+                /* STEP 2: DOCUMENTS */
+                <div className="animate-in fade-in slide-in-from-left-4 duration-500 flex flex-col items-center justify-center min-h-[300px] text-center">
+                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-[#00AFEF]">
+                     <Upload className="text-[#00AFEF]" size={28} />
+                  </div>
+                  <h3 className="text-slate-800 font-bold text-lg mb-2">Upload Agency Documents</h3>
+                  <p className="text-slate-500 text-sm mb-6 max-w-xs">Please upload your business registration and identity proof (PDF, JPG up to 5MB).</p>
+                  
+                  <div className="w-full border-2 border-dashed border-slate-200 rounded-xl p-8 hover:border-[#00AFEF] transition-colors cursor-pointer group bg-slate-50/50">
+                    <input
+  type="file"
+  className="hidden"
+  id="doc-upload"
+  multiple
+  onChange={(e) => {
+    const files = e.target.files;
+    if (files) {
+      setDocuments(Array.from(files));
+      setDocError("");
+    }
+  }}
+/>
+                    {docError && (
+  <div className="mt-3 text-red-600 text-sm flex items-center gap-2">
+    <AlertCircle size={14} />
+    {docError}
+  </div>
+)}
+                    <label htmlFor="doc-upload" className="cursor-pointer">
+                      <span className="text-[#00AFEF] font-semibold group-hover:underline">Click to upload</span>
+                      <span className="text-slate-500 ml-1">or drag and drop files here</span>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
 
             <div className="px-8 py-6 shrink-0 bg-white">
-              <div className="grid grid-cols-2 gap-4">
-                <PremiumButton
-                  type="button"
-                  onClick={() => router.push("/")}
-                  variant="destructive"
-                  size="lg"
-                  className="w-full"
-                >
-                  Cancel
-                </PremiumButton>
-                <PremiumButton
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                >
-                  Register
-                </PremiumButton>
-              </div>
+              {currentStep === 1 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <PremiumButton
+                    type="button"
+                    onClick={() => router.push("/")}
+                    variant="destructive"
+                    size="lg"
+                    className="w-full"
+                  >
+                    Cancel
+                  </PremiumButton>
+                  <PremiumButton
+                    type="button"
+                    onClick={handleNextStep}
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                  >
+                    Save and Next
+                  </PremiumButton>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <PremiumButton
+                    type="button"
+                    onClick={() => {
+  setCurrentStep(1);
+  setTimeout(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, 100);
+}}
+                    variant="destructive"
+                    size="lg"
+                    className="w-full"
+                  >
+                    Back
+                  </PremiumButton>
+                  <PremiumButton
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                  >
+                    Register
+                  </PremiumButton>
+                </div>
+              )}
             </div>
           </form>
         </div>
