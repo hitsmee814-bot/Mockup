@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label"
 import { PremiumButton } from "../../../utils/PremiumButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { phoneNoService } from "@/services/phoneNoService";
+import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
 import {
   validateEmail,
   validatePhone,
@@ -30,6 +32,7 @@ import SupplierDocuments from "./SupplierDocuments"
 import ServiceTypeSelect from "./ServiceTypeSelect"
 import { countryListService } from "@/services/countryListService";
 import { docTypelookupService } from "@/services/docTypes";
+import { userNameService } from "@/services/userNameService";
 
 /* ================= TYPES ================= */
 type NamedDocument = {
@@ -78,19 +81,15 @@ type FormData = {
     const blockContextMenu = (e: React.MouseEvent<HTMLInputElement>) => {
      e.preventDefault()
     }
-  
+
  const labelClass = "text-[12px] font-medium text-[#1A1A1A]"; 
+
+  
 const errorTextClass = "text-[11px] font-semibold text-red-600";
 const inputTextClass = "text-[12px] text-black";
 const placeholderClass = "placeholder:text-[12px] placeholder:text-gray-400";
 const inputClass = `h-[38px] w-full rounded border border-[#00AFEF] bg-white px-3 
    ${inputTextClass} ${placeholderClass} focus:outline-none`;
-const COUNTRY_CODES = [
-  { code: '+1', label: 'US' },
-  { code: '+44', label: 'UK' },
-  { code: '+91', label: 'IN' },
-  
-]
 const dropdownInputClass =
   `${inputClass} flex items-center justify-between cursor-pointer`
 
@@ -122,6 +121,7 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
     </div>
   )
 }
+
 
 
 function ErrorMessage({ message }: { message?: string }) {
@@ -262,7 +262,10 @@ export default function SupplierSignup() {
       const [uploadedFiles, setUploadedFiles] = useState<{[key: number]: File | null}>({});
       const [docGroups, setDocGroups] = useState<any[]>([]);
       const [selectedDocs, setSelectedDocs] = useState<{ [key: number]: any }>({});
-
+      const [usernameSuccess, setUsernameSuccess] = useState("");
+      const [usernameError, setUsernameError] = useState<string>("");
+      const [phoneError, setPhoneError] = useState("");
+      const [phoneSuccess, setPhoneSuccess] = useState("");
         const [multiDocs, setMultiDocs] = useState<{
     [groupId: number]: any[]
   }>({});
@@ -278,6 +281,7 @@ export default function SupplierSignup() {
   name: string;
 };
 const [countries, setCountries] = useState<Country[]>([]);
+const [phoneCodes, setPhoneCodes] = useState<any[]>([])
 
 type DocType = {
   document_type: string;
@@ -294,7 +298,7 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
       const [step, setStep] = useState<1 | 2 | 3>(1)
       const [error, setError] = useState('')
       const [passwordError, setPasswordError] = useState('')
-      const [usernameError, setUsernameError] = useState('')
+     
       const [show, setShow] = useState(false)
       const [submitted, setSubmitted] = useState({
         step1: false,
@@ -308,12 +312,62 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
    
       const [emailError, setEmailError] = useState('')
       const [confirmPasswordError, setConfirmPasswordError] = useState('')
-      const [phoneError, setPhoneError] = useState('')
       const [taxIdError, setTaxIdError] = useState('')
       const [websiteError, setWebsiteError] = useState('')
       const [tradeLicenseNumberError, setTradeLicenseNumberError] = useState('')
       const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')        
-  useEffect(() => {
+       const [countryCodes, setCountryCodes] = useState([]);     
+
+useEffect(() => {
+
+  const fetchCountryCodes = async () => {
+
+    try {
+
+      const response =
+        await phoneNoService.getPhoneCodes();
+
+      console.log("Country Codes:", response);
+
+      // Ensure we always have an array
+      const codes = response || [];
+
+      // Store country codes
+      setCountryCodes(codes);
+
+      // ✅ Set default India (+91)
+      if (codes.length > 0) {
+
+        const india = codes.find(
+          (c: any) => c.iso2 === "IN"
+        );
+
+        if (india) {
+
+          setForm((prev) => ({
+            ...prev,
+            countryCode: `${india.iso2}-${india.phone_code}`,
+          }));
+
+        }
+
+      }
+
+    } catch (error) {
+
+      console.error("Country code fetch failed:", error);
+
+    }
+
+  };
+
+  fetchCountryCodes();
+
+}, []);
+
+
+
+      useEffect(() => {
   const fetchCountries = async () => {
     try {
       const res = await countryListService.getCountries();
@@ -328,6 +382,94 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
 
   fetchCountries();
 }, []);
+
+const checkPhoneNumber = async () => {
+
+  const mobile = form.phone?.trim();
+
+  if (!mobile) {
+
+    setPhoneError("Required");
+    setPhoneSuccess("");
+    return;
+
+  }
+
+  try {
+
+    const response =
+      await phoneNumberAvailService.checkAvailability(mobile);
+
+    console.log("Phone API Response:", response);
+
+    if (response?.available) {
+
+      setPhoneError("");
+      setPhoneSuccess("Phone number is available");
+
+    } else {
+
+      setPhoneError("Phone number already exists");
+      setPhoneSuccess("");
+
+    }
+
+  } catch (error) {
+
+    console.error("Phone check failed:", error);
+
+    setPhoneError("Unable to check phone number");
+    setPhoneSuccess("");
+
+  }
+
+};
+
+
+
+
+
+
+const checkUsername = async () => {
+
+  const username = form.username?.trim();
+
+  if (!username) {
+    setUsernameError("Required");
+    setUsernameSuccess("");
+    return;
+  }
+
+  try {
+
+    const response =
+      await userNameService.checkAvailability(username);
+
+    console.log("Username API Response:", response);
+
+    if (response?.available) {
+
+      //  Available
+      setUsernameError("");
+      setUsernameSuccess("Username is available");
+
+    } else {
+
+      //  Exists
+      setUsernameError("Username already exists");
+      setUsernameSuccess("");
+
+    }
+
+  } catch (error) {
+
+    console.error("Username check failed:", error);
+
+    setUsernameError("Unable to check username");
+    setUsernameSuccess("");
+
+  }
+};
 
 const fetchSupplierDocGroups = async () => {
 
@@ -375,7 +517,7 @@ const fetchSupplierDocGroups = async () => {
           middleName: '',
           lastName: '',
           email: '',
-          countryCode: '+91',
+          countryCode: "IN-+91",
           phone: '',
           username: '',
           password: '',
@@ -406,6 +548,7 @@ const fetchSupplierDocGroups = async () => {
         }
     // USERNAME VALIDATION
 if (name === "username") {
+  setUsernameSuccess("")
   const error = validateUsername(value)
   setUsernameError(error)
 }
@@ -414,6 +557,7 @@ if (name === "username") {
 }
 
       if (name === "phone") {
+        setPhoneSuccess("");
   setPhoneError(validatePhone(value, form.countryCode))
 }
 
@@ -776,9 +920,8 @@ const getTaxPanelBorderClass = () => {
   />
 </Label>
 
-<div
-  className={`flex gap-2 mt-2`}
->
+<div className="flex gap-2 mt-2 items-center">
+
   <Select
     value={form.countryCode}
     onValueChange={(value) =>
@@ -797,13 +940,23 @@ const getTaxPanelBorderClass = () => {
       <SelectValue placeholder="Code" />
     </SelectTrigger>
 
-    <SelectContent className="bg-white border-slate-200">
-      {COUNTRY_CODES.map((c) => (
-        <SelectItem key={c.code} value={c.code}>
-          {c.label} {c.code}
-        </SelectItem>
-      ))}
-    </SelectContent>
+   <SelectContent 
+    position="popper"
+  side="bottom"
+  align="start"
+ sideOffset={6}
+ avoidCollisions={false}
+   
+   className="bg-white border-slate-200">
+  {countryCodes.map((c: any, index: number) => (
+    <SelectItem
+      key={`${c.iso2}-${c.phone_code}-${index}`}
+      value={`${c.iso2}-${c.phone_code}`}
+    >
+      {c.iso2} ({c.phone_code})
+    </SelectItem>
+  ))}
+</SelectContent>
   </Select>
 
   <ShadInput
@@ -821,6 +974,19 @@ const getTaxPanelBorderClass = () => {
     }`}
     inputMode="numeric"
   />
+  <PremiumButton
+    type="button"
+    variant="primary"
+    disabled={
+    !form.phone ||          // empty
+    !!phoneError ||         // has validation error
+    form.phone.length !== 10 // not complete
+  }
+    onClick={checkPhoneNumber}
+    className="h-12"
+  >
+    Check
+  </PremiumButton>
 </div>
 
 <ErrorMessage
@@ -829,35 +995,69 @@ const getTaxPanelBorderClass = () => {
     (submitted.step1 && !form.phone.trim() ? "Required" : undefined)
   }
 />
+{phoneSuccess && (
+  <p className="text-green-600 text-sm mt-1">
+    {phoneSuccess}
+  </p>
+)}
                       </div>
+<Label htmlFor="username" className="text-slate-700">
+  Username <span className="text-red-500">*</span>
+  <TooltipIcon
+    id="tooltip-username"
+    content="Must start with a letter, followed by underscores or numbers. 6–16 characters allowed."
+  />
+</Label>
 
-                      <Label htmlFor="username" className="text-slate-700">
-                    Username <span className="text-red-500">*</span>
-                     <TooltipIcon
-                          id="tooltip-username"
-                          content="Must start with a letter, followed by underscores or numbers. 6–16 characters allowed." />
-                  </Label>
-                    <ShadInput
-                    id="username"
-                    name="username"
-                    type="text"
-                    required
-                    placeholder="Enter username"
-                    value={form.username}
-                    onChange={handleChange}                    
-                    className={`h-12 bg-white  border border-slate-300 text-slate-900
-                    placeholder:text-slate-400
-                    focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
-                    ${getBorderClass(submitted.step1,true,form.username, !!usernameError)}`} />                     
-                      
-                        <ErrorMessage
-                          message={
-                            usernameError ||
-                            (submitted.step1 && !form.username.trim()
-                              ? 'Required'
-                              : undefined)
-                          }
-                        /> 
+{/* Input + Check Button Row */}
+<div className="flex items-center gap-2">
+
+  <ShadInput
+    id="username"
+    name="username"
+    type="text"
+    required
+    placeholder="Enter username"
+    value={form.username}
+    onChange={handleChange}
+    className={`h-12 bg-white border border-slate-300 text-slate-900
+    placeholder:text-slate-400
+    focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+    ${getBorderClass(submitted.step1,true,form.username, !!usernameError)}`}
+  />
+
+  {/* Check Button */}
+
+   <PremiumButton 
+      type="button" 
+      variant="primary"
+      onClick={checkUsername} 
+      disabled={
+    !form.username ||        // empty
+    !!usernameError          // has validation error
+  }
+      className="h-12"
+     // icon={isUserChecking ? <Loader2 size={12} className="animate-spin" /> : null}
+      >
+      Check
+    </PremiumButton>
+
+
+</div>
+
+<ErrorMessage
+  message={
+    usernameError ||
+    (submitted.step1 && !form.username.trim()
+      ? 'Required'
+      : undefined)
+  }
+/>
+{usernameSuccess && (
+  <p className="text-green-600 text-sm mt-1">
+    {usernameSuccess}
+  </p>
+)}
                                                 
 
                            <Label htmlFor="password" className="text-slate-700">
