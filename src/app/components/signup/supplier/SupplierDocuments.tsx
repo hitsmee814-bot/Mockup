@@ -6,11 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input as ShadInput } from "@/components/ui/input"
 import { FileInput } from "./FileHandlers"
 import { PremiumButton } from "../../../utils/PremiumButton";
-import { Upload as UploadIcon, Paperclip, X } from "lucide-react"
+import { Upload as UploadIcon, Paperclip, X, AlertCircle } from "lucide-react"
 
 
 type Props = {
+
   docGroups: any[]
+
   uploadedFiles: { [key: number]: File | null }
   setUploadedFiles: React.Dispatch<
     React.SetStateAction<{ [key: number]: File | null }>
@@ -37,9 +39,16 @@ type Props = {
   >
 
   handleAddMultiDocument: (group: any) => void
+
+  
+  submitted: {
+    step3: boolean
+  }
+
 }
 
 export default function SupplierDocuments({
+
   docGroups,
   uploadedFiles,
   setUploadedFiles,
@@ -51,8 +60,88 @@ export default function SupplierDocuments({
   setMultiFiles,
   multiDocs,
   setMultiDocs,
-  handleAddMultiDocument
+  handleAddMultiDocument,
+
+  submitted   // ⭐ ADD THIS
+
 }: Props) {
+  const [identifierErrors, setIdentifierErrors] =
+  React.useState<{
+    [key: number]: string
+  }>({})
+  const getPanelBorderClass = (group: any) => {
+
+  if (!submitted.step3) {
+    return "border-[#00AFEF]"
+  }
+
+  // SINGLE FILE CASE
+  if (group.min > 0 && group.max === 1) {
+
+    const file =
+      uploadedFiles[group.groupid]
+ 
+
+    if (!file) {
+      return "border-red-500"
+    }
+
+  }
+
+  // MULTI FILE CASE
+  if (group.min > 0 && group.max > 1) {
+
+    const docs =
+      multiDocs[group.groupid] || []
+
+    if (docs.length < group.min) {
+      return "border-red-500"
+    }
+
+  }
+
+  return "border-[#00AFEF]"
+}
+const isGroupInvalid = (group: any) => {
+
+  if (!submitted.step3) return false
+
+  // SINGLE FILE
+  if (group.min > 0 && group.max === 1) {
+
+    const file =
+      uploadedFiles[group.groupid]
+
+    return !file
+  }
+
+  // MULTI FILE
+  if (group.min > 0 && group.max > 1) {
+
+    const docs =
+      multiDocs[group.groupid] || []
+
+    return docs.length < group.min
+  }
+
+  return false
+}
+
+const isIdentifierMissing = (group: any) => {
+
+  if (!submitted.step3) return false
+
+  if (group.min === 0) return false
+
+  const identifier =
+    tempDocs[group.groupid]
+      ?.identifierValue
+
+  const file =
+    uploadedFiles[group.groupid]
+
+  return !identifier && !file
+}
 
   return (
     <>
@@ -84,15 +173,15 @@ export default function SupplierDocuments({
 
             {/* DASHED PANEL */}
 
-            <div className="
-              border-2
-              border-dashed
-              border-[#00AFEF]
-              rounded
-              bg-white
-              p-4
-              min-h-[120px]
-            ">
+            <div   className={`
+                border-2
+                border-dashed
+                rounded
+                bg-white
+                p-4
+                min-h-[120px]
+                ${getPanelBorderClass(group)}
+              `}>
 
               {/* ===== SINGLE MEMBER ===== */}
 
@@ -110,28 +199,82 @@ export default function SupplierDocuments({
                       {member.identifier}
                     </Label>
 
-                    <ShadInput
-                      type="text"
-                      placeholder={`Enter ${member.identifier}`}
-                      className="h-12"
-                    />
+   <ShadInput
+  type="text"
 
-                    <FileInput
-                      label={`Upload ${member.description}`}
-                      required={group.min > 0}
-                      file={
-                        uploadedFiles[group.groupid] || null
-                      }
-                      onChange={(file) => {
+  placeholder={`Enter ${member.identifier}`}
 
-                        setUploadedFiles(prev => ({
-                          ...prev,
-                          [group.groupid]: file
-                        }))
+  value={
+    tempDocs[group.groupid]
+      ?.identifierValue || ""
+  }
+onChange={(e) => {
 
-                      }}
-                    />
+  setTempDocs(prev => ({
+    ...prev,
+    [group.groupid]: {
+      ...member,
+      identifierValue: e.target.value
+    }
+  }))
 
+  // clear upload error when typing
+
+  setIdentifierErrors(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
+
+}}
+
+  className="h-12"
+/>
+
+   <FileInput
+  label={`Upload ${member.description}`}
+
+  required={group.min > 0}
+
+  file={
+    uploadedFiles[group.groupid] || null
+  }
+
+  /* BLOCK FILE PICKER */
+  onBeforeSelect={() => {
+
+    const identifier =
+      tempDocs[group.groupid]
+        ?.identifierValue
+
+    if (!identifier) {
+
+      setIdentifierErrors(prev => ({
+        ...prev,
+        [group.groupid]:
+          `Please enter ${member.identifier}`
+      }))
+
+      return false   //  block picker
+    }
+
+    return true      // allow picker
+  }}
+
+  /*  SAVE FILE */
+  onChange={(file) => {
+
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]: ""
+    }))
+
+    setUploadedFiles(prev => ({
+      ...prev,
+      [group.groupid]: file
+    }))
+
+  }}
+/>
                   </div>
 
                 ))
@@ -515,6 +658,26 @@ export default function SupplierDocuments({
               )}
 
             </div>
+       {/* IDENTIFIER ERROR */}
+
+{/* DYNAMIC "PLEASE ENTER" ERROR */}
+{isIdentifierMissing(group) && (
+  <p className="text-red-500 text-sm flex items-center gap-1">
+    <AlertCircle className="h-4 w-4" />
+    {`Please enter ${tempDocs[group.groupid]?.identifier || "identifier"}`}
+  </p>
+)}
+
+{/* GENERIC REQUIRED ERROR — ONLY if no "Please enter ..." */}
+{submitted.step3 &&
+ !identifierErrors[group.groupid] &&
+ isGroupInvalid(group) && (
+  <p className="text-red-500 text-sm flex items-center gap-1">
+    <AlertCircle className="h-4 w-4" />
+    Required12
+  </p>
+)}
+
 
           </div>
 

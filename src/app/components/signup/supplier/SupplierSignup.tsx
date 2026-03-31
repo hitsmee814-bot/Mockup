@@ -316,47 +316,39 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
       const [websiteError, setWebsiteError] = useState('')
       const [tradeLicenseNumberError, setTradeLicenseNumberError] = useState('')
       const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')        
-       const [countryCodes, setCountryCodes] = useState([]);     
+       const [countryCodes, setCountryCodes] =useState([
+  {
+    iso2: "IN",
+    phone_code: "+91",
+  },
+]);  
+
 
 useEffect(() => {
 
   const fetchCountryCodes = async () => {
 
     try {
-
       const response =
         await phoneNoService.getPhoneCodes();
-
       console.log("Country Codes:", response);
-
       // Ensure we always have an array
       const codes = response || [];
-
       // Store country codes
+      if(codes.length>0)
+      {
       setCountryCodes(codes);
-
-      // ✅ Set default India (+91)
-      if (codes.length > 0) {
-
-        const india = codes.find(
-          (c: any) => c.iso2 === "IN"
-        );
-
-        if (india) {
-
-          setForm((prev) => ({
-            ...prev,
-            countryCode: `${india.iso2}-${india.phone_code}`,
-          }));
-
-        }
-
       }
+      // ✅ ALWAYS select India
+    setForm((prev) => ({
+      ...prev,
+       countryCode: "IN-+91",
+    }));
 
     } catch (error) {
 
       console.error("Country code fetch failed:", error);
-
+        
     }
 
   };
@@ -812,8 +804,7 @@ const getTaxPanelBorderClass = () => {
                      <div className="mx-12 mb-5 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>   
 
             {/* body*/}
-       <div  className="flex-1  overflow-y-auto touch-pan-y  px-1 pb-2    
-       
+       <div  className="flex-1  overflow-y-auto touch-pan-y  px-1 pb-2         
         scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent
               [&::-webkit-scrollbar]:w-1.5
               [&::-webkit-scrollbar-track]:bg-transparent
@@ -1343,7 +1334,7 @@ const getTaxPanelBorderClass = () => {
     setMultiDocs={setMultiDocs}
 
     handleAddMultiDocument={handleAddMultiDocument}
-
+     submitted={submitted}    
   />
 )}                
             </div>
