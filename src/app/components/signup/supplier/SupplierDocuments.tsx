@@ -47,6 +47,8 @@ type Props = {
 
 }
 
+
+
 export default function SupplierDocuments({
 
   docGroups,
@@ -62,49 +64,44 @@ export default function SupplierDocuments({
   setMultiDocs,
   handleAddMultiDocument,
 
-  submitted   // ⭐ ADD THIS
+  submitted   //  ADD THIS
 
-}: Props) {
+}: Props)
+
+{
   const [identifierErrors, setIdentifierErrors] =
   React.useState<{
     [key: number]: string
   }>({})
-  const getPanelBorderClass = (group: any) => {
 
-  if (!submitted.step3) {
-    return "border-[#00AFEF]"
-  }
+const getPanelBorderClass = (group: any) => {
+  const identifier = tempDocs[group.groupid]?.identifierValue;
+  const singleFile = uploadedFiles[group.groupid];
+  const multiGroup = multiDocs[group.groupid] || [];
 
-  // SINGLE FILE CASE
+  // SINGLE FILE
   if (group.min > 0 && group.max === 1) {
-
-    const file =
-      uploadedFiles[group.groupid]
- 
-
-    if (!file) {
-      return "border-red-500"
-    }
-
+    if (!singleFile && !identifier) return "border-red-500"; // missing both
+    if (!singleFile) return "border-red-500"; // file missing
+    if (!identifier) return "border-red-500"; // identifier missing
   }
 
-  // MULTI FILE CASE
+  // MULTI FILE
   if (group.min > 0 && group.max > 1) {
-
-    const docs =
-      multiDocs[group.groupid] || []
-
-    if (docs.length < group.min) {
-      return "border-red-500"
-    }
-
+    if (multiGroup.length < group.min) return "border-red-500";
   }
 
-  return "border-[#00AFEF]"
-}
+  return "border-[#00AFEF]"; // valid
+};
+
+
 const isGroupInvalid = (group: any) => {
 
   if (!submitted.step3) return false
+
+  const identifier =
+    tempDocs[group.groupid]
+      ?.identifierValue
 
   // SINGLE FILE
   if (group.min > 0 && group.max === 1) {
@@ -112,7 +109,7 @@ const isGroupInvalid = (group: any) => {
     const file =
       uploadedFiles[group.groupid]
 
-    return !file
+    return !identifier || !file
   }
 
   // MULTI FILE
@@ -140,7 +137,8 @@ const isIdentifierMissing = (group: any) => {
   const file =
     uploadedFiles[group.groupid]
 
-  return !identifier && !file
+  // identifier missing but file exists
+  return !identifier && file
 }
 
   return (
@@ -194,15 +192,15 @@ const isIdentifierMissing = (group: any) => {
                     key={member.document_type}
                     className="flex flex-col gap-3"
                   >
-
-                    <Label>
-                      {member.identifier}
-                    </Label>
+                      <Label>
+                {member.identifier}
+                {group.min > 0 && <span className="text-red-500"> *</span>}
+              </Label>
 
    <ShadInput
   type="text"
 
-  placeholder={`Enter ${member.identifier}`}
+  placeholder={`Enter ${member.identifier || ""}`}
 
   value={
     tempDocs[group.groupid]
@@ -274,12 +272,10 @@ onChange={(e) => {
     }))
 
   }}
-/>
-                  </div>
+/>   </div>  ))        )}
 
-                ))
 
-              )}
+
 
               {/* ===== MULTIPLE MEMBER ===== */}
 
@@ -287,9 +283,9 @@ onChange={(e) => {
 
                 <div className="flex flex-col gap-3">
 
-                  <Label>
-                    Select Document Type
-                  </Label>
+                 <Label htmlFor={`document-${group.groupid}`}>
+                 Select {group.group_name}
+                </Label>
 
                   <Select
                     value={
@@ -305,20 +301,35 @@ onChange={(e) => {
                             m.document_type === value
                         )
 
-                      setSelectedDocs(prev => ({
-                        ...prev,
-                        [group.groupid]: selectedMember
-                      }))
+                                        setSelectedDocs(prev => ({
+                      ...prev,
+                      [group.groupid]: {
+                        ...selectedMember,
+                        identifierValue: ""
+                      }
+                    }))
 
-                      setUploadedFiles(prev => ({
-                        ...prev,
-                        [group.groupid]: null
-                      }))
+                    // clear file
+                    setUploadedFiles(prev => ({
+                      ...prev,
+                      [group.groupid]: null
+                    }))
+
+                    // clear identifier error
+                    setIdentifierErrors(prev => ({
+                      ...prev,
+                      [group.groupid]: ""
+                    }))
 
                     }}
                   >
 
-                    <SelectTrigger>
+                    <SelectTrigger
+                        className={`w-full !h-12 bg-white border border-slate-300 
+                        text-slate-900 placeholder:text-slate-400 
+                        focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+                        `}
+                      >
                       <SelectValue
                         placeholder="Select document type"
                       />
@@ -346,7 +357,7 @@ onChange={(e) => {
                   </Select>
                   {/* SHOW INPUT AFTER SELECT */}
 
-{selectedDocs[group.groupid] && (
+          {selectedDocs[group.groupid] && (
 
   <>
 
@@ -372,39 +383,90 @@ onChange={(e) => {
     {/* Identifier Input */}
 
     <ShadInput
-      type="text"
+  type="text"
+  placeholder={`Enter ${
+    selectedDocs[group.groupid]?.identifier || ""
+  }`}
 
-      placeholder={`Enter ${
-        selectedDocs[group.groupid]
-          .identifier
-      }`}
+  value={
+    selectedDocs[group.groupid]?.identifierValue || ""
+  }
 
-      className="h-12"
-    />
+  onChange={(e) => {
+
+    setSelectedDocs(prev => ({
+      ...prev,
+      [group.groupid]: {
+        ...(prev[group.groupid] || {}),
+        identifierValue: e.target.value
+      }
+    }))
+
+    // clear upload error when typing
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]: ""
+    }))
+
+  }}
+
+  className="h-12"
+/>
 
     {/* FILE UPLOAD */}
 
     <FileInput
-      label={`Upload ${
-        selectedDocs[group.groupid]
-          .description
-      }`}
+  label={`Upload ${
+    selectedDocs[group.groupid]?.description || ""
+  }`}
 
-      required={group.min > 0}
+  required={group.min > 0}
 
-      file={
-        uploadedFiles[group.groupid] || null
-      }
+  file={
+    uploadedFiles[group.groupid] || null
+  }
 
-      onChange={(file) => {
+  /* BLOCK FILE PICKER */
+  onBeforeSelect={() => {
 
-        setUploadedFiles(prev => ({
-          ...prev,
-          [group.groupid]: file
-        }))
+    const identifier =
+      selectedDocs[group.groupid]
+        ?.identifierValue
 
-      }}
-    />
+    const identifierName =
+      selectedDocs[group.groupid]
+        ?.identifier
+
+    if (!identifier) {
+
+      setIdentifierErrors(prev => ({
+        ...prev,
+        [group.groupid]:
+          `Please enter ${identifierName}`
+      }))
+
+      return false   // block picker
+    }
+
+    return true      // allow picker
+  }}
+
+  /* SAVE FILE */
+  onChange={(file) => {
+
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]: ""
+    }))
+
+    setUploadedFiles(prev => ({
+      ...prev,
+      [group.groupid]: file
+    }))
+
+  }}
+/>
+
 
   </>
 
@@ -413,134 +475,210 @@ onChange={(e) => {
 
               )}
 
-              {/* ===== MULTI DOC SECTION ===== */}
 
-            {group.members.length > 1 && group.max> 1 && (
 
-                <div className="flex flex-col gap-3">
+{/*-----------------------------------------*/}
 
-                  <Label>
-                    Select Document Type
-                  </Label>
 
-                  <Select
-                    value={
-                      tempDocs[group.groupid]
-                        ?.document_type || ""
-                    }
 
-                    onValueChange={(value) => {
+             {group.members.length > 1 && group.max > 1 && (
 
-                      const member =
-                        group.members.find(
-                          (m: any) =>
-                            m.document_type === value
-                        )
+  <div className="flex flex-col gap-3">
 
-                      setTempDocs(prev => ({
-                        ...prev,
-                        [group.groupid]: {
-                          ...member,
-                          identifierValue: ""
-                        }
-                      }))
-
-                    }}
-                  >
-
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder="Select document type"
-                      />
-                    </SelectTrigger>
-
-                    <SelectContent>
-
-                      {group.members.map(
-                        (member: any) => (
-
-                          <SelectItem
-                            key={member.document_type}
-                            value={member.document_type}
-                          >
-
-                            {member.description}
-
-                          </SelectItem>
-
-                        )
-                      )}
-
-                    </SelectContent>
-
-                  </Select>
-                  {tempDocs[group.groupid] && (
-
-  <>
-
-    <Label>
-      {
-        tempDocs[group.groupid]
-          .identifier
-      }
+    <Label htmlFor={`document-${group.groupid}`}>
+      Select {group.group_name}
     </Label>
 
-    <ShadInput
-      type="text"
-
-      placeholder={`Enter ${
-        tempDocs[group.groupid]
-          .identifier
-      }`}
-
+    <Select
       value={
         tempDocs[group.groupid]
-          .identifierValue || ""
+          ?.document_type || ""
       }
 
-      onChange={(e) => {
+      onValueChange={(value) => {
 
+        const member =
+          group.members.find(
+            (m: any) =>
+              m.document_type === value
+          )
+
+        // reset identifier + file on dropdown change
         setTempDocs(prev => ({
           ...prev,
           [group.groupid]: {
-            ...prev[group.groupid],
-            identifierValue: e.target.value
+            ...member,
+            identifierValue: ""
           }
         }))
 
-      }}
-    />
-    
-    <FileInput
-      label={`Upload ${
-        tempDocs[group.groupid]
-          .description
-      }`}
-
-      file={
-        multiFiles[group.groupid] || null
-      }
-
-      onChange={(file) => {
-
         setMultiFiles(prev => ({
           ...prev,
-          [group.groupid]: file
+          [group.groupid]: null
+        }))
+
+        setIdentifierErrors(prev => ({
+          ...prev,
+          [group.groupid]: ""
         }))
 
       }}
-    />
- <PremiumButton
-    type="button"
-    variant="primary"
-    size="lg"
-       
-         onClick={() =>
-             handleAddMultiDocument(group)}
+    >
+
+      <SelectTrigger
+        className={`w-full !h-12 bg-white border border-slate-300 
+        text-slate-900 placeholder:text-slate-400 
+        focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+        `}
+      >
+        <SelectValue
+          placeholder="Select document type"
+        />
+      </SelectTrigger>
+
+      <SelectContent>
+
+        {group.members.map(
+          (member: any) => (
+
+            <SelectItem
+              key={member.document_type}
+              value={member.document_type}
+            >
+
+              {member.description}
+
+            </SelectItem>
+
+          )
+        )}
+
+      </SelectContent>
+
+    </Select>
+
+    {tempDocs[group.groupid] && (
+
+      <>
+
+        {/* Identifier Label */}
+
+        <Label>
+          {
+            tempDocs[group.groupid]
+              ?.identifier
+          }
+        </Label>
+
+        {/* Identifier Input */}
+
+        <ShadInput
+          type="text"
+
+          placeholder={`Enter ${
+            tempDocs[group.groupid]
+              ?.identifier || ""
+          }`}
+
+          value={
+            tempDocs[group.groupid]
+              ?.identifierValue || ""
+          }
+
+          onChange={(e) => {
+
+            setTempDocs(prev => ({
+              ...prev,
+              [group.groupid]: {
+                ...(prev[group.groupid] || {}),
+                identifierValue: e.target.value
+              }
+            }))
+
+            // clear upload error
+            setIdentifierErrors(prev => ({
+              ...prev,
+              [group.groupid]: ""
+            }))
+
+          }}
+        />
+
+        {/* FILE INPUT */}
+
+        <FileInput
+          label={`Upload ${
+            tempDocs[group.groupid]
+              ?.description || ""
+          }`}
+
+          file={
+            multiFiles[group.groupid] || null
+          }
+
+          /* BLOCK FILE PICKER */
+          onBeforeSelect={() => {
+
+            const identifier =
+              tempDocs[group.groupid]
+                ?.identifierValue
+
+            const identifierName =
+              tempDocs[group.groupid]
+                ?.identifier
+
+            if (!identifier) {
+
+              setIdentifierErrors(prev => ({
+                ...prev,
+                [group.groupid]:
+                  `Please enter ${identifierName}`
+              }))
+
+              return false
+            }
+
+            return true
+          }}
+
+          onChange={(file) => {
+
+            setIdentifierErrors(prev => ({
+              ...prev,
+              [group.groupid]: ""
+            }))
+
+            setMultiFiles(prev => ({
+              ...prev,
+              [group.groupid]: file
+            }))
+
+          }}
+        />
+
+ {/* IDENTIFIER ERROR MESSAGE */}
+
+        {identifierErrors[group.groupid] && (
+          <p className="text-red-500 text-sm flex items-center gap-1">
+            <AlertCircle className="h-4 w-4" />
+            {identifierErrors[group.groupid]}
+          </p>
+        )}
+
+        {/* ADD BUTTON */}
+
+        <PremiumButton
+          type="button"
+          variant="primary"
+          size="lg"
+
+          onClick={() =>
+            handleAddMultiDocument(group)
+          }
         >
-        Add Document
+          Add Document
         </PremiumButton>
- 
+
 
     {/* ===== DOCUMENT LIST (NEW DESIGN) ===== */}
 
@@ -660,25 +798,24 @@ onChange={(e) => {
             </div>
        {/* IDENTIFIER ERROR */}
 
-{/* DYNAMIC "PLEASE ENTER" ERROR */}
-{isIdentifierMissing(group) && (
+{/* IDENTIFIER ERROR — only shown if user tried file upload */}
+{identifierErrors[group.groupid] &&
+ group.max === 1 && (   // only show outside for Case 1 & 2
   <p className="text-red-500 text-sm flex items-center gap-1">
     <AlertCircle className="h-4 w-4" />
-    {`Please enter ${tempDocs[group.groupid]?.identifier || "identifier"}`}
+    {identifierErrors[group.groupid]}
   </p>
 )}
 
-{/* GENERIC REQUIRED ERROR — ONLY if no "Please enter ..." */}
+{/* REQUIRED ERROR — shown on Register click only */}
 {submitted.step3 &&
  !identifierErrors[group.groupid] &&
  isGroupInvalid(group) && (
   <p className="text-red-500 text-sm flex items-center gap-1">
     <AlertCircle className="h-4 w-4" />
-    Required12
+    Required
   </p>
 )}
-
-
           </div>
 
         ))
