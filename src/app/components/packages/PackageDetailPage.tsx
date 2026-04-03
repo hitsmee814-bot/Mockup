@@ -34,12 +34,12 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
   const [currentImg, setCurrentImg] = useState(0)
 
   const backHref = tripType
-    ? `/itinerary/packages?tripType=${encodeURIComponent(tripType)}`
-    : "/itinerary/packages"
+    ? `/Mockup/itinerary/packages?tripType=${encodeURIComponent(tripType)}`
+    : "/Mockup/itinerary/packages"
 
   const bookingHref = tripType
-    ? `/itinerary/packages/${pkg.id}/booking?tripType=${encodeURIComponent(tripType)}`
-    : `/itinerary/packages/${pkg.id}/booking`
+    ? `/Mockup/itinerary/packages/${pkg.id}/booking?tripType=${encodeURIComponent(tripType)}`
+    : `/Mockup/itinerary/packages/${pkg.id}/booking`
 
   const breadcrumbLabel = tripType ?? "All"
   const images = pkg.images?.length ? pkg.images : [pkg.image]
