@@ -361,7 +361,7 @@ useEffect(() => {
 
       const codes = response || [];
 
-      // ✅ Format API response
+      // Format API response
       const formatted = codes.map((c: any) => ({
         code: c.iso2,
         name: c.iso2,

@@ -193,8 +193,12 @@ const validatePhone = (value: string, countryCode: string) => {
                 setMobileOtpSent(false)
                 setMobileOtp("")
 
-                 localStorage.setItem("userCountryCode", selectedCountry?.dialCode || "")  // local storage
-                 localStorage.setItem("userPhoneNumber", mobile) // 
+                // save full country code format
+                localStorage.setItem(
+                "userCountryCode",
+                `${selectedCountry?.code}-${selectedCountry?.dialCode}`//local storage
+                );
+                 localStorage.setItem("userPhoneNumber", mobile) // local storage
 
             } else {
                 toast.error(response?.detail || "Invalid OTP", {
