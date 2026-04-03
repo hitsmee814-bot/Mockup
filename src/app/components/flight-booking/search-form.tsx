@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card } from "@/components/ui/card"
-import { motion, Variants } from "framer-motion"
+import { motion } from "framer-motion"
 import { DateRange } from "react-day-picker"
 import { Search } from "lucide-react"
 import { AirportCombobox } from "./airport-combobox"
@@ -18,18 +18,10 @@ import { MultiCityFlights } from "./multi-city-flights"
 interface SearchFormProps {
   onSearch: (params: { from: string; to: string; tripType: string; departDate?: string; returnDate?: string; adults: number; children: number; infants: number; class: string }) => void
 }
-export const fieldVariants: Variants = {
+
+const fieldVariants = {
   hidden: { opacity: 0, y: 12 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.06,
-      type: "spring" as const,
-      stiffness: 200,
-      damping: 20,
-    },
-  }),
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, type: "spring", stiffness: 200, damping: 20 } }),
 }
 
 export function SearchForm({ onSearch }: SearchFormProps) {

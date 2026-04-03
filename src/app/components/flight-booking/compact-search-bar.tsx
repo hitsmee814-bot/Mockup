@@ -8,10 +8,17 @@ import { ClassCombobox } from "./class-combobox"
 import { PassengerSelector } from "./passenger-selector"
 import { DatePicker } from "./date-picker"
 import { DateRange } from "react-day-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, ChevronDown, Plane } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { airports } from "./constants"
+
+const tripOptions = [
+  { value: "roundtrip", label: "Round Trip" },
+  { value: "oneway", label: "One Way" },
+  { value: "multicity", label: "Multi City" },
+]
 
 interface CompactSearchBarProps {
   onSearch: (params: { from: string; to: string; tripType: string; departDate?: string; returnDate?: string; adults: number; children: number; infants: number; class: string }) => void
@@ -30,7 +37,7 @@ export function CompactSearchBar({ onSearch }: CompactSearchBarProps) {
   const [toOpen, setToOpen] = useState(false)
   const [from, setFrom] = useState("")
   const [to, setTo] = useState("")
-  const [tripType] = useState("roundtrip")
+  const [tripType, setTripType] = useState("roundtrip")
   const [isSticky, setIsSticky] = useState(false)
   const [mobileExpanded, setMobileExpanded] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -72,6 +79,7 @@ export function CompactSearchBar({ onSearch }: CompactSearchBarProps) {
         isSticky && "sticky top-0 z-40 py-2 md:py-3 bg-white/80 backdrop-blur-lg shadow-lg"
       )}
     >
+      {/* Mobile: collapsed summary pill */}
       <Card className="md:hidden p-0 border border-gray-100 shadow-md bg-white overflow-hidden">
         <button
           onClick={() => setMobileExpanded(!mobileExpanded)}
@@ -101,6 +109,16 @@ export function CompactSearchBar({ onSearch }: CompactSearchBarProps) {
               className="overflow-hidden"
             >
               <div className="px-3 pb-3 space-y-2 border-t pt-3">
+                <Select value={tripType} onValueChange={setTripType}>
+                  <SelectTrigger className="w-full h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    {tripOptions.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <div className="grid grid-cols-2 gap-2">
                   <AirportCombobox value={from} onChange={setFrom} open={fromOpen} onOpenChange={setFromOpen} placeholder="From" className="h-9 text-xs" />
                   <AirportCombobox value={to} onChange={setTo} open={toOpen} onOpenChange={setToOpen} placeholder="To" className="h-9 text-xs" />
@@ -129,8 +147,21 @@ export function CompactSearchBar({ onSearch }: CompactSearchBarProps) {
         </AnimatePresence>
       </Card>
 
+      {/* Desktop: full inline bar */}
       <Card className="hidden md:block p-4 border border-gray-100 shadow-md bg-white">
         <div className="flex gap-3 items-end">
+          <div className="flex-[0.7]">
+            <Select value={tripType} onValueChange={setTripType}>
+              <SelectTrigger className="w-full h-10 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {tripOptions.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex-1">
             <AirportCombobox value={from} onChange={setFrom} open={fromOpen} onOpenChange={setFromOpen} placeholder="From" className="h-10 text-sm" />
           </div>

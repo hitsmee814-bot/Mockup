@@ -12,13 +12,14 @@ import { Flight } from "./types"
 
 export const cardVariants: Variants = {
   hidden: { opacity: 0, y: 24, scale: 0.98 },
+
   show: (i: number) => ({
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
       delay: i * 0.07,
-      type: "spring" as const,
+      type: "spring" as const, // ✅ FIX
       stiffness: 180,
       damping: 22,
     },
