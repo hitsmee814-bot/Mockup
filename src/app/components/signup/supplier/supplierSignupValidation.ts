@@ -105,10 +105,9 @@ export const validateWebsiteLive = (value: string) => {
 export const validateUsername = (value: string) => {
   if (!value) return ""
 
-  const USERNAME_REGEX = /^[A-Za-z][A-Za-z0-9._]{5,15}$/
-
+  const USERNAME_REGEX =/^(?=.{4,20}$)[a-zA-Z][a-zA-Z0-9_]*$/
   if (!USERNAME_REGEX.test(value)) {
-    return "Username must start with a letter and contain 6–16 characters. Only letters, numbers, periods and underscores are allowed."
+    return "Username must start with a letter and be 4–20 characters using letters, numbers, or _."
   }
 
   return ""

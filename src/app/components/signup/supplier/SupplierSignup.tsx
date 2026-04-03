@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { phoneNoService } from "@/services/phoneNoService";
 import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
+import { CountryCodeCombobox } from "../../login/CountryCodeCombobox";
+
 import {
   validateEmail,
   validatePhone,
@@ -315,40 +317,106 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
       const [taxIdError, setTaxIdError] = useState('')
       const [websiteError, setWebsiteError] = useState('')
       const [tradeLicenseNumberError, setTradeLicenseNumberError] = useState('')
-      const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')        
-       const [countryCodes, setCountryCodes] =useState([
-  {
-    iso2: "IN",
-    phone_code: "+91",
-  },
-]);  
+      const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')   
+      
+      type PhoneCountry  = {
+  code: string
+  name: string
+  dialCode: string
+  flag: string
+}
 
+const [phoneCountries, setPhoneCountries] = useState<PhoneCountry[]>([]);
+//const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<PhoneCountry | undefined>(undefined);
+const [open, setOpen] = useState(false);
+
+
+// ✅ Your existing flag function (KEEP THIS)
+const getFlagEmoji = (code: string) =>
+  code.toUpperCase().replace(/./g, c =>
+    String.fromCodePoint(127397 + c.charCodeAt(0))
+  );
+
+
+// ✅ State (make sure these exist)
+
+const [countryCodes, setCountryCodes] = useState<any[]>([]);
+
+const [selectedCountry, setSelectedCountry] =
+  useState<any | undefined>(undefined);
+
+
+// ✅ Fetch country codes
 
 useEffect(() => {
 
   const fetchCountryCodes = async () => {
 
     try {
+
       const response =
         await phoneNoService.getPhoneCodes();
+
       console.log("Country Codes:", response);
-      // Ensure we always have an array
+
       const codes = response || [];
-      // Store country codes
-      if(codes.length>0)
-      {
-      setCountryCodes(codes);
+
+      // ✅ Format API response
+      const formatted = codes.map((c: any) => ({
+        code: c.iso2,
+        name: c.iso2,
+        dialCode: c.phone_code,
+        flag: getFlagEmoji(c.iso2),
+      }));
+
+      if (formatted.length > 0) {
+
+        setCountryCodes(formatted);
+
+        // ✅ Check localStorage first
+        const savedCountry =
+          localStorage.getItem("userCountryCode");
+
+        let selected;
+
+        if (savedCountry) {
+
+          selected = formatted.find(
+            (c: any) =>
+              `${c.code}-${c.dialCode}` === savedCountry
+          );
+
+        }
+
+        // ✅ If no saved country → select India
+        if (!selected) {
+
+          selected =
+            formatted.find(
+              (c: any) => c.code === "IN"
+            ) || formatted[0];
+
+        }
+
+        // ✅ Set selected country
+        setSelectedCountry(selected);
+
+        // ✅ Update form
+        setForm((prev: any) => ({
+          ...prev,
+          countryCode:
+            `${selected.code}-${selected.dialCode}`,
+        }));
+
       }
-      // ✅ ALWAYS select India
-    setForm((prev) => ({
-      ...prev,
-       countryCode: "IN-+91",
-    }));
 
     } catch (error) {
 
-      console.error("Country code fetch failed:", error);
-        
+      console.error(
+        "Country code fetch failed:",
+        error
+      );
+
     }
 
   };
@@ -358,6 +426,26 @@ useEffect(() => {
 }, []);
 
 
+// 2️⃣ Auto-fill Phone + Email from localStorage
+useEffect(() => {
+
+  const savedPhone =
+    localStorage.getItem("userPhoneNumber");
+
+  const savedEmail =
+    localStorage.getItem("userEmail");
+
+  if (savedPhone || savedEmail) {
+
+    setForm((prev: any) => ({
+      ...prev,
+      phone: savedPhone || prev.phone,
+      email: savedEmail || prev.email,
+    }));
+
+  }
+
+}, []);
 
       useEffect(() => {
   const fetchCountries = async () => {
@@ -529,6 +617,21 @@ const fetchSupplierDocGroups = async () => {
           otherDocs: [],
           })
 
+
+          useEffect(() => {
+  // Get values from localStorage
+  const savedEmail = localStorage.getItem("userEmail");
+  const savedPhone = localStorage.getItem("userPhoneNumber");
+  const savedCountryCode = localStorage.getItem("userCountryCode");
+
+  setForm((prev) => ({
+    ...prev,
+    email: savedEmail || prev.email,
+    phone: savedPhone || prev.phone,
+    countryCode: savedCountryCode || prev.countryCode
+  }));
+
+}, []);
   /* CLOSE SERVICE DROPDOWN */ 
 
   const handleChange = (
@@ -885,6 +988,7 @@ const getTaxPanelBorderClass = () => {
                     required
                     placeholder="Enter email"
                     value={form.email}
+                    readOnly
                     onChange={handleChange}
                     className={`h-12 bg-white  border border-slate-300 text-slate-900
                     placeholder:text-slate-400
@@ -913,48 +1017,22 @@ const getTaxPanelBorderClass = () => {
 
 <div className="flex gap-2 mt-2 items-center">
 
-  <Select
-    value={form.countryCode}
-    onValueChange={(value) =>
-      handleChange({
-        target: { name: "countryCode", value },
-      } as React.ChangeEvent<HTMLInputElement>)
-    }
-  >
-    <SelectTrigger
-      className={`w-24 !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${
-        submitted.step1 && (phoneError || !form.phone)
-          ? "border-red-500 ring-1 ring-red-500"
-          : "border-slate-300"
-      }`}
-    >
-      <SelectValue placeholder="Code" />
-    </SelectTrigger>
-
-   <SelectContent 
-    position="popper"
-  side="bottom"
-  align="start"
- sideOffset={6}
- avoidCollisions={false}
-   
-   className="bg-white border-slate-200">
-  {countryCodes.map((c: any, index: number) => (
-    <SelectItem
-      key={`${c.iso2}-${c.phone_code}-${index}`}
-      value={`${c.iso2}-${c.phone_code}`}
-    >
-      {c.iso2} ({c.phone_code})
-    </SelectItem>
-  ))}
-</SelectContent>
-  </Select>
+<CountryCodeCombobox
+  countries={countryCodes}
+  value={selectedCountry || undefined}
+  onChange={() => {}}   // no change allowed
+  open={false}          // prevents opening
+  onOpenChange={() => {}} // prevents toggle
+  className="w-30 h-12 pointer-events-none opacity-70 cursor-not-allowed"
+                                    
+/>
 
   <ShadInput
     name="phone"
     id="phone"
     type="tel"
     value={form.phone}
+    readOnly
     onChange={handleChange}
     placeholder="Enter phone number"
     maxLength={10}
@@ -1244,11 +1322,11 @@ const getTaxPanelBorderClass = () => {
   </SelectTrigger>
 
 <SelectContent
-  position="popper"
+  //position="popper"
   side="bottom"
   align="start"
- sideOffset={6}
- avoidCollisions={false}
+// sideOffset={0}
+// avoidCollisions={false}
     className="bg-white border-slate-200 z-[9999]"
 >
   

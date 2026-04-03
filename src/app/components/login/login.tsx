@@ -193,6 +193,9 @@ const validatePhone = (value: string, countryCode: string) => {
                 setMobileOtpSent(false)
                 setMobileOtp("")
 
+                 localStorage.setItem("userCountryCode", selectedCountry?.dialCode || "")  // local storage
+                 localStorage.setItem("userPhoneNumber", mobile) // 
+
             } else {
                 toast.error(response?.detail || "Invalid OTP", {
                     position: "top-right",
@@ -222,6 +225,9 @@ const validatePhone = (value: string, countryCode: string) => {
                 setEmailVerified(true)
                 setEmailOtpSent(false)
                 setEmailOtp("")
+
+                 localStorage.setItem("userEmail", verificationEmail)  // local storage 
+
 
                 const token = btoa(JSON.stringify({
                 email: verificationEmail,
