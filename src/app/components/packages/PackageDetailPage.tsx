@@ -64,7 +64,7 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
 
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="/packages">Itineraries</Link>
+            <Link href="/itinerary/packages">Itineraries</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
 

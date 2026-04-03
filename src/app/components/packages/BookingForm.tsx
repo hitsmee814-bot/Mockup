@@ -33,8 +33,8 @@ export function BookingForm({ pkg, tripType }: BookingFormProps) {
     const router = useRouter();
 
     const detailHref = tripType
-        ? `/itinerary/packages/${pkg.id}?tripType=${encodeURIComponent(tripType)}`
-        : `/itinerary/packages/${pkg.id}`
+        ? `/Mockup/itinerary/packages/${pkg.id}?tripType=${encodeURIComponent(tripType)}`
+        : `/Mockup/itinerary/packages/${pkg.id}`
 
     const [form, setForm] = useState({
         fullName: "",
@@ -71,13 +71,13 @@ export function BookingForm({ pkg, tripType }: BookingFormProps) {
             <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2">
 
                 <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
+                    {/* <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
                         <ArrowLeft className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
                     <Breadcrumb>
                         <BreadcrumbList className="text-xs text-gray-400">
                             <BreadcrumbItem>
-                                <BreadcrumbLink href="/packages" className="cursor-pointer">
+                                <BreadcrumbLink href="/Mockup/itinerary/packages" className="cursor-pointer">
                                     Itineraries
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
