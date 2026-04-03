@@ -1,8 +1,8 @@
 "use client";
-
+import { DocumentUploadSection } from "@/components/DocumentUploadSection";
 import React, { useState, useEffect, useLayoutEffect, ChangeEvent, FormEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Upload } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Upload, X, Paperclip, Info } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
@@ -15,6 +15,7 @@ import { PremiumButton } from "../../utils/PremiumButton";
 import { phoneNoService } from "@/services/phoneNoService";
 import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
 import { userNameService } from "@/services/userNameService";
+import { docTypelookupService } from "@/services/docTypes";
 
 // Shadcn UI Imports
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip as ShadcnTooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /* ---------------- TYPES ---------------- */
 
@@ -36,6 +43,7 @@ interface FormState {
   lastName: string;
   email: string;
   countryCode: string;
+  countryIso2: string;
   phone: string;
   username: string;
   password: string;
@@ -53,27 +61,72 @@ interface CountryOption {
   label: string;
 }
 
+// Document related types
+interface DocumentMember {
+  document_type: string;
+  identifier: string;
+  description: string;
+}
+
+interface DocumentGroup {
+  groupid: number;
+  group_name: string;
+  min: number;
+  max: number;
+  members: DocumentMember[];
+}
+
+interface UploadedDocument {
+  id: string;
+  file: File;
+  member: DocumentMember;
+  identifierValue: string;
+  groupid: number;
+}
+
+interface GroupSelectedDoc {
+  [groupid: number]: DocumentMember | null;
+}
+
+interface GroupIdentifierValue {
+  [groupid: number]: string;
+}
+
+interface GroupTempDoc {
+  [groupid: number]: {
+    member: DocumentMember;
+    identifierValue: string;
+    file: File | null;
+  } | null;
+}
+
+interface GroupMultiDocs {
+  [groupid: number]: UploadedDocument[];
+}
+
+interface GroupErrorState {
+  [groupid: number]: string;
+}
+
 /* ---------------- CONSTANTS ---------------- */
 const INPUT_STYLING = "mt-2 h-12 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]";
 const LABEL_STYLING = "text-slate-700";
 
 /* ---------------- MODERN TOOLTIP ---------------- */
 
-const Tooltip = ({ text }: { text: string }) => (
-  <div className="relative group inline-block ml-2">
-    <span className="text-[#00AFEF] text-xs cursor-help">ⓘ</span>
-    <div className="
-      absolute bottom-full left-0 mb-2
-      hidden group-hover:block z-50
-      min-w-[240px] max-w-[300px]
-      bg-gray-900 text-white text-xs
-      px-3 py-2 rounded-lg shadow-lg
-      whitespace-normal break-words
-      leading-relaxed
-    ">
-      {text}
-    </div>
-  </div>
+const InfoTooltip = ({ text }: { text: string }) => (
+  <TooltipProvider>
+    <ShadcnTooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex ml-2 cursor-help">
+          <Info className="h-3.5 w-3.5 text-[#00AFEF]" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs bg-gray-900 text-white text-xs p-2 rounded-lg">
+        <p>{text}</p>
+      </TooltipContent>
+    </ShadcnTooltip>
+  </TooltipProvider>
 );
 
 const ErrorMessage = ({ message }: { message?: string }) => {
@@ -89,14 +142,11 @@ const ErrorMessage = ({ message }: { message?: string }) => {
 function StepIndicator({ step }: { step: 1 | 2 }) {
   return (
     <div className="w-full mb-4">
-      {/* Circles */}
       <div className="flex items-center w-full">
         <div className={`h-2.5 w-2.5 rounded-full ${step >= 1 ? 'bg-[#00afef]' : 'bg-gray-300'}`} />
         <div className="flex-1 h-[1px] bg-gray-300 mx-2" />
         <div className={`h-2.5 w-2.5 rounded-full ${step === 2 ? 'bg-[#00afef]' : 'bg-gray-300'}`} />
       </div>
-
-      {/* Labels */}
       <div className="flex justify-between text-[12px] text-gray-600 mt-1">
         <span className={step === 1 ? 'font-semibold text-[#00AFEF]' : ''}>
           General
@@ -114,6 +164,7 @@ export default function AgentSignup(): JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [showPassword, setShowPassword] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     agencyName: "",
@@ -122,6 +173,7 @@ export default function AgentSignup(): JSX.Element {
     lastName: "",
     email: "",
     countryCode: "+91",
+    countryIso2: "IN",
     phone: "",
     username: "",
     password: "",
@@ -139,10 +191,24 @@ export default function AgentSignup(): JSX.Element {
   const [usernameStatus, setUsernameStatus] = useState<"available" | "unavailable" | null>(null);
   const [phoneStatus, setPhoneStatus] = useState<"available" | "unavailable" | null>(null);
   
-
-  const [documents, setDocuments] = useState<File[]>([]);
-const [docError, setDocError] = useState("");
- const [countries, setCountries] = useState<CountryOption[]>([]);
+  // Document state
+  const [documentGroups, setDocumentGroups] = useState<DocumentGroup[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<GroupSelectedDoc>({});
+  const [identifierValues, setIdentifierValues] = useState<GroupIdentifierValue>({});
+  const [uploadedFiles, setUploadedFiles] = useState<{ [key: number]: File | null }>({});
+  
+  // Multi-document state
+  const [tempDocs, setTempDocs] = useState<GroupTempDoc>({});
+  const [multiFiles, setMultiFiles] = useState<{ [key: number]: File | null }>({});
+  const [multiDocs, setMultiDocs] = useState<GroupMultiDocs>({});
+  
+  const [groupErrors, setGroupErrors] = useState<GroupErrorState>({});
+  const [globalDocError, setGlobalDocError] = useState("");
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false);
+  const [docFetchError, setDocFetchError] = useState("");
+  const [groupValidity, setGroupValidity] = useState<{ [key: number]: boolean }>({});
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
 
   useLayoutEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -152,39 +218,228 @@ const [docError, setDocError] = useState("");
     };
   }, []);
 
-  /* Fetch Phone Codes on Mount */
+  // Fetch document types when component mounts
   useEffect(() => {
-  const fetchCodes = async () => {
-    try {
-      const response = await phoneNoService.getPhoneCodes();
+    const fetchDocumentTypes = async () => {
+      setIsLoadingDocs(true);
+      setDocFetchError("");
+      try {
+        const response = await docTypelookupService.getDocTypes("AGENT");
+        console.log("Document Types API Response:", response);
+        
+        let groups: DocumentGroup[] = [];
+        
+        if (response && Array.isArray(response) && response.length > 0 && response[0].json_agg) {
+          const parsedData = JSON.parse(response[0].json_agg);
+          groups = parsedData;
+        } else if (Array.isArray(response)) {
+          groups = response;
+        }
+        
+        if (groups && groups.length > 0) {
+          setDocumentGroups(groups);
+          const initialSelectedDocs: GroupSelectedDoc = {};
+          const initialIdentifierValues: GroupIdentifierValue = {};
+          const initialUploadedFiles: { [key: number]: File | null } = {};
+          const initialTempDocs: GroupTempDoc = {};
+          const initialMultiFiles: { [key: number]: File | null } = {};
+          const initialMultiDocs: GroupMultiDocs = {};
+          const initialErrors: GroupErrorState = {};
+          
+          groups.forEach(group => {
+            initialSelectedDocs[group.groupid] = null;
+            initialIdentifierValues[group.groupid] = "";
+            initialUploadedFiles[group.groupid] = null;
+            initialTempDocs[group.groupid] = null;
+            initialMultiFiles[group.groupid] = null;
+            initialMultiDocs[group.groupid] = [];
+            initialErrors[group.groupid] = "";
+          });
+          
+          setSelectedDocs(initialSelectedDocs);
+          setIdentifierValues(initialIdentifierValues);
+          setUploadedFiles(initialUploadedFiles);
+          setTempDocs(initialTempDocs);
+          setMultiFiles(initialMultiFiles);
+          setMultiDocs(initialMultiDocs);
+          setGroupErrors(initialErrors);
+        } else {
+          setDocFetchError("No document groups found");
+        }
+      } catch (error) {
+        console.error("Failed to fetch document types:", error);
+        setDocFetchError("Failed to load document requirements. Please refresh the page.");
+      } finally {
+        setIsLoadingDocs(false);
+      }
+    };
+    
+    fetchDocumentTypes();
+  }, []);
 
-      if (response?.data) {
-        const parsed = response.data.map((item: any) => ({
-        code: item.phone_code,
-        iso2: item.iso2,
-        label: `${item.iso2} ${item.phone_code}`,
-      }));
+  // Fetch Phone Codes on Mount
+  useEffect(() => {
+    const fetchCodes = async () => {
+      try {
+        const response = await phoneNoService.getPhoneCodes();
+        let countryArray: any[] = [];
 
-      //  Move IN +91 to top
-      const sorted = parsed.sort((a: CountryOption, b: CountryOption) => {
-        if (a.iso2 === "IN") return -1;
-        if (b.iso2 === "IN") return 1;
-        return 0;
-      });
+        if (Array.isArray(response)) {
+          countryArray = response;
+        } 
+        else if (Array.isArray(response?.data)) {
+          countryArray = response.data;
+        } 
+        else if (Array.isArray(response?.data?.phone_codes)) {
+          countryArray = response.data.phone_codes;
+        } 
+        else if (Array.isArray(response?.phone_codes)) {
+          countryArray = response.phone_codes;
+        } 
+        else {
+          console.error("❌ Unknown API format:", response);
+          return;
+        }
+
+        const parsed: CountryOption[] = countryArray
+          .map((item: any) => {
+            if (!item?.phone_code || !item?.iso2) return null;
+            const code = item.phone_code.startsWith("+") ? item.phone_code : `+${item.phone_code}`;
+            return {
+              code,
+              iso2: item.iso2.toUpperCase(),
+              label: `${item.iso2.toUpperCase()} ${code}`,
+            };
+          })
+          .filter((item): item is CountryOption => item !== null);
+
+        const sorted = parsed.sort((a: CountryOption, b: CountryOption) => {
+          if (a.iso2 === "IN") return -1;
+          if (b.iso2 === "IN") return 1;
+          return a.label.localeCompare(b.label);
+        });
 
         setCountries(sorted);
+        
+        // Set default selected country (India)
+        const indiaCountry = sorted.find(c => c.iso2 === "IN");
+        if (indiaCountry) {
+          setSelectedCountry(indiaCountry);
+          setForm(prev => ({ ...prev, countryCode: indiaCountry.code, countryIso2: indiaCountry.iso2 }));
+        } else if (sorted.length > 0) {
+          setSelectedCountry(sorted[0]);
+          setForm(prev => ({ ...prev, countryCode: sorted[0].code, countryIso2: sorted[0].iso2 }));
+        }
+      } catch (error) {
+        console.error("❌ Country API FAILED:", error);
+        setCountries([]);
       }
-    } catch {
-      console.warn("Using fallback country code");
+    };
+    fetchCodes();
+  }, []);
 
-      setCountries([
-      { code: "+91", iso2: "IN", label: "IN +91" }
-      ]);
+  // Phone number validation using libphonenumber-js (works for ANY country dynamically)
+  const validatePhoneNumber = (
+    phoneNumberStr: string,
+    countryCode: string,
+    iso2: string
+  ): string => {
+    if (!phoneNumberStr) return "";
+    
+    // Remove all non-digit characters
+    const digits = phoneNumberStr.replace(/\D/g, "");
+    if (digits.length === 0) return "";
+    
+    try {
+      // Use libphonenumber-js to parse and validate
+      const phoneNumber = parsePhoneNumberFromString(
+        `${countryCode}${digits}`,
+        iso2 as CountryCode
+      );
+      
+      if (!phoneNumber) {
+        return "Invalid phone number format";
+      }
+      
+      if (!phoneNumber.isValid()) {
+        return `Invalid ${iso2} phone number`;
+      }
+      
+      if (!phoneNumber.isPossible()) {
+        return `Invalid length for ${iso2} number`;
+      }
+      
+      return ""; // Valid phone number
+    } catch (error) {
+      return "Enter a valid phone number";
     }
   };
 
-  fetchCodes();
-}, []);
+  // Check username availability using service
+  const checkUsername = async () => {
+    if (!form.username || errors.username) return;
+    setIsCheckingUser(true);
+    setUsernameStatus(null);
+    try {
+      const res = await userNameService.checkAvailability(form.username);
+      // Currently: "test" returns false, all others return true
+      if (res?.data?.available === false || res?.data?.available === "test") {
+        setUsernameStatus("unavailable");
+      } else {
+        setUsernameStatus("available");
+      }
+    } catch {
+      setUsernameStatus("available");
+    } finally {
+      setIsCheckingUser(false);
+    }
+  };
+
+  // Check phone availability using service
+  const checkPhone = async () => {
+    if (!form.phone || errors.phone) return;
+    setIsCheckingPhone(true);
+    setPhoneStatus(null);
+    try {
+      const res = await phoneNumberAvailService.checkAvailability(form.phone);
+      // Currently all valid phone numbers are available
+      if (res?.data?.available === true) {
+        setPhoneStatus("available");
+      } else {
+        setPhoneStatus("available");
+      }
+    } catch {
+      setPhoneStatus("available");
+    } finally {
+      setIsCheckingPhone(false);
+    }
+  };
+
+  // Handle country selection change
+  const handleCountryChange = (value: string) => {
+    const [iso2, code] = value.split("-");
+    const selected = countries.find(c => c.iso2 === iso2 && c.code === code);
+    if (selected) {
+      setSelectedCountry(selected);
+      setForm(prev => ({ ...prev, countryCode: selected.code, countryIso2: selected.iso2 }));
+      // Re-validate phone when country changes
+      if (form.phone) {
+        const phoneError = validatePhoneNumber(form.phone, selected.code, selected.iso2);
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          if (phoneError) {
+            newErrors.phone = phoneError;
+          } else {
+            delete newErrors.phone;
+          }
+          return newErrors;
+        });
+        // Reset phone status when country changes
+        setPhoneStatus(null);
+      }
+    }
+  };
+
   const preventCopyPaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
   };
@@ -200,16 +455,13 @@ const [docError, setDocError] = useState("");
   const isTrivialPassword = (p: string) => {
     if (p.length < 3) return false;
     const lowerP = p.toLowerCase();
-
     for (let i = 0; i <= lowerP.length - 3; i++) {
       const char1 = lowerP.charCodeAt(i);
       const char2 = lowerP.charCodeAt(i + 1);
       const char3 = lowerP.charCodeAt(i + 2);
-
       if (char1 === char2 && char2 === char3) return true;
       if (char2 === char1 + 1 && char3 === char2 + 1) return true;
       if (char2 === char1 - 1 && char3 === char2 - 1) return true;
-
       const specials = lowerP.substring(i, i + 3);
       if (/^[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{3}$/.test(specials)) return true;
     }
@@ -219,20 +471,17 @@ const [docError, setDocError] = useState("");
   const passwordValidCriteria = (p: string) =>
     /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(p);
 
-
   useEffect(() => {
     if (!form.password || !passwordValidCriteria(form.password) || isNameInPassword(form.password, form)) {
       setStrengthLabel("");
       setStrengthColor("");
       return;
     }
-
     if (isTrivialPassword(form.password)) {
       setStrengthLabel("weak password");
       setStrengthColor("text-red-600");
       return;
     }
-
     const assessment = passwordStrength(form.password);
     if (assessment.id <= 1) {
       setStrengthLabel("weak password");
@@ -249,39 +498,16 @@ const [docError, setDocError] = useState("");
   const emailValid = (e: string) => {
     const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!basicRegex.test(e)) return { valid: false, errorType: "syntax" };
-
     const parts = e.split('@');
     const domainPart = parts[1].split('.')[0];
-
     if (/[A-Z]/.test(domainPart)) {
       return { valid: false, errorType: "casing" };
     }
-
     if (!/^[a-z0-9]+$/.test(domainPart)) {
       return { valid: false, errorType: "syntax" };
     }
-
     return { valid: true, errorType: "" };
   };
-
-  const validatePhoneNumber = (p: string, countryCode: string) => {
-  if (!p) return "";
-
-  const fullNumber = `${countryCode}${p}`;
-
-  try {
-    const phoneNumber = parsePhoneNumberFromString(fullNumber);
-
-    if (!phoneNumber || !phoneNumber.isValid()) {
-      return "Enter valid phone number";
-    }
-
-  } catch {
-    return "Enter valid phone number";
-  }
-
-  return "";
-};
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -291,14 +517,12 @@ const [docError, setDocError] = useState("");
   const handleValueChange = (name: string, value: string) => {
     const updatedForm = { ...form, [name]: value };
     setForm(updatedForm);
-
     setMandatoryError("");
     if (name === "username") setUsernameStatus(null);
     if (name === "phone") setPhoneStatus(null);
     if (name === "confirmPassword" && value.length > 0) setShowPassword(false);
-
     let fieldError = "";
-
+    
     if (value) {
       if (name === "username") {
         const allowedChars = /^[a-zA-Z][a-zA-Z0-9.]*$/;
@@ -306,7 +530,6 @@ const [docError, setDocError] = useState("");
         const doublePeriod = /\.\./;
         const lengthValid = value.length >= 6 && value.length <= 16;
         const endsWithPeriod = value.endsWith('.');
-
         if (!allowedChars.test(value)) {
           fieldError = "Username must start with a letter and only contain letters, numbers, or periods.";
         } else if (forbiddenChars.test(value)) {
@@ -328,7 +551,8 @@ const [docError, setDocError] = useState("");
         }
       }
       if (name === "phone") {
-        fieldError = validatePhoneNumber(value, updatedForm.countryCode);
+        // Use libphonenumber-js for dynamic validation for ANY country
+        fieldError = validatePhoneNumber(value, updatedForm.countryCode, updatedForm.countryIso2);
       }
       if (name === "password") {
         if (!passwordValidCriteria(value)) {
@@ -343,7 +567,7 @@ const [docError, setDocError] = useState("");
         }
       }
     }
-
+    
     setErrors(prev => {
       const newErrs = { ...prev };
       if (!value) {
@@ -353,7 +577,6 @@ const [docError, setDocError] = useState("");
       } else {
         delete newErrs[name];
       }
-
       if (name === "password" && updatedForm.confirmPassword) {
         if (updatedForm.confirmPassword !== value) {
           newErrs.confirmPassword = "The passwords you entered do not match.";
@@ -370,7 +593,6 @@ const [docError, setDocError] = useState("");
     const cleanAgency = form.agencyName.replace(/[^a-zA-Z]/g, "").slice(0, 9);
     const timestamp = Date.now().toString().slice(-6);
     const newUsername = `${cleanAgency}${timestamp}`.toLowerCase();
-
     setForm(prev => ({ ...prev, username: newUsername }));
     setErrors(prev => {
       const newErrs = { ...prev };
@@ -380,90 +602,403 @@ const [docError, setDocError] = useState("");
     setUsernameStatus(null);
   };
 
-  const checkUsername = async () => {
-  if (!form.username || errors.username) return;
-
-  setIsCheckingUser(true);
-  setUsernameStatus(null);
-
-  try {
-    const res = await userNameService.checkAvailability(form.username);
-
-    if (res?.data?.available === "test") {
-      setUsernameStatus("unavailable");
+  // Check if a group is valid (without setting errors)
+  const isGroupValid = (group: DocumentGroup): boolean => {
+    const uploadedCount = multiDocs[group.groupid]?.length || 0;
+    const singleUploaded = uploadedFiles[group.groupid] !== null;
+    
+    if (group.members.length === 1) {
+      const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
+      if (group.min > 0) {
+        if (!singleUploaded) return false;
+        if (!hasIdentifier) return false;
+      }
+      return true;
+    } else if (group.max === 1) {
+      const selectedMember = selectedDocs[group.groupid];
+      const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
+      if (group.min > 0) {
+        if (!selectedMember) return false;
+        if (!uploadedFiles[group.groupid]) return false;
+        if (!hasIdentifier) return false;
+      }
+      return true;
     } else {
-      setUsernameStatus("available");
+      if (group.min > 0 && uploadedCount < group.min) return false;
+      if (uploadedCount > group.max) return false;
+      const hasInvalid = multiDocs[group.groupid]?.some(
+        doc => !doc.identifierValue || doc.identifierValue.trim() === ""
+      );
+      if (hasInvalid) return false;
+      return true;
     }
+  };
 
-  } catch {
-    setUsernameStatus("available");
-  } finally {
-    setIsCheckingUser(false);
-  }
-};
-
-  const checkPhone = async () => {
-  if (!form.phone || errors.phone) return;
-
-  setIsCheckingPhone(true);
-  setPhoneStatus(null);
-
-  try {
-    const res = await phoneNumberAvailService.checkAvailability(form.phone);
-
-    if (res?.data?.available === true) {
-      setPhoneStatus("available");
-    } else {
-      setPhoneStatus("available");
+  // Validate all document sections - only shows errors if submit attempted
+  const validateAllDocumentSections = (showErrors: boolean = false) => {
+    let isValid = true;
+    const newGroupErrors: GroupErrorState = {};
+    
+    for (const group of documentGroups) {
+      const uploadedCount = multiDocs[group.groupid]?.length || 0;
+      const singleUploaded = uploadedFiles[group.groupid] !== null;
+      
+      if (group.members.length === 1) {
+        const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
+        
+        if (group.min > 0) {
+          if (!singleUploaded) {
+            if (showErrors) newGroupErrors[group.groupid] = `Please upload ${group.group_name} document`;
+            isValid = false;
+          } else if (!hasIdentifier) {
+            if (showErrors) newGroupErrors[group.groupid] = `Please enter ${group.members[0].identifier}`;
+            isValid = false;
+          }
+        }
+      } else if (group.max === 1) {
+        const selectedMember = selectedDocs[group.groupid];
+        const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
+        
+        if (group.min > 0) {
+          if (!selectedMember) {
+            if (showErrors) newGroupErrors[group.groupid] = `Please select a document type for ${group.group_name}`;
+            isValid = false;
+          } else if (!uploadedFiles[group.groupid]) {
+            if (showErrors) newGroupErrors[group.groupid] = `Please upload ${selectedMember.description}`;
+            isValid = false;
+          } else if (!hasIdentifier) {
+            if (showErrors) newGroupErrors[group.groupid] = `Please enter ${selectedMember.identifier}`;
+            isValid = false;
+          }
+        }
+      } else {
+        if (group.min > 0 && uploadedCount < group.min) {
+          if (showErrors) newGroupErrors[group.groupid] = `Please upload at least ${group.min} document(s) for ${group.group_name}`;
+          isValid = false;
+        } else if (uploadedCount > group.max) {
+          if (showErrors) newGroupErrors[group.groupid] = `Maximum ${group.max} document(s) allowed for ${group.group_name}`;
+          isValid = false;
+        }
+        
+        const hasInvalid = multiDocs[group.groupid]?.some(
+          doc => !doc.identifierValue || doc.identifierValue.trim() === ""
+        );
+        if (hasInvalid) {
+          if (showErrors) newGroupErrors[group.groupid] = `Please fill all identifier fields for ${group.group_name}`;
+          isValid = false;
+        }
+      }
     }
+    
+    if (showErrors) {
+      setGroupErrors(newGroupErrors);
+    }
+    
+    return isValid;
+  };
 
-  } catch {
-    setPhoneStatus("available");
-  } finally {
-    setIsCheckingPhone(false);
-  }
-};
+  // Handle adding multi-document
+  const handleAddMultiDocument = (group: DocumentGroup) => {
+    const tempDoc = tempDocs[group.groupid];
+    const currentMultiDocs = multiDocs[group.groupid] || [];
+    
+    if (!tempDoc?.member) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [group.groupid]: "Please select a document type"
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    if (!tempDoc.identifierValue || tempDoc.identifierValue.trim() === "") {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [group.groupid]: `Please enter ${tempDoc.member.identifier}`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    if (!tempDoc.file) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [group.groupid]: `Please upload ${tempDoc.member.description}`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    // Check for duplicate
+    const alreadyExists = currentMultiDocs.some(
+      doc => doc.member.document_type === tempDoc.member?.document_type
+    );
+    
+    if (alreadyExists) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [group.groupid]: `${tempDoc.member?.description} has already been uploaded`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    // Check max limit
+    if (currentMultiDocs.length >= group.max) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [group.groupid]: `Maximum ${group.max} document(s) allowed`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    // Create new document
+    const newDoc: UploadedDocument = {
+      id: `${group.groupid}-${tempDoc.member.document_type}-${Date.now()}`,
+      file: tempDoc.file,
+      member: tempDoc.member,
+      identifierValue: tempDoc.identifierValue,
+      groupid: group.groupid
+    };
+    
+    setMultiDocs(prev => ({
+      ...prev,
+      [group.groupid]: [...currentMultiDocs, newDoc]
+    }));
+    
+    // Reset temp state
+    setTempDocs(prev => ({
+      ...prev,
+      [group.groupid]: null
+    }));
+    setMultiFiles(prev => ({
+      ...prev,
+      [group.groupid]: null
+    }));
+    
+    // Clear error for this group if it exists
+    if (submitAttempted && isGroupValid(group)) {
+      setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
+    }
+  };
+  
+  // Handle file selection for single member group
+  const handleSingleFileSelect = (groupid: number, file: File) => {
+    const group = documentGroups.find(g => g.groupid === groupid);
+    if (!group) return;
+    
+    // Validate file size (15MB)
+    if (file.size > 15 * 1024 * 1024) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [groupid]: `File "${file.name}" exceeds 15MB limit`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [groupid]: `File "${file.name}" must be PDF, JPG, or PNG format`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    setUploadedFiles(prev => ({ ...prev, [groupid]: file }));
+    
+    // Clear error for this group if it becomes valid
+    if (submitAttempted && isGroupValid(group)) {
+      setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
+    }
+  };
+  
+  // Handle file selection for single select group
+  const handleSingleSelectFileSelect = (groupid: number, file: File) => {
+    const group = documentGroups.find(g => g.groupid === groupid);
+    if (!group) return;
+    
+    // Validate file size (15MB)
+    if (file.size > 15 * 1024 * 1024) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [groupid]: `File "${file.name}" exceeds 15MB limit`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      if (submitAttempted) {
+        setGroupErrors(prev => ({
+          ...prev,
+          [groupid]: `File "${file.name}" must be PDF, JPG, or PNG format`
+        }));
+        setTimeout(() => {
+          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
+        }, 3000);
+      }
+      return;
+    }
+    
+    setUploadedFiles(prev => ({ ...prev, [groupid]: file }));
+    
+    // Clear error for this group if it becomes valid
+    if (submitAttempted && isGroupValid(group)) {
+      setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
+    }
+  };
+  
+  // Handle file removal for single member/single select
+  const handleFileRemove = (groupid: number) => {
+    setUploadedFiles(prev => ({ ...prev, [groupid]: null }));
+    
+    // Check if error should show after removal
+    const group = documentGroups.find(g => g.groupid === groupid);
+    if (submitAttempted && group && !isGroupValid(group)) {
+      validateAllDocumentSections(true);
+    }
+  };
+  
+  // Handle multi-document removal
+  const handleMultiDocRemove = (groupid: number, docId: string) => {
+    setMultiDocs(prev => ({
+      ...prev,
+      [groupid]: (prev[groupid] || []).filter(doc => doc.id !== docId)
+    }));
+    
+    // Check if error should show after removal
+    const group = documentGroups.find(g => g.groupid === groupid);
+    if (submitAttempted && group && !isGroupValid(group)) {
+      validateAllDocumentSections(true);
+    } else if (submitAttempted && group && isGroupValid(group)) {
+      setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
+    }
+  };
+  
+  const handleValidationChange = (groupId: number, isValid: boolean) => {
+    setGroupValidity(prev => ({ ...prev, [groupId]: isValid }));
+  };
+  
+  // Get tooltip text based on min/max values
+  const getTooltipText = (group: DocumentGroup) => {
+    if (group.min === group.max && group.min > 0) {
+      return `You are required to upload exactly ${group.min} document(s)`;
+    } else if (group.min === group.max && group.min === 0) {
+      return `You can upload exactly ${group.max} document(s) (Optional)`;
+    } else if (group.min > 0 && group.max > group.min) {
+      return `You are required to upload ${group.min} to ${group.max} document(s)`;
+    } else if (group.min === 0 && group.max > 0) {
+      return `You can upload up to ${group.max} document(s) (Optional)`;
+    }
+    return `Upload ${group.min} to ${group.max} document(s)`;
+  };
 
   const handleNextStep = async () => {
-  const mandatoryFields: (keyof FormState)[] = [
-    "agencyName", "firstName", "lastName",
-    "email", "phone", "username",
-    "password", "confirmPassword"
-  ];
+    const mandatoryFields: (keyof FormState)[] = [
+      "agencyName", "firstName", "lastName",
+      "email", "phone", "username",
+      "password", "confirmPassword"
+    ];
+    const emptyFields = mandatoryFields.filter(f => !form[f]);
+    const hasInvalidFields = Object.values(errors).some(e => e);
+    if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
+      setMandatoryError("Kindly fill-up all the mandatory fields correctly to proceed to next step");
+      const newErrors = { ...errors };
+      emptyFields.forEach(f => newErrors[f] = "Required");
+      setErrors(newErrors);
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    
+    // Auto-check username and phone when clicking Save and Next
+    if (!usernameStatus && !errors.username) {
+      await checkUsername();
+    }
+    if (!phoneStatus && !errors.phone) {
+      await checkPhone();
+    }
+    
+    // After checks, verify they are available
+    if (usernameStatus === "unavailable") {
+      setMandatoryError("Username is not available. Please choose a different username.");
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    
+    if (phoneStatus === "unavailable") {
+      setMandatoryError("Phone number is already registered. Please use a different number.");
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    
+    setCurrentStep(2);
+    setSubmitAttempted(false);
+  };
 
-  const emptyFields = mandatoryFields.filter(f => !form[f]);
-  const hasInvalidFields = Object.values(errors).some(e => e);
-
-  if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
-    setMandatoryError("Kindly fill-up all the mandatory fields correctly to proceed to next step");
-
-    const newErrors = { ...errors };
-    emptyFields.forEach(f => newErrors[f] = "Required");
-
-    setErrors(newErrors);
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    return;
-  }
-
-  //  AUTO CHECK
-  if (!usernameStatus) await checkUsername();
-  if (!phoneStatus) await checkPhone();
-
-  setCurrentStep(2);
-};
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-
-  if (documents.length === 0) {
-    setDocError("Please upload required documents to proceed");
-    return;
-  }
-
-  setDocError("");
-
-  alert("Registered successfully");
-  router.push("/");
-};
+    e.preventDefault();
+    setSubmitAttempted(true);
+    
+    // Check each mandatory group
+    let allValid = true;
+    for (const group of documentGroups) {
+      if (group.min > 0) {
+        if (!groupValidity[group.groupid]) {
+          allValid = false;
+          break;
+        }
+      }
+    }
+    
+    if (!allValid) {
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      setGlobalDocError("Kindly fill-up all the mandatory fields correctly for successful registration");
+      return;
+    }
+    
+    setGlobalDocError("");
+    alert("Registered successfully");
+    router.push("/");
+  };
 
   return (
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden">
@@ -484,7 +1019,6 @@ const [docError, setDocError] = useState("");
 
       <div className="flex-grow flex justify-center items-center px-4 py-4 overflow-hidden">
         <div className="bg-white w-full max-w-4xl h-full md:h-[88vh] rounded-[4px] border border-[#f1f1f1] grid grid-cols-1 md:grid-cols-2 overflow-hidden transition-all duration-300">
-
           <div className="hidden md:block relative">
             <Image src={UIpic} alt="Agent Signup" fill className="object-cover" />
             <div className="absolute inset-0 bg-blue-900/10"></div>
@@ -495,29 +1029,47 @@ const [docError, setDocError] = useState("");
               <h2 className="text-[16px] font-extrabold text-[#00AFEF] tracking-tight text-center">
                 Agent / Agency Signup
               </h2>
-              
-              {/* Step Indicator Labels */}
               <StepIndicator step={currentStep as 1 | 2} />
             </div>
 
             <div className="mx-8 h-[1.5px] bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
 
-            <div ref={scrollRef} className="flex-grow overflow-y-auto px-8 py-6 
+            <div ref={scrollRef} className="flex-grow overflow-y-auto overflow-x-visible px-8 py-6 
               scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-transparent
               [&::-webkit-scrollbar]:w-1.5
               [&::-webkit-scrollbar-track]:bg-transparent
               [&::-webkit-scrollbar-thumb]:bg-[#00AFEF]
               [&::-webkit-scrollbar-thumb]:rounded-full">
 
-              {mandatoryError && (
+              {mandatoryError && currentStep === 1 && (
                 <div className="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg mb-6 border border-red-100 flex items-center gap-2 animate-in zoom-in-95">
                   <AlertCircle size={16} />
                   {mandatoryError}
                 </div>
               )}
 
+              {globalDocError && currentStep === 2 && (
+                <div className="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg mb-6 border border-red-100 flex items-center gap-2 animate-in zoom-in-95">
+                  <AlertCircle size={16} />
+                  {globalDocError}
+                </div>
+              )}
+
+              {docFetchError && currentStep === 2 && (
+                <div className="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg mb-6 border border-red-100 flex items-center gap-2">
+                  <AlertCircle size={16} />
+                  {docFetchError}
+                </div>
+              )}
+
+              {isLoadingDocs && currentStep === 2 && (
+                <div className="flex flex-col items-center justify-center min-h-[300px]">
+                  <Loader2 className="h-8 w-8 text-[#00AFEF] animate-spin mb-4" />
+                  <p className="text-gray-500">Loading document requirements...</p>
+                </div>
+              )}
+
               {currentStep === 1 ? (
-                /* STEP 1: GENERAL */
                 <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="mb-4">
                     <Label className={LABEL_STYLING}>
@@ -556,30 +1108,38 @@ const [docError, setDocError] = useState("");
                   <div className="mb-4">
                     <Label className={`${LABEL_STYLING} flex items-center`}>
                       Phone Number<span className="text-red-500 ml-1">*</span>
-                      <Tooltip text="Enter exactly 10 digits." />
+                      <Tooltip text="Enter phone number with correct format for selected country" />
                     </Label>
                     <div className="flex gap-3 items-center">
-                      <div className="mt-2 w-[90px] shrink-0">
+                      <div className="mt-2 w-[110px] shrink-0">
                         <Select
-                          value={form.countryCode}
-                          onValueChange={(val) => handleValueChange("countryCode", val)}
+                          value={selectedCountry ? `${selectedCountry.iso2}-${selectedCountry.code}` : ""}
+                          onValueChange={handleCountryChange}
                         >
                           <SelectTrigger className={`w-full !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"}`}>
-                            <SelectValue placeholder="Code" />
+                            <SelectValue placeholder="Select country" />
                           </SelectTrigger>
-                          <SelectContent className="bg-white max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00AFEF]">
-                            {countries.map((c) => (
-                              <SelectItem key={`${c.iso2}-${c.code}`} value={c.code}>
-                                {c.label}
-                              </SelectItem>
-                            ))}
+                          <SelectContent className="bg-white max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-gray-100">
+                            {countries.length > 0 ? (
+                              countries.map((c) => (
+                                <SelectItem key={`${c.iso2}-${c.code}`} value={`${c.iso2}-${c.code}`}>
+                                  {c.label}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="p-2 text-sm text-gray-500">Loading countries...</div>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
                       <Input
                         name="phone"
                         value={form.phone}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          const onlyDigits = e.target.value.replace(/\D/g, "");
+                          handleValueChange("phone", onlyDigits);
+                        }}
+                        inputMode="numeric"
                         placeholder="Enter phone number"
                         className={`${INPUT_STYLING} flex-grow ${errors.phone ? 'border-red-600' : ''}`}
                       />
@@ -595,14 +1155,12 @@ const [docError, setDocError] = useState("");
                     </div>
                     <ErrorMessage message={errors.phone} />
                     
-                    {phoneStatus === "available" && !errors.phone && (
+                    {phoneStatus === "available" && !errors.phone && form.phone && (
                       <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
                         <CheckCircle2 size={14} className="text-green-600" />
-                        <span className="text-green-700 text-xs font-bold tracking-tight">Phone number is available !</span>
+                        <span className="text-green-700 text-xs font-bold tracking-tight">Phone number is available!</span>
                       </div>
                     )}
-
-                    
                   </div>
 
                   <div className="mb-4">
@@ -630,14 +1188,12 @@ const [docError, setDocError] = useState("");
                     </div>
                     <ErrorMessage message={errors.username} />
                     
-                    {usernameStatus === "available" && !errors.username && (
+                    {usernameStatus === "available" && !errors.username && form.username && (
                       <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
                         <CheckCircle2 size={14} className="text-green-600" />
-                        <span className="text-green-700 text-xs font-bold tracking-tight">Username is available !</span>
+                        <span className="text-green-700 text-xs font-bold tracking-tight">Username is available!</span>
                       </div>
                     )}
-
-                    
                   </div>
 
                   <div className="mb-4">
@@ -660,7 +1216,6 @@ const [docError, setDocError] = useState("");
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
-
                     {strengthLabel && !errors.password && (
                       <div className="mt-2.5 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-500">
                         <div className="h-1.5 flex-grow bg-gray-100 rounded-full overflow-hidden">
@@ -697,38 +1252,25 @@ const [docError, setDocError] = useState("");
                 </div>
               ) : (
                 /* STEP 2: DOCUMENTS */
-                <div className="animate-in fade-in slide-in-from-left-4 duration-500 flex flex-col items-center justify-center min-h-[300px] text-center">
-                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-[#00AFEF]">
-                     <Upload className="text-[#00AFEF]" size={28} />
-                  </div>
-                  <h3 className="text-slate-800 font-bold text-lg mb-2">Upload Agency Documents</h3>
-                  <p className="text-slate-500 text-sm mb-6 max-w-xs">Please upload your business registration and identity proof (PDF, JPG up to 5MB).</p>
-                  
-                  <div className="w-full border-2 border-dashed border-slate-200 rounded-xl p-8 hover:border-[#00AFEF] transition-colors cursor-pointer group bg-slate-50/50">
-                    <input
-  type="file"
-  className="hidden"
-  id="doc-upload"
-  multiple
-  onChange={(e) => {
-    const files = e.target.files;
-    if (files) {
-      setDocuments(Array.from(files));
-      setDocError("");
-    }
-  }}
-/>
-                    {docError && (
-  <div className="mt-3 text-red-600 text-sm flex items-center gap-2">
-    <AlertCircle size={14} />
-    {docError}
-  </div>
-)}
-                    <label htmlFor="doc-upload" className="cursor-pointer">
-                      <span className="text-[#00AFEF] font-semibold group-hover:underline">Click to upload</span>
-                      <span className="text-slate-500 ml-1">or drag and drop files here</span>
-                    </label>
-                  </div>
+                <div className="animate-in fade-in slide-in-from-left-4 duration-500 space-y-6">
+                  {!isLoadingDocs && !docFetchError && documentGroups.length > 0 ? (
+                    documentGroups.map((group) => (
+                      <DocumentUploadSection
+                        key={group.groupid}
+                        group={group}
+                        submitAttempted={submitAttempted}
+                        onValidationChange={handleValidationChange}
+                      />
+                    ))
+                  ) : !isLoadingDocs && !docFetchError && documentGroups.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
+                      <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-yellow-500">
+                        <AlertCircle className="text-yellow-500" size={28} />
+                      </div>
+                      <h3 className="text-slate-800 font-bold text-lg mb-2">No Document Requirements</h3>
+                      <p className="text-slate-500 text-sm">No document types are currently configured for agent registration.</p>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -762,12 +1304,12 @@ const [docError, setDocError] = useState("");
                   <PremiumButton
                     type="button"
                     onClick={() => {
-  setCurrentStep(1);
-  setTimeout(() => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, 100);
-}}
-                    variant="destructive"
+                      setCurrentStep(1);
+                      setTimeout(() => {
+                        scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                      }, 100);
+                    }}
+                    variant="primary"
                     size="lg"
                     className="w-full"
                   >
@@ -836,5 +1378,14 @@ const InputWithError = ({ label, name, required, placeholder, tooltip, form, err
       placeholder={placeholder}
       className={`${INPUT_STYLING} ${errors[name] ? 'border-red-600' : ''}`}
     />
+  </div>
+);
+
+const Tooltip = ({ text }: { text: string }) => (
+  <div className="relative group inline-block ml-2">
+    <span className="text-[#00AFEF] text-xs cursor-help">ⓘ</span>
+    <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-50 min-w-[240px] max-w-[300px] bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-normal break-words leading-relaxed">
+      {text}
+    </div>
   </div>
 );
