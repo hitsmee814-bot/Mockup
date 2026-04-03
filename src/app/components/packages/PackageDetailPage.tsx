@@ -5,6 +5,7 @@ import {
   Star, Clock, MapPin, CheckCircle2, ChevronRight, Calendar,
   Shield, XCircle, Tag, Eye, Map, MessageCircle, ChevronLeft,
   ImageIcon,
+  ArrowLeft,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
@@ -12,6 +13,8 @@ import { useRouter } from "next/navigation"
 import { ItineraryStepper } from "./ItineraryStepper"
 import { useState } from "react"
 import dynamic from "next/dynamic"
+import { Button } from "@/components/ui/button"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), { ssr: false })
 
@@ -31,12 +34,12 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
   const [currentImg, setCurrentImg] = useState(0)
 
   const backHref = tripType
-    ? `/packages?tripType=${encodeURIComponent(tripType)}`
-    : "/packages"
+    ? `/itinerary/packages?tripType=${encodeURIComponent(tripType)}`
+    : "/itinerary/packages"
 
   const bookingHref = tripType
-    ? `/packages/${pkg.id}/booking?tripType=${encodeURIComponent(tripType)}`
-    : `/packages/${pkg.id}/booking`
+    ? `/itinerary/packages/${pkg.id}/booking?tripType=${encodeURIComponent(tripType)}`
+    : `/itinerary/packages/${pkg.id}/booking`
 
   const breadcrumbLabel = tripType ?? "All"
   const images = pkg.images?.length ? pkg.images : [pkg.image]
@@ -44,15 +47,54 @@ export function PackageDetailPage({ pkg, tripType }: PackageDetailPageProps) {
   return (
     <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2">
-        <nav className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Link href="/packages" className="transition-colors hover:text-[#3FB8FF]">Itineraries</Link>
-          <ChevronRight className="size-3 shrink-0" />
-          <Link href={backHref} className="capitalize transition-colors hover:text-[#3FB8FF]">{breadcrumbLabel}</Link>
-          <ChevronRight className="size-3 shrink-0" />
-          <span className="text-gray-800 font-semibold truncate">{pkg.name}</span>
-        </nav>
-      </div>
+<div className="max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2">
+  <div className="flex items-center gap-3">
+
+    {/* <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 rounded-full"
+      onClick={() => router.back()}
+    >
+      <ArrowLeft className="h-4 w-4" />
+    </Button> */}
+
+    <Breadcrumb>
+      <BreadcrumbList>
+
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/packages">Itineraries</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+
+        <BreadcrumbSeparator />
+
+        {tripType && (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={backHref} className="capitalize">
+                  {tripType}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+
+            <BreadcrumbSeparator />
+          </>
+        )}
+
+        <BreadcrumbItem>
+          <BreadcrumbPage className="truncate max-w-[150px] sm:max-w-xs">
+            {pkg.name}
+          </BreadcrumbPage>
+        </BreadcrumbItem>
+
+      </BreadcrumbList>
+    </Breadcrumb>
+
+  </div>
+</div>
 
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6 sm:space-y-8">
 

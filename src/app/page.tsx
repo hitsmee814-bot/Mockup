@@ -11,6 +11,7 @@ import VacationDestinations from "./components/package-carousel/PackageCards"
 import RoadmapTimeline from "./components/RoadMap/RoadMap"
 import CoverflowCarousel from "./components/package-carousel/CarouselCards"
 import TopPackages from "./components/TopPackages"
+import Testimonials from "./components/TestimonialsSection"
 
 export default function HomePage() {
 
@@ -27,7 +28,7 @@ export default function HomePage() {
       {/* <CriticalServices /> */}
       {/* <VisionMissionSection /> */}
       {/* <TeamSectionNew /> */}
-      <TestimonialsCarousel />
+      <Testimonials />
       <RoadmapTimeline/>
       {/* <PrivacyPolicy /> */}
       <FAQ />

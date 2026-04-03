@@ -83,9 +83,9 @@ export function FlightDetail({ id }: { id: string }) {
       {/* <Header title="Flight" /> */}
       <div className="min-h-screen bg-white text-gray-800 p-4 md:p-8 space-y-4 md:space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
+          {/* <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
-          </Button>
+          </Button> */}
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>

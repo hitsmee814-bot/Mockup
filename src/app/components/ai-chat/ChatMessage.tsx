@@ -10,52 +10,50 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isBot = message.role === "bot"
+  const time = message.timestamp.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
 
-  return (
-    <motion.div
-      className={`flex gap-2.5 ${isBot ? "justify-start" : "justify-end"}`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-    >
-      {isBot && (
-        <div
-          className="size-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-          style={{ background: "linear-gradient(135deg, #3FB8FF, #6366f1)" }}
-        >
-          <Sparkles className="size-3.5 text-white" />
+  if (message.typing) {
+    return (
+      <motion.div className="flex items-start gap-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <div className="size-6 rounded-full flex items-center justify-center shrink-0 bg-gradient-to-br from-primary to-chart-3">
+          <Sparkles className="size-3 text-white" />
         </div>
-      )}
+        <div className="bg-muted rounded-2xl rounded-tl-sm px-3 py-2 inline-flex gap-1.5">
+          {[0, 1, 2].map(i => (
+            <motion.span key={i} className="size-1.5 rounded-full bg-muted-foreground/50"
+              animate={{ y: [0, -4, 0] }} transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.12 }} />
+          ))}
+        </div>
+      </motion.div>
+    )
+  }
 
-      <div className={`max-w-[80%] ${!isBot ? "flex flex-col items-end" : ""}`}>
-        {message.typing ? (
-          <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 inline-flex gap-1.5">
-            {[0, 1, 2].map(i => (
-              <motion.span
-                key={i}
-                className="size-1.5 rounded-full bg-gray-400"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.12 }}
-              />
-            ))}
+  if (isBot) {
+    return (
+      <motion.div className="flex items-start gap-2" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="size-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 bg-gradient-to-br from-primary to-chart-3">
+          <Sparkles className="size-3 text-white" />
+        </div>
+        <div className="min-w-0 max-w-[calc(100%-2rem)]">
+          <div className="bg-muted border border-border text-foreground rounded-2xl rounded-tl-sm px-3 py-2 text-[12px] sm:text-[13px] leading-relaxed"
+            style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+            {message.text}
           </div>
-        ) : (
-          <>
-            <div
-              className={`rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed ${
-                isBot
-                  ? "bg-gray-50 border border-gray-100 text-gray-700 rounded-tl-sm"
-                  : "text-white rounded-tr-sm"
-              }`}
-              style={!isBot ? { background: "#3FB8FF" } : undefined}
-            >
-              {message.text}
-            </div>
-            <p className={`text-[9px] text-gray-300 mt-1 ${isBot ? "" : "text-right"}`}>
-              {message.timestamp.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-            </p>
-          </>
-        )}
+          <p className="text-[9px] text-muted-foreground/50 mt-0.5">{time}</p>
+        </div>
+      </motion.div>
+    )
+  }
+
+  // User message
+  return (
+    <motion.div className="flex flex-col items-end" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="max-w-[85%]">
+        <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-3 py-2 text-[12px] sm:text-[13px] leading-relaxed"
+          style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+          {message.text}
+        </div>
+        <p className="text-[9px] text-muted-foreground/50 mt-0.5 text-right">{time}</p>
       </div>
     </motion.div>
   )

@@ -20,22 +20,22 @@ interface QuickTopicsProps {
 
 export function QuickTopics({ onSelect }: QuickTopicsProps) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       {topics.map((t, i) => {
         const Icon = t.icon
         return (
           <motion.button
             key={t.label}
             onClick={() => onSelect(t.value)}
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-full border cursor-pointer transition-all hover:shadow-sm"
-            style={{ background: t.color + "08", color: t.color, borderColor: t.color + "25" }}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2 rounded-xl border cursor-pointer transition-all hover:shadow-sm"
+            style={{ background: t.color + "0A", color: t.color, borderColor: t.color + "25" }}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.03 }}
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, background: t.color + "15" }}
             whileTap={{ scale: 0.95 }}
           >
-            <Icon className="size-3" />
+            <Icon className="size-3.5" />
             {t.label}
           </motion.button>
         )
