@@ -8,15 +8,23 @@ import { Separator } from "@/components/ui/separator"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { ChevronDown } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, Variants } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { FilterState, defaultFilters } from "./types"
 
-const filterSectionVariants = {
+
+const filterSectionVariants: Variants = {
   hidden: { opacity: 0, y: 10 },
+
   show: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.04, type: "spring", stiffness: 200, damping: 24 }
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.04,
+      type: "spring" as const,
+      stiffness: 200,
+      damping: 24,
+    },
   }),
 }
 
