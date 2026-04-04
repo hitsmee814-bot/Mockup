@@ -16,6 +16,7 @@ import { EnquiryDialog } from "./EnquiryDialog"
 import { useState } from "react"
 import dynamic from "next/dynamic"
 import type { Accommodation } from "./types"
+import { PremiumButton } from "@/app/utils/PremiumButton"
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), { ssr: false })
 
@@ -542,24 +543,22 @@ export function PackageDetailPage({ pkg, tripType }: Props) {
               ) : null}
 
               {/* Book Now */}
-              <motion.button
+              <PremiumButton
                 onClick={() => router.push(bookingHref)}
-                className="w-full text-white font-bold py-3 rounded-xl text-sm cursor-pointer bg-primary"
-                whileHover={{ scale: 1.02, boxShadow: "0 6px 24px 0 rgba(63,184,255,0.3)" }}
-                whileTap={{ scale: 0.98 }}
+                variant="primary"
+                className="w-full"
               >
                 Book Now
-              </motion.button>
+              </PremiumButton>
 
               {/* Enquiry */}
-              <motion.button
+              <PremiumButton
                 onClick={() => setEnquiryOpen(true)}
-                className="w-full font-bold py-3 rounded-xl text-sm cursor-pointer border-2 border-primary text-primary bg-primary/5"
-                whileHover={{ scale: 1.02, backgroundColor: "rgba(63,184,255,0.1)" }}
-                whileTap={{ scale: 0.98 }}
+                variant="secondary"
+                className="w-full"
               >
                 Have a Question? Enquire Now
-              </motion.button>
+              </PremiumButton>
 
               {/* Download & Share */}
               <div className="grid grid-cols-2 gap-2">
@@ -599,7 +598,6 @@ export function PackageDetailPage({ pkg, tripType }: Props) {
         </div>
       </div>
 
-      {/* Enquiry Dialog */}
       <EnquiryDialog open={enquiryOpen} onOpenChange={setEnquiryOpen} packageName={pkg.name} />
     </div>
   )
