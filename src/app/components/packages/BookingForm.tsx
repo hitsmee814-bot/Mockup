@@ -64,7 +64,7 @@ export function BookingForm({ pkg, tripType }: BookingFormProps) {
   return (
     <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2">
+      <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 pb-2">
         <nav className="flex items-center gap-1.5 text-xm text-gray-400">
           <Link href="/packages" className="transition-colors hover:text-[#3FB8FF]">Itineraries</Link>
           <ChevronRight className="size-3 shrink-0" />
@@ -74,7 +74,7 @@ export function BookingForm({ pkg, tripType }: BookingFormProps) {
         </nav>
       </div>
 
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
         <AnimatePresence mode="wait">
           {submitted ? (
             <SuccessView pkg={pkg} detailHref={detailHref} totalPrice={totalPrice} form={form} />
