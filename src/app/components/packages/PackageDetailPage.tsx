@@ -137,7 +137,7 @@ export function PackageDetailPage({ pkg, tripType }: Props) {
     <div className="min-h-screen bg-background">
       {/* Breadcrumb */}
       <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 pb-2">
-        <nav className="flex items-center gap-1.5 text-xm text-muted-foreground">
+        <nav className="flex items-center gap-2.5 text-sm text-muted-foreground">
           <Link href="/itinerary/packages" className="hover:text-primary transition-colors">Packages</Link>
           <ChevronRight className="size-3 shrink-0" />
           <Link href={backHref} className="capitalize hover:text-primary transition-colors">{breadcrumbLabel}</Link>

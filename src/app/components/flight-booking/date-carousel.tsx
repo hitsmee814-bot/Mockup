@@ -26,7 +26,7 @@ export function DateCarousel({ dateOffset, setDateOffset, selectedDate, setSelec
   return (
     <Card className="p-2 sm:p-3 md:p-4 border border-gray-100 shadow-md bg-white overflow-hidden">
       <div className="flex items-center gap-1 md:gap-2">
-        <Button
+        {/* <Button
           variant="ghost"
           size="icon"
           onClick={() => navigateDates(-1)}
@@ -34,7 +34,7 @@ export function DateCarousel({ dateOffset, setDateOffset, selectedDate, setSelec
           className="shrink-0 rounded-full h-8 w-8 md:h-10 md:w-10"
         >
           <ChevronLeft className="h-4 w-4" />
-        </Button>
+        </Button> */}
         <div className="flex-1 grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-1 sm:gap-1.5 md:gap-2">
           <AnimatePresence mode="popLayout" custom={direction}>
             {dates.map((d, i) => (

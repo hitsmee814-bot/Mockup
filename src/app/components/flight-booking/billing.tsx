@@ -91,7 +91,7 @@ export function Billing({ id }: { id: string }) {
                 </div>
                 <div className="flex gap-3 mt-2">
                   <Button variant="outline" onClick={() => router.push("/itinerary/flights")}>Search More</Button>
-                  <Button className="text-white" style={{ background: "#3FB8FF" }} onClick={() => router.push("/itinerary/flight")}>Done</Button>
+                  <Button className="text-white" style={{ background: "#3FB8FF" }} onClick={() => router.push("/itinerary/flights")}>Done</Button>
                 </div>
               </motion.div>
             </motion.div>
@@ -113,8 +113,7 @@ export function Billing({ id }: { id: string }) {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-5">
-            <div className="flex-1 space-y-5">
-              {/* Flight summary */}
+  <div className="flex-1 space-y-5 order-2 lg:order-1">              {/* Flight summary */}
               <motion.div {...fadeUp(0)}>
                 <Card className="p-4 border border-gray-100 shadow-sm bg-gray-50/50">
                   <div className="flex items-center gap-4">
@@ -217,9 +216,8 @@ export function Billing({ id }: { id: string }) {
               </motion.div>
             </div>
 
-            {/* Fare Summary Sticky */}
-            <div className="lg:w-96">
-              <motion.div {...fadeUp(0.16)} className="lg:sticky lg:top-8">
+            <div className="lg:w-96 order-1 lg:order-2">             
+             <motion.div {...fadeUp(0.16)} className="lg:sticky lg:top-8">
                 <Card className="border border-gray-100 shadow-md overflow-hidden">
                   <div className="p-5">
                     <h3 className="font-bold text-base mb-4">Fare Summary</h3>

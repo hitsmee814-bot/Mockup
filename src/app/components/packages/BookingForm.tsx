@@ -65,7 +65,7 @@ export function BookingForm({ pkg, tripType }: BookingFormProps) {
     <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
       <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 pb-2">
-        <nav className="flex items-center gap-1.5 text-xm text-gray-400">
+        <nav className="flex items-center gap-2.5 text-sm text-gray-400">
           <Link href="/packages" className="transition-colors hover:text-[#3FB8FF]">Itineraries</Link>
           <ChevronRight className="size-3 shrink-0" />
           <Link href={detailHref} className="transition-colors hover:text-[#3FB8FF] truncate max-w-[140px]">{pkg.name}</Link>
