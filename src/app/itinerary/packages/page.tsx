@@ -1,8 +1,8 @@
 "use client"
 
-import { Packages } from "@/app/components/packages/Packages"
 import { Suspense } from "react"
 import { Spinner } from "@/components/ui/spinner"
+import { Package } from "@/app/components/packages/Package"
 
 export default function PackagesPage() {
     return (
@@ -13,7 +13,7 @@ export default function PackagesPage() {
                 </div>
             }
         >
-            <Packages />
+            <Package />
         </Suspense>
     )
 }

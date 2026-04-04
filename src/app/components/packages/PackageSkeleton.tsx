@@ -2,6 +2,7 @@ export function PackageSkeleton() {
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden animate-pulse"
       style={{ boxShadow: "0 2px 12px 0 rgba(63,184,255,0.06)" }}>
+      {/* Image placeholder */}
       <div className="relative h-40 sm:h-52" style={{ background: "linear-gradient(135deg, #3FB8FF18 0%, #FBAB1818 100%)" }}>
         <span className="absolute top-3 left-3 h-5 w-16 rounded-full" style={{ background: "#FBAB1830" }} />
         <span className="absolute top-3 right-3 h-5 w-12 rounded-full" style={{ background: "#3FB8FF20" }} />
@@ -9,13 +10,17 @@ export function PackageSkeleton() {
       </div>
 
       <div className="p-3 sm:p-4 space-y-2.5">
+        {/* Location */}
         <div className="h-3 w-28 rounded-full" style={{ background: "#3FB8FF15" }} />
+        {/* Title */}
         <div className="h-4 w-3/4 rounded-full" style={{ background: "#3FB8FF20" }} />
+        {/* Description */}
         <div className="space-y-1.5">
           <div className="h-3 w-full rounded-full bg-gray-100" />
           <div className="h-3 w-2/3 rounded-full bg-gray-100" />
         </div>
         <div className="h-px bg-gray-100" />
+        {/* Footer */}
         <div className="flex items-end justify-between">
           <div className="space-y-1">
             <div className="h-3 w-16 rounded-full bg-gray-100" />

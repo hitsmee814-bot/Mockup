@@ -36,6 +36,19 @@ export interface Review {
   rating: number;
   date: string;
   comment: string;
+  tags?: string[];
+}
+
+export interface Accommodation {
+  destination: string;
+  hotelName: string;
+  nights: number;
+  mealPlan: string;
+}
+
+export interface PriceBreakdown {
+  label: string;
+  amount: number;
 }
 
 export interface TravelPackage {
@@ -56,9 +69,16 @@ export interface TravelPackage {
   tags: string[];
   shortDescription: string;
   overview: string;
+  route?: string;
+  ageGroup?: string;
+  packageType?: string;
   inclusions: string[];
   exclusions: string[];
   locations: Location[];
   userReviews: Review[];
   itinerary: ItineraryDay[];
+  accommodations?: Accommodation[];
+  priceBreakdown?: PriceBreakdown[];
+  importantNotes?: string[];
+  travelAdvisory?: string[];
 }

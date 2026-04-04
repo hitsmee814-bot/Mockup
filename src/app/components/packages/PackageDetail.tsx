@@ -32,6 +32,7 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
             className="fixed right-0 top-0 h-full w-full max-w-xl bg-white border-l border-gray-100 z-50 flex flex-col overflow-hidden"
           >
+            {/* Hero image */}
             <div className="relative h-56 shrink-0 bg-gray-100 overflow-hidden">
               <motion.img
                 src={pkg.image}
@@ -74,8 +75,10 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
               </motion.div>
             </div>
 
+            {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
+              {/* Price + CTA */}
               <motion.div
                 className="flex items-center justify-between rounded-2xl p-4 border border-gray-100 bg-gray-50"
                 initial={{ opacity: 0, y: 12 }}
@@ -98,6 +101,7 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 </motion.button>
               </motion.div>
 
+              {/* Categories */}
               <motion.div
                 className="flex flex-wrap gap-2"
                 initial={{ opacity: 0 }}
@@ -111,6 +115,7 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 ))}
               </motion.div>
 
+              {/* Description */}
               <motion.p
                 className="text-sm text-gray-500 leading-relaxed"
                 initial={{ opacity: 0 }}
@@ -120,6 +125,7 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 {pkg.shortDescription}
               </motion.p>
 
+              {/* Inclusions */}
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
                 <h3 className="font-bold text-sm mb-3 flex items-center gap-2 text-gray-800">
                   <CheckCircle2 className="size-4" style={{ color: "#3FB8FF" }} /> What&apos;s Included
@@ -136,6 +142,7 @@ export function PackageDetail({ pkg, onClose }: PackageDetailProps) {
                 </div>
               </motion.div>
 
+              {/* Itinerary */}
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <h3 className="font-bold text-sm mb-4 flex items-center gap-2 text-gray-800">
                   <Calendar className="size-4" style={{ color: "#3FB8FF" }} /> Day-by-Day Itinerary

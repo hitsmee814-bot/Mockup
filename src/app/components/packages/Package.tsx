@@ -3,13 +3,13 @@
 import { useMemo, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { travelPackages } from "./data"
+import { Category } from "./types"
 import { FilterBar } from "./FilterBar"
 import { PackageCard } from "./PackageCard"
 import { PackageSkeleton } from "./PackageSkeleton"
 import { FilterDrawer } from "./FilterDrawer"
 import { Compass } from "lucide-react"
-import { motion, AnimatePresence, Variants } from "framer-motion"
-import { Category } from "./types"
+import { motion, AnimatePresence } from "framer-motion"
 
 const SKELETON_COUNT = 8
 
@@ -30,24 +30,21 @@ const staggerContainer = {
   hidden: {},
   show: { transition: { staggerChildren: 0.07 } },
 }
-const cardVariant: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 20,
-    scale: 0.95,
-  },
+
+const cardVariant = {
+  hidden: { opacity: 0, y: 30, scale: 0.97 },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
-      duration: 0.4,
+      duration: 0.45,
       ease: [0.25, 0.1, 0.25, 1] as const,
     },
   },
 }
 
-export function Packages() {
+export function Package() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -73,7 +70,7 @@ export function Packages() {
     const params = new URLSearchParams(searchParams.toString())
     if (cat === "All") params.delete("tripType")
     else params.set("tripType", cat)
-    router.push(`/itinerary/packages?${params.toString()}`)
+    router.push(`/packages?${params.toString()}`)
   }
 
   const activeFilterCount = [
@@ -103,6 +100,7 @@ export function Packages() {
     <div className="min-h-screen bg-white px-3 sm:px-4 py-6 sm:py-10">
       <div className="max-w-7xl mx-auto space-y-8">
 
+        {/* Header */}
         <div className="text-center space-y-3">
           <motion.div
             className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-1.5 rounded-full border"
