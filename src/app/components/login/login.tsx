@@ -278,7 +278,7 @@ const validatePhone = (value: string, countryCode: string) => {
         setLoading(true);
 
         try {
-            const response = await loginService.sendMobileOtp(username, password);
+            const response = await loginService.login(username, password);
             
             console.log("Login Response:", response);
             toast.success("Welcome Back", { position: "top-right" });
@@ -291,8 +291,7 @@ const validatePhone = (value: string, countryCode: string) => {
                 login()
             }, 2000);
         } catch (error:any) {
-            console.error("Login Error:", error);
-            toast.error(error.detail, { position: "top-right" });
+            toast.error(error.message, { position: "top-right" });
         } finally {
             setLoading(false);
         }
