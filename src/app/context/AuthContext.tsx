@@ -14,17 +14,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("isLoggedIn") === "true"
+    const stored = localStorage.getItem("isLoggedIn") === "true"
     setIsLoggedIn(stored)
   }, [])
 
   const login = () => {
-    sessionStorage.setItem("isLoggedIn", "true")
+    localStorage.setItem("isLoggedIn", "true")
     setIsLoggedIn(true)
   }
 
   const logout = () => {
-    sessionStorage.removeItem("isLoggedIn")
+    localStorage.removeItem("isLoggedIn")
+    localStorage.removeItem("loggedInType");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     setIsLoggedIn(false)
   }
 

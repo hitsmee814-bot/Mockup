@@ -9,6 +9,7 @@ import { PremiumButton } from "../utils/PremiumButton"
 import { HiOutlineBriefcase } from "react-icons/hi"
 import { SearchDialog } from "./common/SearchDialog"
 import { useAuth } from "../context/AuthContext"
+import { useRouter } from "next/navigation"
 
 
 type NavChild = {
@@ -67,6 +68,7 @@ export default function HeaderNav({
   onAuthOpen,
   position = "sticky",
 }: HeaderNavProps) {
+  const router = useRouter()
   const [scrollRatio, setScrollRatio] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -205,7 +207,7 @@ export default function HeaderNav({
             {isLoggedIn ? (
                 <PremiumButton
                 size="sm"
-                onClick={logout}
+                onClick={()=> router.push('itinerary/profile')}
                 variant={isScrolled ? "ghost" : "primary"}
                 >
                 Profile
