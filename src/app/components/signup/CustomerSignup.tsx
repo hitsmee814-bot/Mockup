@@ -6,6 +6,7 @@ import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, ChevronsUpDown } from 
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
+import { toast } from "sonner";
 import logovar from "../../assets/images/logoPrimary.png";
 import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg";
 
@@ -13,6 +14,8 @@ import UIpic from "../../assets/images/traveling-concept-with-landmarks.jpg";
 import { phoneNoService } from "@/services/phoneNoService";
 import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
 import { userNameService } from "@/services/userNameService";
+import { userCreationService } from "@/services/userCreationService";
+import { customerProfileCreationService } from "@/services/customerProfileCreationService";
 
 /* PREMIUM BUTTON IMPORT */
 import { PremiumButton } from "../../utils/PremiumButton";
@@ -27,11 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
 
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
 
@@ -136,85 +134,6 @@ const CustomInput: React.FC<InputProps> = ({
   </div>
 );
 
-/* CUSTOM ALERT COMPONENT FOR MODERN NOTIFICATIONS */
-const CustomAlert: React.FC<{
-  type: 'success' | 'error' | 'warning';
-  title: string;
-  message: string;
-  onClose?: () => void;
-}> = ({ type, title, message, onClose }) => {
-  const [isVisible, setIsVisible] = useState(true);
-
-  useEffect(() => {
-    if (type === 'success') {
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        onClose?.();
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [type, onClose]);
-
-  if (!isVisible) return null;
-
-  const styles = {
-    success: {
-      bg: "bg-green-50",
-      border: "border-green-200",
-      icon: "text-green-600",
-      title: "text-green-800",
-      message: "text-green-700"
-    },
-    error: {
-      bg: "bg-red-50",
-      border: "border-red-200",
-      icon: "text-red-600",
-      title: "text-red-800",
-      message: "text-red-700"
-    },
-    warning: {
-      bg: "bg-yellow-50",
-      border: "border-yellow-200",
-      icon: "text-yellow-600",
-      title: "text-yellow-800",
-      message: "text-yellow-700"
-    }
-  };
-
-  const currentStyle = styles[type];
-
-  return (
-    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md animate-in slide-in-from-top-5 duration-300">
-      <Alert className={`${currentStyle.bg} ${currentStyle.border} border shadow-lg rounded-xl`}>
-        <div className="flex items-start gap-3">
-          {type === 'success' && <CheckCircle2 className={`h-5 w-5 ${currentStyle.icon} mt-0.5`} />}
-          {type === 'error' && <AlertCircle className={`h-5 w-5 ${currentStyle.icon} mt-0.5`} />}
-          {type === 'warning' && <AlertCircle className={`h-5 w-5 ${currentStyle.icon} mt-0.5`} />}
-          <div className="flex-1">
-            <AlertTitle className={`${currentStyle.title} font-semibold text-sm`}>
-              {title}
-            </AlertTitle>
-            <AlertDescription className={`${currentStyle.message} text-xs mt-1`}>
-              {message}
-            </AlertDescription>
-          </div>
-          {onClose && (
-            <button
-              onClick={() => {
-                setIsVisible(false);
-                onClose();
-              }}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </Alert>
-    </div>
-  );
-};
-
 export default function CustomerSignup(): JSX.Element {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -234,9 +153,6 @@ export default function CustomerSignup(): JSX.Element {
   // Track if checks were manually performed
   const [phoneCheckedManually, setPhoneCheckedManually] = useState<boolean>(false);
   const [usernameCheckedManually, setUsernameCheckedManually] = useState<boolean>(false);
-
-  // State for custom alerts
-  const [alert, setAlert] = useState<{ type: 'success' | 'error' | 'warning'; title: string; message: string } | null>(null);
 
   const [form, setForm] = useState<FormType>({
     firstName: "",
@@ -261,7 +177,6 @@ export default function CustomerSignup(): JSX.Element {
     { code: "GB", label: "🇬🇧 +44" },
   ]);
 
-  const [isUserChecking, setIsUserChecking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load data from localStorage on component mount
@@ -413,7 +328,7 @@ export default function CustomerSignup(): JSX.Element {
     return "";
   };
 
-  // MODIFIED: Phone availability check - ALWAYS RETURNS AVAILABLE until database integration
+  // Phone availability check function - ALWAYS RETURNS AVAILABLE until database integration
   const checkPhoneAvailability = async () => {
     if (!form.phone || errors.phone) return;
     
@@ -424,32 +339,16 @@ export default function CustomerSignup(): JSX.Element {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // TEMPORARY: Always return "available" since database integration is not complete
-    // Once database is integrated, replace this with the actual API call below
     setPhoneStatus("available");
     setPhoneCheckedManually(true);
     setIsPhoneChecking(false);
-    
-    /* 
-    // UNCOMMENT THIS BLOCK WHEN DATABASE INTEGRATION IS COMPLETE
-    try {
-      const response = await phoneNumberAvailService.checkAvailability(form.phone);
-      if (response?.available === true) {
-        setPhoneStatus("available");
-        setPhoneCheckedManually(true);
-      } else {
-        setPhoneStatus("unavailable");
-        setPhoneCheckedManually(true);
-      }
-    } catch (err: any) {
-      setPhoneStatus("available");
-      setPhoneCheckedManually(true);
-    } finally {
-      setIsPhoneChecking(false);
-    }
-    */
+    toast.success("✓ Phone number is available!", {
+      position: "top-right",
+      duration: 3000,
+    });
   };
 
-  // MODIFIED: Username availability check - ALWAYS RETURNS AVAILABLE until database integration
+  // Username availability check - ALWAYS RETURNS AVAILABLE until database integration
   const checkUsername = async () => {
     if (!form.username || errors.username) return;
     
@@ -460,34 +359,13 @@ export default function CustomerSignup(): JSX.Element {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // TEMPORARY: Always return "available" since database integration is not complete
-    // Once database is integrated, replace this with the actual API call below
     setUsernameStatus("available");
     setUsernameCheckedManually(true);
     setIsUsernameChecking(false);
-    
-    /* 
-    // UNCOMMENT THIS BLOCK WHEN DATABASE INTEGRATION IS COMPLETE
-    try {
-      const response = await userNameService.checkAvailability(form.username);
-      if (response?.available === true) {
-        setUsernameStatus("available");
-        setUsernameCheckedManually(true);
-      } else {
-        setUsernameStatus("unavailable");
-        setUsernameCheckedManually(true);
-      }
-    } catch (err: any) {
-      if (err?.response?.status === 409) {
-        setUsernameStatus("unavailable");
-        setUsernameCheckedManually(true);
-      } else {
-        setUsernameStatus("available");
-        setUsernameCheckedManually(true);
-      }
-    } finally {
-      setIsUsernameChecking(false);
-    }
-    */
+    toast.success("✓ Username is available!", {
+      position: "top-right",
+      duration: 3000,
+    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -567,191 +445,125 @@ export default function CustomerSignup(): JSX.Element {
 
   const preventCopyPaste = (e: React.ClipboardEvent) => { e.preventDefault(); };
 
-  // Main submit handler with sequential API calls
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    const requiredFields: (keyof FormType)[] = ["firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
-    const newFieldErrors: ErrorType = {};
-    let hasEmptyField = false;
+  // Main submit handler with sequential API calls using service files
+  // Main submit handler with sequential API calls using service files
+// Main submit handler with sequential API calls using service files
+// Main submit handler with sequential API calls using service files
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  
+  const requiredFields: (keyof FormType)[] = ["firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
+  const newFieldErrors: ErrorType = {};
+  let hasEmptyField = false;
 
-    requiredFields.forEach(field => {
-      if (!form[field]) {
-        newFieldErrors[field] = "Required";
-        hasEmptyField = true;
+  requiredFields.forEach(field => {
+    if (!form[field]) {
+      newFieldErrors[field] = "Required";
+      hasEmptyField = true;
+    }
+  });
+
+  const hasDynamicErrors = Object.values(errors).some(err => err !== "" && err !== "Required");
+  
+  if (hasEmptyField || hasDynamicErrors || strengthLabel === "weak password") {
+    setErrors(prev => ({ ...prev, ...newFieldErrors }));
+    setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
+    toast.error("Please fill all mandatory fields correctly", {
+      position: "top-right",
+    });
+    
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    // STEP 1: Create User API Call using service
+    const createUserPayload = {
+      username: form.username,
+      password: form.password,
+      user_org_id: 6,
+      email: form.email,
+      phone: form.phone
+    };
+
+    console.log("Creating user with payload:", createUserPayload);
+    const userResponse = await userCreationService.createUser(createUserPayload);
+    const userId = userResponse.user_id;
+    console.log("User created with ID:", userId);
+
+    // STEP 2: Create Customer Profile API Call using service
+    // Get the dial code from stored data or extract from country label
+    let dialCode: string = "";
+
+    // First, try to get from storedDialCode (from localStorage)
+    if (storedDialCode) {
+      dialCode = storedDialCode;
+    }
+
+    // If not in storage, extract from the selected country's label
+    if (!dialCode && countryCode) {
+      const selectedCountryData = countries.find(c => c.code === countryCode);
+      if (selectedCountryData) {
+        // Extract dial code from label (e.g., "🇮🇳 +91" -> "+91")
+        const match = selectedCountryData.label.match(/\+(\d+)/);
+        if (match) {
+          dialCode = `+${match[1]}`;
+        }
       }
+    }
+
+    // Final fallback for India
+    if (!dialCode) {
+      dialCode = "+91";
+    }
+
+    console.log("Sending countrycode as:", dialCode);
+    
+    const customerProfilePayload = {
+      user_id: userId,
+      firstname: form.firstName,
+      middlename: form.middleName || "",
+      lastname: form.lastName,
+      email: form.email,
+      countrycode: dialCode,
+      phonenumber: form.phone
+    };
+
+    console.log("Creating customer profile with payload:", customerProfilePayload);
+    await customerProfileCreationService.createCustomerProfile(customerProfilePayload);
+
+    // SUCCESS: Clear localStorage and show success message
+    localStorage.removeItem("userPhoneNumber");
+    localStorage.removeItem("userCountryCode");
+    localStorage.removeItem("userEmail");
+
+    toast.success("🎉 Registration Successful! Your customer profile has been created successfully.", {
+      position: "top-right",
+      duration: 1800,
     });
 
-    const hasDynamicErrors = Object.values(errors).some(err => err !== "" && err !== "Required");
+    // Redirect to home page after short delay
+    setTimeout(() => {
+      router.push("/");
+    }, 2000);
+
+  } catch (error: any) {
+    console.error("Registration error:", error);
     
-    if (hasEmptyField || hasDynamicErrors || strengthLabel === "weak password") {
-      setErrors(prev => ({ ...prev, ...newFieldErrors }));
-      setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
-      
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // MODIFIED: AUTO-CHECK for phone - ALWAYS PASSES since database integration is not complete
-      // TEMPORARY: Always consider phone available
-      if (!phoneCheckedManually) {
-        setPhoneStatus("available");
-      }
-      
-      /* 
-      // UNCOMMENT THIS BLOCK WHEN DATABASE INTEGRATION IS COMPLETE
-      if (!phoneCheckedManually) {
-        const phoneResponse = await phoneNumberAvailService.checkAvailability(form.phone);
-        if (phoneResponse?.available !== true) {
-          setPhoneStatus("unavailable");
-          setAlert({
-            type: 'error',
-            title: 'Phone Number Unavailable',
-            message: '❌ This phone number is already registered. Please use a different phone number.'
-          });
-          setIsSubmitting(false);
-          return;
-        } else {
-          setPhoneStatus("available");
-        }
-      } else if (phoneStatus === "unavailable") {
-        setAlert({
-          type: 'error',
-          title: 'Phone Number Unavailable',
-          message: '❌ This phone number is already registered. Please use a different phone number.'
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      */
-
-      // MODIFIED: AUTO-CHECK for username - ALWAYS PASSES since database integration is not complete
-      // TEMPORARY: Always consider username available
-      if (!usernameCheckedManually) {
-        setUsernameStatus("available");
-      }
-      
-      /* 
-      // UNCOMMENT THIS BLOCK WHEN DATABASE INTEGRATION IS COMPLETE
-      if (!usernameCheckedManually) {
-        try {
-          const usernameResponse = await userNameService.checkAvailability(form.username);
-          if (usernameResponse?.available !== true) {
-            setUsernameStatus("unavailable");
-            setAlert({
-              type: 'error',
-              title: 'Username Unavailable',
-              message: '❌ This username is already taken. Please choose a different username.'
-            });
-            setIsSubmitting(false);
-            return;
-          } else {
-            setUsernameStatus("available");
-          }
-        } catch (err: any) {
-          if (err?.response?.status === 409) {
-            setUsernameStatus("unavailable");
-            setAlert({
-              type: 'error',
-              title: 'Username Unavailable',
-              message: '❌ This username is already taken. Please choose a different username.'
-            });
-            setIsSubmitting(false);
-            return;
-          }
-        }
-      } else if (usernameStatus === "unavailable") {
-        setAlert({
-          type: 'error',
-          title: 'Username Unavailable',
-          message: '❌ This username is already taken. Please choose a different username.'
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      */
-
-      // STEP 1: Create User API Call
-      const createUserPayload = {
-        username: form.username,
-        password: form.password,
-        user_org_id: 6,
-        email: form.email,
-        phone: form.phone
-      };
-
-      const userResponse = await fetch("http://150.241.244.100:8000/users/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(createUserPayload),
-      });
-
-      if (!userResponse.ok) {
-        throw new Error("Failed to create user");
-      }
-
-      const userData = await userResponse.json();
-      const userId = userData.user_id;
-
-      // STEP 2: Create Customer Profile API Call
-      const isoCode = storedCountryIso || countryCode;
-      
-      const customerProfilePayload = {
-        user_id: userId,
-        firstname: form.firstName,
-        middlename: form.middleName || "",
-        lastname: form.lastName,
-        email: form.email,
-        countrycode: isoCode,
-        phonenumber: form.phone
-      };
-
-      const profileResponse = await fetch("http://150.241.244.100:8000/profiles/customer/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(customerProfilePayload),
-      });
-
-      if (!profileResponse.ok) {
-        throw new Error("Failed to create customer profile");
-      }
-
-      // SUCCESS: Clear localStorage and show success message
-      localStorage.removeItem("userPhoneNumber");
-      localStorage.removeItem("userCountryCode");
-      localStorage.removeItem("userEmail");
-
-      setAlert({
-        type: 'success',
-        title: '🎉 Registration Successful!',
-        message: 'Your customer profile has been created successfully. Redirecting you to the home page...'
-      });
-
-      // Wait for alert to be visible before redirect
-      setTimeout(() => {
-        router.push("/");
-      }, 2000);
-
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      setAlert({
-        type: 'error',
-        title: 'Registration Failed',
-        message: '❌ Something went wrong. Please try again or contact support if the issue persists.'
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    // Show the actual error message from the API
+    const errorMessage = error?.message || "Registration failed. Please try again.";
+    toast.error(errorMessage, {
+      position: "top-right",
+      duration: 1800,
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Get tooltip text for phone number based on disabled state
   const getPhoneTooltipText = () => {
@@ -771,16 +583,6 @@ export default function CustomerSignup(): JSX.Element {
 
   return (
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar-track]:bg-white [&::-webkit-scrollbar-thumb]:bg-white">
-      {/* Custom Alert Display */}
-      {alert && (
-        <CustomAlert
-          type={alert.type}
-          title={alert.title}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
-      )}
-
       <div className="bg-white shadow-sm px-6 py-3 flex items-center shrink-0 z-20">
         <div onClick={() => router.push("/")} className="flex items-center gap-2 cursor-pointer">
           <Image src={logovar} alt="logo" width={32} height={32} />
@@ -833,14 +635,13 @@ export default function CustomerSignup(): JSX.Element {
                 disabled={isEmailFromStorage}
               />
 
-              {/* Phone Number Section with Check Button - ALWAYS ENABLED */}
+              {/* Phone Number Section with Check Button */}
               <div className="mb-4">
                 <ShadLabel className="text-slate-700 flex items-center">
                   Phone Number<span className="text-red-500 ml-1">*</span>
                   <Tooltip text={getPhoneTooltipText()} />
                 </ShadLabel>
                 <div className="flex gap-2 mt-2">
-                  {/* Country Code Dropdown with ChevronsUpDown icon */}
                   <Select 
                     value={countryCode} 
                     onValueChange={(v) => handleCountryChange(v as CountryCode)}
@@ -869,7 +670,6 @@ export default function CustomerSignup(): JSX.Element {
                       errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"
                     } ${isPhoneFromStorage ? "bg-gray-100 cursor-not-allowed" : ""}`}
                   />
-                  {/* Phone Check Button - ALWAYS ENABLED */}
                   <PremiumButton 
                     type="button" 
                     variant="info"
@@ -882,15 +682,12 @@ export default function CustomerSignup(): JSX.Element {
                 </div>
                 <ErrorMessage message={errors.phone} />
                 
-                {/* Phone availability status message - Always shows available now */}
                 {phoneStatus === "available" && !errors.phone && (
                   <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
                     <CheckCircle2 size={14} className="text-green-600" />
                     <span className="text-green-700 text-xs font-bold tracking-tight">Phone number is available!</span>
                   </div>
                 )}
-
-                {/* Temporarily removed "unavailable" status display until database integration */}
               </div>
 
               {/* Username Section with Check Button */}
@@ -921,15 +718,12 @@ export default function CustomerSignup(): JSX.Element {
                 </div>
                 <ErrorMessage message={errors.username} />
                 
-                {/* Username always shows "available" until database integration */}
                 {usernameStatus === "available" && !errors.username && (
                   <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
                     <CheckCircle2 size={14} className="text-green-600" />
                     <span className="text-green-700 text-xs font-bold tracking-tight">Username is available!</span>
                   </div>
                 )}
-
-                {/* Temporarily removed "unavailable" status display until database integration */}
               </div>
 
               <div className="mb-4">
@@ -999,7 +793,7 @@ export default function CustomerSignup(): JSX.Element {
                   Cancel
                 </PremiumButton>
                 <PremiumButton type="submit" variant="primary" size="lg" disabled={isSubmitting} className="w-full" icon={isSubmitting ? <Loader2 size={16} className="animate-spin" /> : null}>
-                  {isSubmitting ? "Registering..." : "Register"}
+                  Register
                 </PremiumButton>
               </div>
             </div>
