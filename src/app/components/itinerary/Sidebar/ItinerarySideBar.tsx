@@ -15,7 +15,7 @@ import {
 import { useSidebar } from "@/components/ui/sidebar"
 import { useRouter, usePathname } from "next/navigation"
 
-import { Package, Plane, Hotel, Car, Sparkles } from "lucide-react"
+import { Package, Plane, Hotel, Car, Sparkles, CalendarCheck, CreditCard, User } from "lucide-react"
 
 const navigation = [
   {
@@ -26,6 +26,9 @@ const navigation = [
       { title: "Hotels", key: "hotels", icon: Hotel },
       { title: "Cabs", key: "cabs", icon: Car },
       { title: "AI", key: "ai", icon: Sparkles },
+      { title: "Bookings", key: "bookings", icon: CalendarCheck },
+      { title: "Payments", key: "payments", icon: CreditCard },
+      { title: "Profile", key: "profile", icon: User },      
     ],
   },
 ]
