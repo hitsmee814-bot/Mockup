@@ -3,6 +3,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowRight } from "lucide-react"
+import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"
 
 interface LoginFormProps {
     username: string
@@ -25,6 +27,8 @@ export function LoginForm({
     onSubmit,
     onModeChange,
 }: LoginFormProps) {
+    const [showPassword, setShowPassword] = useState(false)
+
     return (
         <div className="space-y-5">
             <div>
@@ -40,19 +44,33 @@ export function LoginForm({
             </div>
             <div>
                 <Label htmlFor="password" className="text-[#04257E]">Password</Label>
+                <div className="relative">
                 <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => onPasswordChange(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter" && !(!!emailError || !username || !password)) {
-                            onSubmit()
-                        }
+                    if (e.key === "Enter" && !(!!emailError || !username || !password)) {
+                        onSubmit()
+                    }
                     }}
-                    className="mt-2 bg-white border-[#CAD8FF] text-[#04257E] placeholder:text-[#7B9FFF] focus:border-[#3FB8FF] h-12"
+                    className="mt-2 bg-white border-[#CAD8FF] text-[#04257E] placeholder:text-[#7B9FFF] focus:border-[#3FB8FF] h-12 pr-10"
                 />
+
+                <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-8 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF]"
+                >
+                    {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                    ) : (
+                    <Eye className="h-5 w-5" />
+                    )}
+                </button>
+                </div>
             </div>
             <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 cursor-pointer text-slate-600">

@@ -20,6 +20,7 @@ import { LogIn, Menu, X } from "lucide-react"
 import { lookupService } from "@/services/countriesService"
 import { useAuth } from "@/app/context/AuthContext"
 import { loginService } from "@/services/loginService"
+import AuthPageGuard from "@/app/guards/AuthPageGuard"
 
 type Country = {
     code: string
@@ -285,8 +286,10 @@ const validatePhone = (value: string, countryCode: string) => {
             localStorage.setItem("refresh_token", response.refresh_token)
             selectedType ? 
             localStorage.setItem("loggedInType", selectedType) : "";
-            login()
-            router.push('/itinerary/flights');
+            router.push('/itinerary/packages');
+            setTimeout(() => {
+                login()
+            }, 2000);
         } catch (error:any) {
             console.error("Login Error:", error);
             toast.error(error.detail, { position: "top-right" });
@@ -309,6 +312,7 @@ const validatePhone = (value: string, countryCode: string) => {
     const selectedUserType = userTypes.find(t => t.id === selectedType)
 
     return (
+        <AuthPageGuard>
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
 
             <header className="fixed top-0 left-0 right-0 h-20 bg-[#3FB8FF] backdrop-blur-md border-b border-slate-200 z-50">
@@ -566,5 +570,7 @@ const validatePhone = (value: string, countryCode: string) => {
                 </AnimatePresence>
             </motion.div>
         </div>
+                                                </AuthPageGuard>
+
     )
 }
