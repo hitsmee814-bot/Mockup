@@ -45,7 +45,7 @@ export const Header = forwardRef<HTMLElement>((props, ref) => {
                     {isLoggedIn ? (
                     <PremiumButton
                         size="sm"
-                        onClick={logout}
+                        // onClick={logout}
                     >
                         Profile
                         <User2 size={18}/>

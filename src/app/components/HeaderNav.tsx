@@ -205,7 +205,7 @@ export default function HeaderNav({
             {isLoggedIn ? (
                 <PremiumButton
                 size="sm"
-                onClick={logout}
+                // onClick={logout}
                 variant={isScrolled ? "ghost" : "primary"}
                 >
                 Profile

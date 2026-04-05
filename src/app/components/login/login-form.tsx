@@ -5,22 +5,22 @@ import { Label } from "@/components/ui/label"
 import { ArrowRight } from "lucide-react"
 
 interface LoginFormProps {
-    email: string
+    username: string
     password: string
     emailError: string
     gradient: string
-    onEmailChange: (value: string) => void
+    onUsernameChange: (value: string) => void
     onPasswordChange: (value: string) => void
     onSubmit: () => void
     onModeChange: () => void
 }
 
 export function LoginForm({
-    email,
+    username,
     password,
     emailError,
     gradient,
-    onEmailChange,
+    onUsernameChange,
     onPasswordChange,
     onSubmit,
     onModeChange,
@@ -28,19 +28,15 @@ export function LoginForm({
     return (
         <div className="space-y-5">
             <div>
-                <Label htmlFor="email" className="text-[#04257E]">Email Address</Label>
+                <Label htmlFor="username" className="text-[#04257E]">Username</Label>
                 <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => onEmailChange(e.target.value)}
+                    id="username"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => onUsernameChange(e.target.value)}
                     className="mt-2 bg-white border-[#CAD8FF] text-[#04257E] placeholder:text-[#7B9FFF] focus:border-[#3FB8FF] h-12"
                     autoFocus
                 />
-                {emailError && (
-                    <p className="text-[#A73775] text-xs mt-1">{emailError}</p>
-                )}
             </div>
             <div>
                 <Label htmlFor="password" className="text-[#04257E]">Password</Label>
@@ -51,7 +47,7 @@ export function LoginForm({
                     value={password}
                     onChange={(e) => onPasswordChange(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter" && !(!!emailError || !email || !password)) {
+                        if (e.key === "Enter" && !(!!emailError || !username || !password)) {
                             onSubmit()
                         }
                     }}
@@ -74,7 +70,7 @@ export function LoginForm({
                 size="lg"
                 className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl"
                 onClick={onSubmit}
-                disabled={!!emailError || !email || !password}
+                disabled={!!emailError || !username || !password}
             >
                 Sign In
                 <ArrowRight className="ml-2 h-5 w-5" />

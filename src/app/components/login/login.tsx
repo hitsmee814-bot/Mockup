@@ -19,6 +19,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { LogIn, Menu, X } from "lucide-react"
 import { lookupService } from "@/services/countriesService"
 import { useAuth } from "@/app/context/AuthContext"
+import { loginService } from "@/services/loginService"
 
 type Country = {
     code: string
@@ -40,6 +41,7 @@ export function Login() {
     const [mobileVerified, setMobileVerified] = useState(false)
     const [emailVerified, setEmailVerified] = useState(false)
     const [email, setEmail] = useState("")
+    const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [emailError, setEmailError] = useState("")
     const [verificationEmailError, setVerificationEmailError] = useState("")
@@ -271,15 +273,27 @@ const validatePhone = (value: string, countryCode: string) => {
     router.push(`/signup/${selectedType}`)
 }
 
-    const handleSubmit = () => {
+        const handleSubmit = async () => {
         setLoading(true);
-        setTimeout(() => {
-            toast.success("Welcome Back", { position: "top-right" })
-            console.log("Login", { type: selectedType, email, password })
+
+        try {
+            const response = await loginService.sendMobileOtp(username, password);
+            
+            console.log("Login Response:", response);
+            toast.success("Welcome Back", { position: "top-right" });
+            localStorage.setItem("access_token", response.access_token)
+            localStorage.setItem("refresh_token", response.refresh_token)
+            selectedType ? 
+            localStorage.setItem("loggedInType", selectedType) : "";
             login()
-            router.push('/itinerary/packages')
-        }, 3000);
-    }
+            router.push('/itinerary/flights');
+        } catch (error:any) {
+            console.error("Login Error:", error);
+            toast.error(error.detail, { position: "top-right" });
+        } finally {
+            setLoading(false);
+        }
+        };
     const handleModeChange = () => {
         setIsSignup(!isSignup)
         setMobile("")
@@ -532,13 +546,13 @@ const validatePhone = (value: string, countryCode: string) => {
                                         />
                                     ) : (
                                         <LoginForm
-                                            email={email}
+                                            username={username}
                                             password={password}
                                             emailError={emailError}
                                             gradient="from-[#3FB8FF] to-[#FBAB18]"
-                                            onEmailChange={(value) => {
-                                                setEmail(value)
-                                                setEmailError(validateEmail(value))
+                                            onUsernameChange={(value) => {
+                                                setUsername(value)
+                                                // setEmailError(validateEmail(value))
                                             }}
                                             onPasswordChange={setPassword}
                                             onSubmit={handleSubmit}
