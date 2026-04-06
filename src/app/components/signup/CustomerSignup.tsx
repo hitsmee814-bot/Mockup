@@ -54,6 +54,8 @@ type CountryOption = {
   label: string;
 };
 
+
+
 /* TOOLTIP COMPONENT */
 const Tooltip: React.FC<{ text: string }> = ({ text }) => (
   <div className="relative group inline-block ml-2">
@@ -328,44 +330,85 @@ export default function CustomerSignup(): JSX.Element {
     return "";
   };
 
-  // Phone availability check function - ALWAYS RETURNS AVAILABLE until database integration
+  // FIXED: Phone availability check - ACTUAL API CALL
   const checkPhoneAvailability = async () => {
+    console.log("🚨🚨🚨 CHECK PHONE FUNCTION IS CALLED 🚨🚨🚨");
     if (!form.phone || errors.phone) return;
     
     setIsPhoneChecking(true);
     setPhoneStatus(null);
     
-    // Simulate a small delay for better UX (shows the loading spinner)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // TEMPORARY: Always return "available" since database integration is not complete
-    setPhoneStatus("available");
-    setPhoneCheckedManually(true);
-    setIsPhoneChecking(false);
-    toast.success("✓ Phone number is available!", {
-      position: "top-right",
-      duration: 3000,
-    });
+    try {
+      const response = await phoneNumberAvailService.checkAvailability(form.phone);
+      console.log("Phone availability response:", response);
+      
+      if (response?.available === true) {
+        setPhoneStatus("available");
+        setPhoneCheckedManually(true);
+        toast.success(" Phone number is available!", {
+          position: "top-right",
+          duration: 3000,
+        });
+      } else {
+        setPhoneStatus("unavailable");
+        setPhoneCheckedManually(true);
+        toast.error(" Phone number is not available. Please use a different number.", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
+    } catch (error: any) {
+      console.error("Phone availability check error:", error);
+      // Default to available on error (since database integration pending)
+      setPhoneStatus("available");
+      setPhoneCheckedManually(true);
+      toast.success(" Phone number is available!", {
+        position: "top-right",
+        duration: 3000,
+      });
+    } finally {
+      setIsPhoneChecking(false);
+    }
   };
 
-  // Username availability check - ALWAYS RETURNS AVAILABLE until database integration
+  // FIXED: Username availability check - ACTUAL API CALL
   const checkUsername = async () => {
     if (!form.username || errors.username) return;
     
     setIsUsernameChecking(true);
     setUsernameStatus(null);
     
-    // Simulate a small delay for better UX (shows the loading spinner)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // TEMPORARY: Always return "available" since database integration is not complete
-    setUsernameStatus("available");
-    setUsernameCheckedManually(true);
-    setIsUsernameChecking(false);
-    toast.success("✓ Username is available!", {
-      position: "top-right",
-      duration: 3000,
-    });
+    try {
+      const response = await userNameService.checkAvailability(form.username);
+      console.log("Username availability response:", response);
+      
+      if (response?.available === true) {
+        setUsernameStatus("available");
+        setUsernameCheckedManually(true);
+        toast.success("✓ Username is available!", {
+          position: "top-right",
+          duration: 3000,
+        });
+      } else {
+        setUsernameStatus("unavailable");
+        setUsernameCheckedManually(true);
+        toast.error(" Username is not available. Please choose a different username.", {
+          position: "top-right",
+          duration: 3000,
+        });
+      }
+    } catch (error: any) {
+      console.error("Username availability check error:", error);
+      // Default to available on error (since database integration pending)
+      setUsernameStatus("available");
+      setUsernameCheckedManually(true);
+      toast.success(" Username is available!", {
+        position: "top-right",
+        duration: 3000,
+      });
+    } finally {
+      setIsUsernameChecking(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -445,125 +488,178 @@ export default function CustomerSignup(): JSX.Element {
 
   const preventCopyPaste = (e: React.ClipboardEvent) => { e.preventDefault(); };
 
-  // Main submit handler with sequential API calls using service files
-  // Main submit handler with sequential API calls using service files
-// Main submit handler with sequential API calls using service files
-// Main submit handler with sequential API calls using service files
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  
-  const requiredFields: (keyof FormType)[] = ["firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
-  const newFieldErrors: ErrorType = {};
-  let hasEmptyField = false;
-
-  requiredFields.forEach(field => {
-    if (!form[field]) {
-      newFieldErrors[field] = "Required";
-      hasEmptyField = true;
-    }
-  });
-
-  const hasDynamicErrors = Object.values(errors).some(err => err !== "" && err !== "Required");
-  
-  if (hasEmptyField || hasDynamicErrors || strengthLabel === "weak password") {
-    setErrors(prev => ({ ...prev, ...newFieldErrors }));
-    setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
-    toast.error("Please fill all mandatory fields correctly", {
-      position: "top-right",
-    });
+  // Main submit handler with sequential API calls
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    return;
-  }
+    const requiredFields: (keyof FormType)[] = ["firstName", "lastName", "email", "phone", "username", "password", "confirmPassword"];
+    const newFieldErrors: ErrorType = {};
+    let hasEmptyField = false;
 
-  setIsSubmitting(true);
+    requiredFields.forEach(field => {
+      if (!form[field]) {
+        newFieldErrors[field] = "Required";
+        hasEmptyField = true;
+      }
+    });
 
-  try {
-    // STEP 1: Create User API Call using service
-    const createUserPayload = {
-      username: form.username,
-      password: form.password,
-      user_org_id: 6,
-      email: form.email,
-      phone: form.phone
-    };
-
-    console.log("Creating user with payload:", createUserPayload);
-    const userResponse = await userCreationService.createUser(createUserPayload);
-    const userId = userResponse.user_id;
-    console.log("User created with ID:", userId);
-
-    // STEP 2: Create Customer Profile API Call using service
-    // Get the dial code from stored data or extract from country label
-    let dialCode: string = "";
-
-    // First, try to get from storedDialCode (from localStorage)
-    if (storedDialCode) {
-      dialCode = storedDialCode;
+    const hasDynamicErrors = Object.values(errors).some(err => err !== "" && err !== "Required");
+    
+    if (hasEmptyField || hasDynamicErrors || strengthLabel === "weak password") {
+      setErrors(prev => ({ ...prev, ...newFieldErrors }));
+      setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
+      toast.error("Please fill all mandatory fields correctly", {
+        position: "top-right",
+      });
+      
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      return;
     }
 
-    // If not in storage, extract from the selected country's label
-    if (!dialCode && countryCode) {
-      const selectedCountryData = countries.find(c => c.code === countryCode);
-      if (selectedCountryData) {
-        // Extract dial code from label (e.g., "🇮🇳 +91" -> "+91")
-        const match = selectedCountryData.label.match(/\+(\d+)/);
-        if (match) {
-          dialCode = `+${match[1]}`;
+    setIsSubmitting(true);
+
+    try {
+      // AUTO-CHECK: Phone availability if not checked manually
+      if (!phoneCheckedManually) {
+        try {
+          const phoneResponse = await phoneNumberAvailService.checkAvailability(form.phone);
+          if (phoneResponse?.available !== true) {
+            setPhoneStatus("unavailable");
+            toast.error("Phone number is not available. Please use a different number.", {
+              position: "top-right",
+              duration: 3000,
+            });
+            setIsSubmitting(false);
+            return;
+          } else {
+            setPhoneStatus("available");
+          }
+        } catch (error) {
+          console.error("Auto phone check error:", error);
+          // Continue anyway since database pending
+        }
+      } else if (phoneStatus === "unavailable") {
+        toast.error("Phone number is not available. Please use a different number.", {
+          position: "top-right",
+          duration: 3000,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // AUTO-CHECK: Username availability if not checked manually
+      if (!usernameCheckedManually) {
+        try {
+          const usernameResponse = await userNameService.checkAvailability(form.username);
+          if (usernameResponse?.available !== true) {
+            setUsernameStatus("unavailable");
+            toast.error("Username is not available. Please choose a different username.", {
+              position: "top-right",
+              duration: 3000,
+            });
+            setIsSubmitting(false);
+            return;
+          } else {
+            setUsernameStatus("available");
+          }
+        } catch (error) {
+          console.error("Auto username check error:", error);
+          // Continue anyway since database pending
+        }
+      } else if (usernameStatus === "unavailable") {
+        toast.error("Username is not available. Please choose a different username.", {
+          position: "top-right",
+          duration: 3000,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // STEP 1: Create User API Call
+      const createUserPayload = {
+        username: form.username,
+        password: form.password,
+        user_org_id: 6,
+        email: form.email,
+        phone: form.phone
+      };
+
+      console.log("Creating user with payload:", createUserPayload);
+      const userResponse = await userCreationService.createUser(createUserPayload);
+      const userId = userResponse.user_id;
+      console.log("User created with ID:", userId);
+
+      // STEP 2: Create Customer Profile API Call
+      let dialCode: string = "";
+
+      if (storedDialCode) {
+        dialCode = storedDialCode;
+      }
+
+      if (!dialCode && countryCode) {
+        const selectedCountryData = countries.find(c => c.code === countryCode);
+        if (selectedCountryData) {
+          const match = selectedCountryData.label.match(/\+(\d+)/);
+          if (match) {
+            dialCode = `+${match[1]}`;
+          }
         }
       }
-    }
 
-    // Final fallback for India
-    if (!dialCode) {
-      dialCode = "+91";
-    }
+      if (!dialCode) {
+        dialCode = "+91";
+      }
 
-    console.log("Sending countrycode as:", dialCode);
-    
-    const customerProfilePayload = {
-      user_id: userId,
-      firstname: form.firstName,
-      middlename: form.middleName || "",
-      lastname: form.lastName,
-      email: form.email,
-      countrycode: dialCode,
-      phonenumber: form.phone
-    };
+      console.log("Sending countrycode as:", dialCode);
+      
+      const customerProfilePayload = {
+        user_id: userId,
+        firstname: form.firstName,
+        middlename: form.middleName || "",
+        lastname: form.lastName,
+        email: form.email,
+        countrycode: dialCode,
+        phonenumber: form.phone
+      };
 
-    console.log("Creating customer profile with payload:", customerProfilePayload);
-    await customerProfileCreationService.createCustomerProfile(customerProfilePayload);
+      console.log("Creating customer profile with payload:", customerProfilePayload);
+      await customerProfileCreationService.createCustomerProfile(customerProfilePayload);
 
-    // SUCCESS: Clear localStorage and show success message
-    localStorage.removeItem("userPhoneNumber");
-    localStorage.removeItem("userCountryCode");
-    localStorage.removeItem("userEmail");
+      // SUCCESS
+      localStorage.removeItem("userPhoneNumber");
+      localStorage.removeItem("userCountryCode");
+      localStorage.removeItem("userEmail");
 
-    toast.success("🎉 Registration Successful! Your customer profile has been created successfully.", {
-      position: "top-right",
-      duration: 1800,
-    });
+      toast.success("🎉 Registration Successful! Your customer profile has been created successfully.", {
+        position: "top-right",
+        duration: 1800,
+      });
 
-    // Redirect to home page after short delay
-    setTimeout(() => {
-      router.push("/");
-    }, 2000);
+      setTimeout(() => {
+        router.push("/");
+      }, 2000);
 
-  } catch (error: any) {
+    } catch (error: any) {
     console.error("Registration error:", error);
     
-    // Show the actual error message from the API
-    const errorMessage = error?.message || "Registration failed. Please try again.";
-    toast.error(errorMessage, {
-      position: "top-right",
-      duration: 1800,
+    // Get the error message from the error object
+    let errorMessage = error?.message || "Failed to process your request.";
+    
+    // Don't override if we already have a meaningful message
+    if (errorMessage === "Failed to fetch") {
+        errorMessage = "Network error. Please check your connection and try again.";
+    }
+    
+    toast.error(errorMessage, { 
+        position: "top-right", 
+        duration: 4000 
     });
-  } finally {
+} finally {
     setIsSubmitting(false);
-  }
-};
+}
+  };
 
   // Get tooltip text for phone number based on disabled state
   const getPhoneTooltipText = () => {
@@ -688,6 +784,13 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                     <span className="text-green-700 text-xs font-bold tracking-tight">Phone number is available!</span>
                   </div>
                 )}
+
+                {phoneStatus === "unavailable" && !errors.phone && (
+                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <AlertCircle size={14} className="text-red-600" />
+                    <span className="text-red-700 text-xs font-bold tracking-tight">This phone number already exists. Please use another number.</span>
+                  </div>
+                )}
               </div>
 
               {/* Username Section with Check Button */}
@@ -722,6 +825,13 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
                     <CheckCircle2 size={14} className="text-green-600" />
                     <span className="text-green-700 text-xs font-bold tracking-tight">Username is available!</span>
+                  </div>
+                )}
+
+                {usernameStatus === "unavailable" && !errors.username && (
+                  <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <AlertCircle size={14} className="text-red-600" />
+                    <span className="text-red-700 text-xs font-bold tracking-tight">This username already exists. Please choose another username.</span>
                   </div>
                 )}
               </div>
