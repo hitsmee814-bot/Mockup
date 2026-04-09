@@ -1,5 +1,4 @@
 'use client'
-
 import React from "react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,21 +8,21 @@ import { PremiumButton } from "../../../utils/PremiumButton";
 import { scanUploadService  }from "@/services/scanUploadService";
 import { Upload as UploadIcon, Paperclip, X, AlertCircle, Loader2,CheckCircle  } from "lucide-react"
 import { TooltipIcon,numberToWord } from "./SupplierUtils"
-
+import { validateIdentifier } from "./supplierSignupValidation"; 
+import { ErrorMessage} from "./SupplierUtils"
+import { isDuplicateFile} from "./SupplierUtils"
+ 
 type Props = {
-
   docGroups: any[]
 
   uploadedFiles: { [key: number]: File | null }
   setUploadedFiles: React.Dispatch<
     React.SetStateAction<{ [key: number]: File | null }>
   >
-
   selectedDocs: { [key: number]: any }
   setSelectedDocs: React.Dispatch<
     React.SetStateAction<{ [key: number]: any }>
   >
-
   tempDocs: { [key: number]: any }
   setTempDocs: React.Dispatch<
     React.SetStateAction<{ [key: number]: any }>
@@ -102,6 +101,11 @@ const getPanelBorderClass = (group: any) => {
 
       if (!identifier || !file) {
         return "border-red-500";
+      }
+      else
+      {
+          return "border-[#00AFEF]";
+
       }
 
     }
@@ -305,34 +309,90 @@ const isIdentifierMissing = (group: any) => {
               </Label>
 
    <ShadInput
-  type="text"
+  type="text"   
 
   placeholder={`Enter ${member.identifier || ""}`}
-
+                    
   value={
     tempDocs[group.groupid]
       ?.identifierValue || ""
   }
 onChange={(e) => {
 
+  // Convert to uppercase automatically
+  const value =
+    e.target.value.toUpperCase();
+
+  // Save value
   setTempDocs(prev => ({
     ...prev,
     [group.groupid]: {
       ...member,
-      identifierValue: e.target.value
+      identifierValue: value
     }
-  }))
+  }));
 
-  // clear upload error when typing
+  // Run validation rule
+  const result =
+    validateIdentifier(
+      value,
+      member.identifier
+    );
 
-  setIdentifierErrors(prev => ({
-    ...prev,
-    [group.groupid]: ""
-  }))
+  /**
+   * LIVE VALIDATION RULE:
+   * Show error only when
+   * user typed enough characters
+   */
+
+  const expectedLengths: Record<string, number> = {
+    GSTIN: 15,
+    PAN: 10,
+    CIN: 21,
+    UDYAM_NO: 19
+  };
+
+  const expectedLength =
+    expectedLengths[
+      member.identifier
+    ];
+
+  // Show error only when full length reached
+  if (
+    expectedLength &&
+    value.length === expectedLength &&
+    !result.isValid
+  ) {
+
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]:
+        result.error
+    }));
+
+  }
+
+  // Clear error if valid
+  else if (result.isValid) {
+
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]: ""
+    }));
+
+  }
 
 }}
 
-  className="h-12"
+ className={`
+  h-12
+  border
+  ${
+    identifierErrors[group.groupid]
+      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+      : "border-slate-300 focus:border-[#3FB8FF] focus:ring-[#3FB8FF]"
+  }
+`}
 />
 
    <FileInput
@@ -347,25 +407,45 @@ onChange={(e) => {
   
 
   /* BLOCK FILE PICKER */
-  onBeforeSelect={() => {
+onBeforeSelect={() => {
 
-    const identifier =
-      tempDocs[group.groupid]
-        ?.identifierValue
+  const identifier =
+    tempDocs[group.groupid]
+      ?.identifierValue
 
-    if (!identifier) {
+  // Check empty
+  if (!identifier) {
 
-      setIdentifierErrors(prev => ({
-        ...prev,
-        [group.groupid]:
-          `Please enter ${member.identifier}`
-      }))
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]:
+        `Please enter ${member.identifier}`
+    }))
 
-      return false   //  block picker
-    }
+    return false
+  }
 
-    return true      // allow picker
-  }}
+  // Validate format
+  const result =
+    validateIdentifier(
+      identifier,
+      member.identifier
+    )
+
+  if (!result.isValid) {
+
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]:
+        result.error
+    }))
+
+    return false
+  }
+
+  return true
+
+}}
 
   /*  SAVE FILE */
 onChange={async (file) => {
@@ -393,7 +473,24 @@ onChange={async (file) => {
 
   console.log("File selected:", file)
   if (!file) return;
+/* DUPLICATE FILE CHECK */
 
+if (
+  isDuplicateFile(
+    file,
+    uploadedFiles,
+    multiDocs
+  )
+) {
+
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]:
+      `${file.name} has already been uploaded.`
+  }))
+
+  return;
+}
   try {
     console.log("Calling scan API...")
 
@@ -428,25 +525,35 @@ console.log(documentType)
       ...prev,
       [group.groupid]: false
     }))
-
-    if (
-      response.status === "success" &&
-      response.scan_status === "clean"
-    ) {
-
-      // Save file
-      setUploadedFiles(prev => ({
+ setScanLoading(prev => ({
         ...prev,
-        [group.groupid]: file
+        [group.groupid]: false
       }))
 
-      setScanSuccess(prev => ({
+      if (
+        response.status === "success" &&
+        response.scan_status === "clean"
+      ) {
+
+        // Save file
+        setUploadedFiles(prev => ({
+          ...prev,
+          [group.groupid]: file
+        }))
+         // Clear error
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
+
+        // Show success message
+  setScanSuccess(prev => ({
     ...prev,
     [group.groupid]:
       "File scanned successfully"
   }))
 
-  // Auto-hide after 2 seconds
+  // Auto hide after 2 sec
   setTimeout(() => {
 
     setScanSuccess(prev => ({
@@ -454,57 +561,55 @@ console.log(documentType)
       [group.groupid]: ""
     }))
 
-  }, 2000);
+  }, 2000)
 
-    } else {
+
+      } else {
+
+        setScanErrors(prev => ({
+          ...prev,
+          [group.groupid]:
+            "File failed security scan. Please upload a valid file."
+        }))
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Scan API error:",
+        error
+      )
+
+      setScanLoading(prev => ({
+        ...prev,
+        [group.groupid]: false
+      }))
 
       setScanErrors(prev => ({
         ...prev,
         [group.groupid]:
-          "File failed security scan"
+          "Unable to scan file.Please try again."
       }))
 
     }
 
-  } catch (error) {
-
-     console.error("Scan API error:", error)
-
-    setScanLoading(prev => ({
-      ...prev,
-      [group.groupid]: false
-    }))
-
-    setScanErrors(prev => ({
-      ...prev,
-      [group.groupid]:
-        "Unable to scan file"
-    }))
-    setScanSuccess(prev => ({
-  ...prev,
-  [group.groupid]: ""
-}))
-
-  }
-  
-
-}}
-
-
-/>   
+  }}
+/>
 {scanLoading[group.groupid] && (
 
   <p className="text-blue-600 text-sm mt-1 flex items-center gap-2">
 
-   <Loader2 
-  className="h-4 w-4 animate-spin text-blue-600 [animation-duration:2.5s]" 
-/>
+    <Loader2
+      className="h-4 w-4 animate-spin text-blue-600 [animation-duration:2.5s]"
+    />
 
     Scanning file...
 
   </p>
 
 )}
+
 {/* SUCCESS MESSAGE */}
 
 {scanSuccess[group.groupid] && (
@@ -514,25 +619,19 @@ console.log(documentType)
     <CheckCircle
       className="h-4 w-4 text-green-600"
     />
-console.log(  {scanSuccess[group.groupid]})
+
     {scanSuccess[group.groupid]}
 
   </p>
 
 )}
-{/* ERROR MESSAGE */}
 
+{/* ERROR MESSAGE */}
 {scanErrors[group.groupid] && (
 
-  <p className="text-red-600 text-sm mt-1 flex items-center gap-2">
-
-    <AlertCircle
-      className="h-4 w-4 text-red-600"
-    />
-
-    {scanErrors[group.groupid]}
-
-  </p>
+  <ErrorMessage
+    message={scanErrors[group.groupid]}
+  />
 
 )}
 
@@ -735,7 +834,24 @@ console.log(  {scanSuccess[group.groupid]})
     console.log("File selected:", file)
 
     if (!file) return;
+    /* DUPLICATE FILE CHECK */
 
+if (
+  isDuplicateFile(
+    file,
+    uploadedFiles,
+    multiDocs
+  )
+) {
+
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]:
+      `${file.name} has already been uploaded.`
+  }))
+
+  return;
+}
     try {
 
       console.log("Calling scan API...")
@@ -883,15 +999,9 @@ console.log(  {scanSuccess[group.groupid]})
 
 {scanErrors[group.groupid] && (
 
-  <p className="text-red-600 text-sm mt-1 flex items-center gap-2">
-
-    <AlertCircle
-      className="h-4 w-4 text-red-600"
-    />
-
-    {scanErrors[group.groupid]}
-
-  </p>
+  <ErrorMessage
+    message={scanErrors[group.groupid]}
+  />
 
 )}
 
@@ -908,56 +1018,48 @@ console.log(  {scanSuccess[group.groupid]})
 
 
 
-             {group.members.length > 1 && group.max > 1 && (
+            {group.members.length > 1 && group.max > 1 && (
 
   <div className="flex flex-col gap-3">
 
-    <Label htmlFor={`document-${group.groupid}`}>
+    {/* SELECT DOCUMENT TYPE */}
+
+    <Label>
       Select {group.group_name}
     </Label>
 
     <Select
       value={
-        tempDocs[group.groupid]
+        selectedDocs[group.groupid]
           ?.document_type || ""
       }
 
       onValueChange={(value) => {
 
-        const member =
+        const selectedMember =
           group.members.find(
             (m: any) =>
               m.document_type === value
           )
 
-        // reset identifier + file on dropdown change
-        setTempDocs(prev => ({
+        setSelectedDocs(prev => ({
           ...prev,
           [group.groupid]: {
-            ...member,
+            ...selectedMember,
             identifierValue: ""
           }
         }))
 
-        setMultiFiles(prev => ({
+        // Clear file when type changes
+        setUploadedFiles(prev => ({
           ...prev,
           [group.groupid]: null
-        }))
-
-        setIdentifierErrors(prev => ({
-          ...prev,
-          [group.groupid]: ""
         }))
 
       }}
     >
 
-      <SelectTrigger
-        className={`w-full !h-12 bg-white border border-slate-300 
-        text-slate-900 placeholder:text-slate-400 
-        focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
-        `}
-      >
+      <SelectTrigger className="w-full !h-12">
         <SelectValue
           placeholder="Select document type"
         />
@@ -965,138 +1067,355 @@ console.log(  {scanSuccess[group.groupid]})
 
       <SelectContent>
 
-        {group.members.map(
-          (member: any) => (
+  {group.members
 
-            <SelectItem
-              key={member.document_type}
-              value={member.document_type}
-            >
+    /* REMOVE ALREADY ADDED TYPES */
 
-              {member.description}
+    .filter((member: any) =>
 
-            </SelectItem>
+      !(multiDocs[group.groupid] || [])
+        .some(
+          (doc: any) =>
 
-          )
-        )}
+            doc.document_type ===
+            member.document_type
 
-      </SelectContent>
+        )
+
+    )
+
+    .map((member: any) => (
+
+      <SelectItem
+        key={member.document_type}
+        value={member.document_type}
+      >
+
+        {member.description}
+
+      </SelectItem>
+
+    ))
+
+  }
+
+</SelectContent>
 
     </Select>
 
-    {tempDocs[group.groupid] && (
+{/* SHOW IDENTIFIER + FILE */}
 
-      <>
+{selectedDocs[group.groupid] && (
 
-        {/* Identifier Label */}
+  <>
 
-        <Label>
-          {
-            tempDocs[group.groupid]
-              ?.identifier
-          }
-        </Label>
+{/* IDENTIFIER */}
 
-        {/* Identifier Input */}
+<Label>
 
-        <ShadInput
-          type="text"
-
-          placeholder={`Enter ${
-            tempDocs[group.groupid]
-              ?.identifier || ""
-          }`}
-
-          value={
-            tempDocs[group.groupid]
-              ?.identifierValue || ""
-          }
-
-          onChange={(e) => {
-
-            setTempDocs(prev => ({
-              ...prev,
-              [group.groupid]: {
-                ...(prev[group.groupid] || {}),
-                identifierValue: e.target.value
-              }
-            }))
-
-            // clear upload error
-            setIdentifierErrors(prev => ({
-              ...prev,
-              [group.groupid]: ""
-            }))
-
-          }}
-        />
-
-        {/* FILE INPUT */}
-
-        <FileInput
-  label={`Upload ${
-    tempDocs[group.groupid]
-      ?.description || ""
-  }`}
-
-  file={
-    multiFiles[group.groupid] || null
+  {
+    selectedDocs[group.groupid]
+      ?.identifier
   }
 
-  /* ALLOW FILE PICKER EVEN IF IDENTIFIER EMPTY */
-  onBeforeSelect={() => {
+</Label>
 
-    // Clear previous identifier error
-    setIdentifierErrors(prev => ({
+<ShadInput
+  type="text"
+
+  placeholder={`Enter ${
+    selectedDocs[group.groupid]
+      ?.identifier || ""
+  }`}
+
+  value={
+    selectedDocs[group.groupid]
+      ?.identifierValue || ""
+  }
+
+  onChange={(e) => {
+
+    setSelectedDocs(prev => ({
       ...prev,
-      [group.groupid]: ""
+      [group.groupid]: {
+        ...(prev[group.groupid] || {}),
+        identifierValue:
+          e.target.value
+      }
     }))
-
-    return true   // ✅ Always allow picker
 
   }}
 
-  onChange={(file) => {
-
-    setIdentifierErrors(prev => ({
-      ...prev,
-      [group.groupid]: ""
-    }))
-
-    setMultiFiles(prev => ({
-      ...prev,
-      [group.groupid]: file
-    }))
-
-  }}
+  className="h-12"
 />
 
- {/* IDENTIFIER ERROR MESSAGE */}
+{/* FILE INPUT */}
+<div className="flex items-end gap-2">
 
-        {identifierErrors[group.groupid] && (
-          <p className="text-red-500 text-sm flex items-center gap-1">
-            <AlertCircle className="h-4 w-4" />
-            {identifierErrors[group.groupid]}
-          </p>
-        )}
+  {/* FILE INPUT */}
 
-        {/* ADD BUTTON */}
+  <div className="flex-1">
 
-        <PremiumButton
-          type="button"
-          variant="primary"
-          size="lg"
+    <FileInput
+      label={`Upload ${
+        selectedDocs[group.groupid]
+          ?.description || ""
+      }`}
 
-          onClick={() =>
-            handleAddMultiDocument(group)
+      file={
+        multiFiles[group.groupid] || null
+      }
+
+      onBeforeSelect={() => true}
+
+      onChange={async (file) => {
+
+        if (file === null) {
+
+          setMultiFiles(prev => ({
+            ...prev,
+            [group.groupid]: null
+          }))
+
+          return
+        }
+
+        if (!file) return;
+        /* DUPLICATE FILE CHECK */
+
+if (
+  isDuplicateFile(
+    file,
+    uploadedFiles,
+    multiDocs
+  )
+) {
+
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]:
+      `${file.name} has already been uploaded.`
+  }))
+
+  return;
+}
+
+        try {
+
+          /* START SCAN */
+
+          setScanLoading(prev => ({
+            ...prev,
+            [group.groupid]: true
+          }))
+
+          setScanErrors(prev => ({
+            ...prev,
+            [group.groupid]: ""
+          }))
+
+          const mobile_no =
+            localStorage.getItem(
+              "userPhoneNumber"
+            ) || "";
+
+          const documentType =
+            selectedDocs[group.groupid]
+              ?.document_type;
+
+          const response =
+            await scanUploadService(
+              file,
+              mobile_no,
+              documentType
+            );
+
+          /* STOP LOADING */
+
+          setScanLoading(prev => ({
+            ...prev,
+            [group.groupid]: false
+          }))
+
+          if (
+            response.status === "success" &&
+            response.scan_status === "clean"
+          ) {
+
+            setMultiFiles(prev => ({
+              ...prev,
+              [group.groupid]: file
+            }))
+
+            setScanSuccess(prev => ({
+              ...prev,
+              [group.groupid]:
+                "File scanned successfully"
+            }))
+
+            setTimeout(() => {
+
+              setScanSuccess(prev => ({
+                ...prev,
+                [group.groupid]: ""
+              }))
+
+            }, 2000)
+
+          } else {
+
+            setScanErrors(prev => ({
+              ...prev,
+              [group.groupid]:
+                "File failed security scan. Please upload a valid file."
+            }))
+
           }
-        >
-          Add Document
-        </PremiumButton>
+
+        } catch (error) {
+
+          setScanLoading(prev => ({
+            ...prev,
+            [group.groupid]: false
+          }))
+
+          setScanErrors(prev => ({
+            ...prev,
+            [group.groupid]:
+              "Unable to scan file. Please try again."
+          }))
+
+        }
+
+      }}
+    />
+
+  </div>
+
+  {/* SMALL ADD BUTTON */}
+
+  <PremiumButton
+    type="button"
+
+    className="h-12 px-4"
+
+    disabled={
+      !multiFiles[group.groupid] ||
+      (multiDocs[group.groupid]?.length || 0)
+        >= group.max
+    }
+
+    onClick={() => {
+
+      const selected =
+        selectedDocs[group.groupid]
+
+      const file =
+        multiFiles[group.groupid]
+
+      if (!selected || !file) return
+
+      const newDoc = {
+
+        ...selected,
+
+        file,
+
+        identifierValue:
+          selected.identifierValue || ""
+
+      }
+
+      setMultiDocs(prev => ({
+
+        ...prev,
+
+        [group.groupid]: [
+
+          ...(prev[group.groupid] || []),
+
+          newDoc
+
+        ]
+
+      }))
+
+      /* RESET */
+
+      setSelectedDocs(prev => ({
+        ...prev,
+        [group.groupid]: null
+      }))
+
+      setMultiFiles(prev => ({
+        ...prev,
+        [group.groupid]: null
+      }))
+
+    }}
+  >
+
+    Add
+
+  </PremiumButton>
+
+</div>
+{scanLoading[group.groupid] && (
+
+  <p className="text-blue-600 text-sm mt-1 flex items-center gap-2">
+
+    <Loader2
+      className="h-4 w-4 animate-spin text-blue-600"
+    />
+
+    Scanning file...
+
+  </p>
+
+)}
+
+{scanSuccess[group.groupid] && (
+
+  <p className="text-green-600 text-sm mt-1 flex items-center gap-2">
+
+    <CheckCircle
+      className="h-4 w-4 text-green-600"
+    />
+
+    {scanSuccess[group.groupid]}
+
+  </p>
+
+)}
+
+{scanErrors[group.groupid] && (
+
+  <ErrorMessage
+    message={scanErrors[group.groupid]}
+  />
+
+)}
+
+{/* ADD BUTTON */}
+
+{/* DOCUMENT LIST */}
 
 
-    {/* ===== DOCUMENT LIST (NEW DESIGN) ===== */}
 
+{/* MAX MESSAGE */}
+
+{multiDocs[group.groupid]?.length >= group.max && (
+
+  <p className="text-red-500 text-xs">
+    You’ve reached the maximum limit of {group.max} documents.
+   
+  </p>
+
+)}
+
+  </>
+
+)}
 {multiDocs[group.groupid]?.map(
   (doc: any, index: number) => (
 
@@ -1105,7 +1424,6 @@ console.log(  {scanSuccess[group.groupid]})
 
       className="
         flex
-        items-center
         justify-between
         border
         border-blue-300
@@ -1117,98 +1435,69 @@ console.log(  {scanSuccess[group.groupid]})
       "
     >
 
-      {/* LEFT SIDE */}
+      <div>
 
-      <div className="flex items-start gap-2">
-       {/* Paperclip Icon */}
+       <Label className="text-slate-700">
 
-<Paperclip className="h-4 w-4 text-gray-500 mt-1 shrink-0" />
+  {doc.description}
 
-        {/* TEXT SECTION */}
+  {doc.identifierValue &&
+    ` - ${doc.identifierValue}`}
 
-        <div className="flex flex-col">
+</Label>
 
-          {/* Document Type + Identifier */}
+        <div className="text-sm text-blue-500">
 
-          <span className="font-medium text-sm">
-
-            {doc.description}
-            {" - "}
-            {doc.identifierValue}
-
-          </span>
-
-          {/* File Name */}
-
-          <span className="text-xs text-gray-500">
-
-            {doc.file.name}
-
-          </span>
+          {doc.file.name}
 
         </div>
 
       </div>
 
-      {/* DELETE BUTTON */}
+     <button
+  type="button"
 
-      <button
-        type="button"
+  className="
+    p-1
+    rounded-full
+    text-gray-500
+    hover:text-red-600
+    hover:bg-red-50
+    transition
+  "
 
-         className="
-    text-gray-400
-    hover:text-red-500
-        "
+  onClick={() => {
 
-        onClick={() => {
+    const updated =
+      multiDocs[group.groupid]
+        .filter(
+          (_: any, i: number) =>
+            i !== index
+        )
 
-          const updated =
-            multiDocs[group.groupid]
-              .filter(
-                (_: any, i: number) =>
-                  i !== index
-              )
+    setMultiDocs(prev => ({
 
-          setMultiDocs(prev => ({
-            ...prev,
-            [group.groupid]: updated
-          }))
+      ...prev,
 
-        }}
-      >
+      [group.groupid]:
+        updated
 
-        <X className="h-4 w-4" />
+    }))
 
-      </button>
+  }}
+>
+
+  <X className="h-4 w-4" />
+
+</button>
 
     </div>
 
   )
 )}
-
-
-
-
-{/* ===== MAX LIMIT MESSAGE ===== */}
-
-{multiDocs[group.groupid]?.length >= group.max && (
-
-  <p className="text-red-500 text-sm">
-
-    Maximum {group.max} documents added
-
-  </p>
+</div>
 
 )}
-
-  </>
-  
-
-)}
-
-                </div>
-
-              )}
 
             </div>
        {/* IDENTIFIER ERROR */}
@@ -1216,20 +1505,25 @@ console.log(  {scanSuccess[group.groupid]})
 {/* IDENTIFIER ERROR — only shown if user tried file upload */}
 {identifierErrors[group.groupid] &&
  group.max === 1 && (   // only show outside for Case 1 & 2
-  <p className="text-red-500 text-sm flex items-center gap-1">
-    <AlertCircle className="h-4 w-4" />
-    {identifierErrors[group.groupid]}
-  </p>
+  <ErrorMessage
+  message={
+    identifierErrors[group.groupid]
+  }
+/>
 )}
 
 {/* REQUIRED ERROR — shown on Register click only */}
 {submitted.step3 &&
  !identifierErrors[group.groupid] &&
  isGroupInvalid(group) && (
-  <p className="text-red-500 text-sm flex items-center gap-1">
-    <AlertCircle className="h-4 w-4" />
-    Required
-  </p>
+    <ErrorMessage
+  message="Required"
+  
+/>
+  // <p className="text-red-500 text-sm flex items-center gap-1">
+  //   <AlertCircle className="h-4 w-4" />
+  //   Required
+  // </p>
 )}
           </div>
 

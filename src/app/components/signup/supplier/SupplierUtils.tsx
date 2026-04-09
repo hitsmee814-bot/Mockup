@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import { Upload as UploadIcon, Paperclip, X } from "lucide-react"
 import { Tooltip } from "react-tooltip"
-  
+import { AlertCircle } from "lucide-react";  
 
 const ALLOWED_TYPES = [
   'application/pdf',
@@ -23,7 +23,45 @@ type TooltipIconProps = {
   id: string
   content: string
 }
+export function ErrorMessage({ message }: { message?: string }) {
+  const ref = React.useRef<HTMLParagraphElement>(null)
+  const fieldRef = React.useRef<HTMLElement | null>(null)
 
+  React.useEffect(() => {
+    if (!ref.current) return
+
+    // Locate related field
+    const container = ref.current.previousElementSibling
+    const field =
+      container?.querySelector?.('input, select, textarea') ||
+      (container as HTMLElement)
+
+    if (!(field instanceof HTMLElement)) return
+
+    fieldRef.current = field
+
+    if (message) {
+      // Apply error style
+      field.classList.add('border-red-500')
+      field.classList.remove('border-[#00AFEF]')
+    } else {
+      // Restore normal style
+      field.classList.remove('border-red-500')
+      field.classList.add('border-[#00AFEF]')
+    }
+  }, [message])
+
+  return (
+    <p
+      ref={ref}
+      className={`mt-1 flex items-center gap-1 text-[11px] font-semibold
+        ${message ? 'text-red-600' : 'hidden'}`}
+    >
+      <AlertCircle size={12} className="shrink-0" />
+      <span>{message}</span>
+    </p>
+  )
+}
 export function numberToWord(num: number): string {
   const numberWords: { [key: number]: string } = {
     0: "zero",
@@ -214,7 +252,50 @@ export function TooltipIcon({ id, content }: TooltipIconProps) {
     </div>
   )
 }
+export const isDuplicateFile = (
+  file: File,
+  uploadedFiles: any,
+  multiDocs: any
+): boolean => {
 
+  if (!file) return false;
+
+  const fileName = file.name;
+  const fileSize = file.size;
+
+  /* CHECK CASE-1 & CASE-2 */
+
+  const singleFiles =
+    Object.values(uploadedFiles || {})
+      .filter(Boolean);
+
+  const singleMatch =
+    singleFiles.some(
+      (f: any) =>
+
+        f?.name === fileName &&
+        f?.size === fileSize
+
+    );
+
+  /* CHECK CASE-3 */
+
+  const multiFilesList =
+    Object.values(multiDocs || {})
+      .flat();
+
+  const multiMatch =
+    multiFilesList.some(
+      (doc: any) =>
+
+        doc?.file?.name === fileName &&
+        doc?.file?.size === fileSize
+
+    );
+
+  return singleMatch || multiMatch;
+
+};
 
     export function MultiFileInput({
       label,

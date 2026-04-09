@@ -330,14 +330,14 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
   flag: string
 }
 
-// ✅ Your existing flag function (KEEP THIS)
+// Your existing flag function (KEEP THIS)
 const getFlagEmoji = (code: string) =>
   code.toUpperCase().replace(/./g, c =>
     String.fromCodePoint(127397 + c.charCodeAt(0))
   );
 
 
-// ✅ State (make sure these exist)
+//  State (make sure these exist)
 
 const [countryCodes, setCountryCodes] = useState<any[]>([]);
 
@@ -345,7 +345,7 @@ const [selectedCountry, setSelectedCountry] =
   useState<any | undefined>(undefined);
 
 
-// ✅ Fetch country codes
+//  Fetch country codes
 
 useEffect(() => {
 
