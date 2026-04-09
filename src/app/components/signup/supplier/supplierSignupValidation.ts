@@ -175,43 +175,70 @@ const VAT_REGEX_BY_COUNTRY = {
 }
 //---------------Later--------------- 
 
-
-const TAX_FORMATS: Record<
+const IDENTIFIER_VALIDATIONS: Record<
   string,
   { regex: RegExp; error: string }
 > = {
-  GST: {
-    regex: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-    error: "Please enter valid GST number",
+
+  GSTIN: {
+    regex:
+      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+    error: "Please enter valid GSTIN number",
   },
+
   PAN: {
-     regex: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+    regex:
+      /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
     error: "Please enter valid PAN number",
   },
-  VAT: {
-    regex: /^[A-Z0-9]{8,12}$/,
-    error: "Please enter valid VAT number",
+
+  CIN: {
+    regex:
+      /^[A-Z]{1}[0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/,
+    error: "Please enter valid CIN number",
   },
+
+  UDYAM_NO: {
+    regex:
+      /^UDYAM-[A-Z]{2}-\d{2}-\d{7}$/,
+    error: "Please enter valid UDYAM number",
+  },
+
 }
 
-export const validateTaxId = (
+export const validateIdentifier = (
   value: string,
-  docType: string
-): TaxValidationResult => {
-  if (!docType || !value) {
+  identifier?: string
+) => {
+
+  if (!identifier || !value) {
     return { isValid: true, error: "" }
   }
 
-  const rule = TAX_FORMATS[docType]
+  // Ignore placeholder
+  if (identifier === "document identifier") {
+    return { isValid: true, error: "" }
+  }
+
+  const rule =
+    IDENTIFIER_VALIDATIONS[identifier]
+
+  // If no rule exists → allow
   if (!rule) {
     return { isValid: true, error: "" }
   }
 
   if (!rule.regex.test(value.toUpperCase())) {
-    return { isValid: false, error: rule.error }
+    return {
+      isValid: false,
+      error: rule.error,
+    }
   }
 
-  return { isValid: true, error: "" }
+  return {
+    isValid: true,
+    error: "",
+  }
 }
 
 /* ================= STEP VALIDATIONS ================= */
@@ -307,14 +334,17 @@ export const validateStep2 = (
   if (
     hasEmptyFields([
       form.supplierLegalName,
-      form.tradeName,
-      form.serviceTypes,
+      form.tradeName,      
       form.countryOfRegistration,
       form.websiteUrl,
     ])
   ) {
     return "EMPTY"
   }
+
+  if (!form.serviceTypes || form.serviceTypes.length === 0) {
+  return "EMPTY"
+}
 
   if (websiteError) {
     return "INVALID"

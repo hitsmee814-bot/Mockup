@@ -40,7 +40,7 @@ import { userNameService } from "@/services/userNameService";
 type NamedDocument = {
   file: File
   name: string
-  identifier?: string   // ✅ NEW
+  identifier?: string   
 }
 
 type TooltipIconProps = {
@@ -266,8 +266,12 @@ export default function SupplierSignup() {
       const [selectedDocs, setSelectedDocs] = useState<{ [key: number]: any }>({});
       const [usernameSuccess, setUsernameSuccess] = useState("");
       const [usernameError, setUsernameError] = useState<string>("");
+      const [isUsernameChecked, setIsUsernameChecked] = useState(false);
+      const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);     
       const [phoneError, setPhoneError] = useState("");
       const [phoneSuccess, setPhoneSuccess] = useState("");
+      const [isPhoneChecked, setIsPhoneChecked] = useState(false);
+      const [isPhoneAvailable, setIsPhoneAvailable] = useState(false);      
         const [multiDocs, setMultiDocs] = useState<{
     [groupId: number]: any[]
   }>({});
@@ -326,11 +330,6 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
   flag: string
 }
 
-const [phoneCountries, setPhoneCountries] = useState<PhoneCountry[]>([]);
-//const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<PhoneCountry | undefined>(undefined);
-const [open, setOpen] = useState(false);
-
-
 // ✅ Your existing flag function (KEEP THIS)
 const getFlagEmoji = (code: string) =>
   code.toUpperCase().replace(/./g, c =>
@@ -373,7 +372,7 @@ useEffect(() => {
 
         setCountryCodes(formatted);
 
-        // ✅ Check localStorage first
+        // Check localStorage first
         const savedCountry =
           localStorage.getItem("userCountryCode");
 
@@ -388,7 +387,7 @@ useEffect(() => {
 
         }
 
-        // ✅ If no saved country → select India
+        //  If no saved country → select India
         if (!selected) {
 
           selected =
@@ -398,10 +397,10 @@ useEffect(() => {
 
         }
 
-        // ✅ Set selected country
+        //  Set selected country
         setSelectedCountry(selected);
 
-        // ✅ Update form
+        // Update form
         setForm((prev: any) => ({
           ...prev,
           countryCode:
@@ -426,7 +425,7 @@ useEffect(() => {
 }, []);
 
 
-// 2️⃣ Auto-fill Phone + Email from localStorage
+// Auto-fill Phone + Email from localStorage
 useEffect(() => {
 
   const savedPhone =
@@ -486,11 +485,17 @@ const checkPhoneNumber = async () => {
 
       setPhoneError("");
       setPhoneSuccess("Phone number is available");
+       setIsPhoneChecked(true);
+      setIsPhoneAvailable(true);
 
     } else {
+      const msg =
+        "This phone number is already registered.";
 
-      setPhoneError("Phone number already exists");
+       setPhoneError(msg);
       setPhoneSuccess("");
+      setIsPhoneChecked(true);
+      setIsPhoneAvailable(false);
 
     }
 
@@ -500,6 +505,8 @@ const checkPhoneNumber = async () => {
 
     setPhoneError("Unable to check phone number");
     setPhoneSuccess("");
+    setIsPhoneChecked(false);
+    setIsPhoneAvailable(false);
 
   }
 
@@ -527,19 +534,25 @@ const checkUsername = async () => {
 
     console.log("Username API Response:", response);
 
-    if (response?.available) {
+if (response?.available) {
 
-      //  Available
-      setUsernameError("");
-      setUsernameSuccess("Username is available");
+  setUsernameError("");
+  setUsernameSuccess("Username is available");
 
-    } else {
+  setIsUsernameChecked(true);
+  setIsUsernameAvailable(true);
 
-      //  Exists
-      setUsernameError("Username already exists");
-      setUsernameSuccess("");
+} else {
 
-    }
+  setUsernameError(
+    "This username is already taken. Please choose a different username."
+  );
+
+  setUsernameSuccess("");
+
+  setIsUsernameChecked(true);
+  setIsUsernameAvailable(false);
+}
 
   } catch (error) {
 
@@ -643,10 +656,16 @@ const fetchSupplierDocGroups = async () => {
         }
     // USERNAME VALIDATION
 if (name === "username") {
-  setUsernameSuccess("")
-  const error = validateUsername(value)
-  setUsernameError(error)
+
+  setUsernameSuccess("");
+
+  setIsUsernameChecked(false);
+  setIsUsernameAvailable(false);
+
+  const error = validateUsername(value);
+  setUsernameError(error);
 }
+
      if (name === "email") {
   setEmailError(validateEmail(value))
 }
@@ -703,22 +722,7 @@ if (name === "confirmPassword") {
 }
   }
 
-    const getStrengthColor = (id: number) => {
-      switch (id) {
-        case 0:
-          return 'text-red-500'
-        case 1:
-          return 'text-orange-500'
-        case 2:
-          return 'text-yellow-500'
-        case 3:
-          return 'text-green-600'
-        default:
-          return 'text-gray-400'
-      }
-    }
-
-    const getBorderClass = (
+   const getBorderClass = (
   stepSubmitted: boolean,
   isMandatory: boolean,
   value?: string | string[] | boolean | null,
@@ -827,44 +831,6 @@ if (name === "confirmPassword") {
   }));
 
 };
-const getTaxNumberBorderClass = () => {
-  if (taxIdError) {
-    return 'border-red-500'
-  }
-  return 'border-[#00AFEF]'
-}
-
-const getTaxPanelBorderClass = () => {
-  if (
-    submitted.step3 &&
-    (
-      !form.taxDocType ||
-      !form.panTaxId.trim() ||
-      !form.taxRegistrationDoc ||
-      taxIdError
-    )
-  ) {
-    return 'border-red-500'
-  }
-  return 'border-[#00AFEF]'
-} 
-
- const toggleService = (option: string) => {
-  setForm(prev => ({
-    ...prev,
-    serviceTypes: prev.serviceTypes.includes(option)
-      ? prev.serviceTypes.filter(o => o !== option)
-      : [...prev.serviceTypes, option],
-  }))
-}
-                const step3FileNames = [
-                form.tradeLicense?.name,
-                form.registrationCert?.name,
-                form.taxRegistrationDoc?.name,
-                ...form.otherDocs.map(doc => doc.file.name),
-              ]
-                .filter(Boolean)
-                .map(name => name!.toLowerCase())
 
   return (
     <main className="min-h-screen bg-blue-50 flex items-center justify-center px-4 pt-24 md:pt-20">
@@ -986,6 +952,7 @@ const getTaxPanelBorderClass = () => {
                     name="email"
                     type="email"
                     required
+                    disabled
                     placeholder="Enter email"
                     value={form.email}
                     readOnly
@@ -1032,6 +999,7 @@ const getTaxPanelBorderClass = () => {
     id="phone"
     type="tel"
     value={form.phone}
+    disabled
     readOnly
     onChange={handleChange}
     placeholder="Enter phone number"
@@ -1046,11 +1014,7 @@ const getTaxPanelBorderClass = () => {
   <PremiumButton
     type="button"
     variant="primary"
-    disabled={
-    !form.phone ||          // empty
-    !!phoneError ||         // has validation error
-    form.phone.length !== 10 // not complete
-  }
+  disabled={!form.phone}
     onClick={checkPhoneNumber}
     className="h-12"
   >
@@ -1065,9 +1029,12 @@ const getTaxPanelBorderClass = () => {
   }
 />
 {phoneSuccess && (
-  <p className="text-green-600 text-sm mt-1">
-    {phoneSuccess}
-  </p>
+
+
+<div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <AlertCircle size={12} className="text-green-600" />
+                        <span className="text-green-700 text-xs font-bold tracking-tight">{phoneSuccess}</span>
+                      </div> 
 )}
                       </div>
 <Label htmlFor="username" className="text-slate-700">
@@ -1101,10 +1068,7 @@ const getTaxPanelBorderClass = () => {
       type="button" 
       variant="primary"
       onClick={checkUsername} 
-      disabled={
-    !form.username ||        // empty
-    !!usernameError          // has validation error
-  }
+       disabled={!form.username?.trim()}  
       className="h-12"
      // icon={isUserChecking ? <Loader2 size={12} className="animate-spin" /> : null}
       >
@@ -1123,13 +1087,14 @@ const getTaxPanelBorderClass = () => {
   }
 />
 {usernameSuccess && (
-  <p className="text-green-600 text-sm mt-1">
-    {usernameSuccess}
-  </p>
-)}
-                                                
+  
+ <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <AlertCircle size={12} className="text-green-600" />
+                        <span className="text-green-700 text-xs font-bold tracking-tight">{usernameSuccess}</span>
+                      </div> 
+)}                                               
 
-                           <Label htmlFor="password" className="text-slate-700">
+    <Label htmlFor="password" className="text-slate-700">
   Password <span className="text-red-500">*</span>
   <TooltipIcon
     id="tooltip-password"
@@ -1277,8 +1242,15 @@ const getTaxPanelBorderClass = () => {
 />
 
    {/* SERVICE TYPE */}
+
+   
 <ServiceTypeSelect  
   value={form.serviceTypes || []}   
+
+    error={
+    submitted.step2 &&
+    (!form.serviceTypes || form.serviceTypes.length === 0)
+  }
   onChange={(values) =>
     setForm((prev) => ({
       ...prev,
@@ -1435,10 +1407,12 @@ const getTaxPanelBorderClass = () => {
                         variant="primary"
                         size="lg"
                           className="w-full"
-                      onClick={() => {
+                           onClick={() => {
                         setSubmitted(prev => ({ ...prev, step1: true }))
 
-                        const result = validateStep1(form, {
+                //Mandatory fields validation
+
+                    const result = validateStep1(form, {
                               emailError,
                               phoneError,
                               usernameError,
@@ -1455,6 +1429,66 @@ const getTaxPanelBorderClass = () => {
                           return
                         }
 
+                        /* ===============================
+   PHONE VALIDATION
+=============================== */
+
+if (!isPhoneChecked) {
+
+  const msg =
+    "Please click Check to verify phone number availability";
+
+  setPhoneError(msg);
+  setError("Please verify your phone number availability to continue registration.");
+
+  return;
+}
+
+if (!isPhoneAvailable) {
+
+  const msg =
+    "This phone number is already registered.";
+
+  setPhoneError(msg);
+  setError("This phone number is already registered. Please use a different phone number.");
+  return;
+}
+
+//Mandatory validation
+  if (!form.username) {
+    setError(
+      "Kindly fill-up all the mandatory fields."
+    );
+
+    return;
+  }  
+  
+  //if the check button is clicked
+  if (!isUsernameChecked) {
+
+    setUsernameError(
+      "Please click Check to verify username availability"
+    );
+
+    setError(
+      "Please Check username availability"
+    );
+
+    return;
+  }
+            //  Username availability check
+                      if (!isUsernameAvailable) {
+
+    setUsernameError(
+     
+ "This username is not available."
+    );
+    setError(
+      "This username is already taken. Please choose a different username."
+    );
+
+                      return;
+                    }                
                         setError('')
                         setStep(2)
                       }}                    
@@ -1511,16 +1545,22 @@ const getTaxPanelBorderClass = () => {
                           'Please fill the mandatory fields correctly'
                         )
                         return
-                      }
-
-                      setError('')
+                      }                      
 
                       //  CALL SERVICE HERE
+                      try {
                       await fetchSupplierDocGroups()
-
-                      //  MOVE TO STEP 3
-                      setStep(3)
-
+                       setError('')   
+                        setStep(3)
+                      } 
+                      catch (err) {
+                      setError
+                      (
+                        "Unable to load document requirements. Please try again."
+                      )
+                      return
+                    }
+                   
                     }}
                   >
                     Next

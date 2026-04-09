@@ -4,10 +4,11 @@ import React from "react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input as ShadInput } from "@/components/ui/input"
-import { FileInput } from "./FileHandlers"
+import { FileInput } from "./SupplierUtils"
 import { PremiumButton } from "../../../utils/PremiumButton";
-import { Upload as UploadIcon, Paperclip, X, AlertCircle } from "lucide-react"
-
+import { scanUploadService  }from "@/services/scanUploadService";
+import { Upload as UploadIcon, Paperclip, X, AlertCircle, Loader2,CheckCircle  } from "lucide-react"
+import { TooltipIcon,numberToWord } from "./SupplierUtils"
 
 type Props = {
 
@@ -47,8 +48,6 @@ type Props = {
 
 }
 
-
-
 export default function SupplierDocuments({
 
   docGroups,
@@ -73,56 +72,151 @@ export default function SupplierDocuments({
   React.useState<{
     [key: number]: string
   }>({})
+  const [scanLoading, setScanLoading] =
+React.useState<{ [key: number]: boolean }>({})
+
+const [scanErrors, setScanErrors] =
+React.useState<{ [key: number]: string }>({})
+
+const [scanSuccess, setScanSuccess] =
+React.useState<{ [key: number]: string }>({})
 
 const getPanelBorderClass = (group: any) => {
-  const identifier = tempDocs[group.groupid]?.identifierValue;
-  const singleFile = uploadedFiles[group.groupid];
-  const multiGroup = multiDocs[group.groupid] || [];
 
-  // SINGLE FILE
-  if (group.min > 0 && group.max === 1) {
-    if (!singleFile && !identifier) return "border-red-500"; // missing both
-    if (!singleFile) return "border-red-500"; // file missing
-    if (!identifier) return "border-red-500"; // identifier missing
+  // Do not validate until Register clicked
+  if (!submitted.step3) {
+    return "border-[#00AFEF]";
   }
 
-  // MULTI FILE
-  if (group.min > 0 && group.max > 1) {
-    if (multiGroup.length < group.min) return "border-red-500";
+  // ===== CASE 1 (single member) =====
+
+  if (group.members.length === 1) {
+
+    const identifier =
+      tempDocs[group.groupid]?.identifierValue;
+
+    const file =
+      uploadedFiles[group.groupid];
+
+    if (group.min > 0) {
+
+      if (!identifier || !file) {
+        return "border-red-500";
+      }
+
+    }
+
+    return "border-[#00AFEF]";
   }
 
-  return "border-[#00AFEF]"; // valid
+  // ===== CASE 2 (multiple types, max=1) =====
+
+  if (group.members.length > 1 && group.max === 1) {
+
+       const file =
+      uploadedFiles[group.groupid];
+
+    if (group.min > 0) {
+
+      if (!file) {
+        return "border-red-500";
+      }
+
+    }
+
+    return "border-[#00AFEF]";
+  }
+
+  // ===== CASE 3 (multiple types, max>1) =====
+
+  if (group.members.length > 1 && group.max > 1) {
+
+    const docs =
+      multiDocs[group.groupid] || [];
+
+    if (group.min > 0 &&
+        docs.length < group.min) {
+
+      return "border-red-500";
+    }
+
+    return "border-[#00AFEF]";
+  }
+
+  return "border-[#00AFEF]";
 };
 
 
 const isGroupInvalid = (group: any) => {
 
-  if (!submitted.step3) return false
+  // Do not validate until Register clicked
+  if (!submitted.step3) return false;
 
-  const identifier =
-    tempDocs[group.groupid]
-      ?.identifierValue
+  // ===== CASE 1 =====
+  // Single member
+  if (group.members.length === 1) {
 
-  // SINGLE FILE
-  if (group.min > 0 && group.max === 1) {
+    const identifier =
+      tempDocs[group.groupid]
+        ?.identifierValue;
 
     const file =
-      uploadedFiles[group.groupid]
+      uploadedFiles[group.groupid];
 
-    return !identifier || !file
+    if (group.min > 0) {
+
+      if (!identifier || !file) {
+        return true;
+      }
+
+    }
+
+    return false;
   }
 
-  // MULTI FILE
-  if (group.min > 0 && group.max > 1) {
+  // ===== CASE 2 =====
+  // Multiple members but only one allowed
+  // ===== CASE 2 =====
+if (
+  group.members.length > 1 &&
+  group.max === 1
+) {
+
+  const file =
+    uploadedFiles[group.groupid];
+
+  if (group.min > 0) {
+
+    return !file;   // Only file required
+
+  }
+
+  return false;
+}
+
+  // ===== CASE 3 =====
+  // Multiple documents allowed
+  if (
+    group.members.length > 1 &&
+    group.max > 1
+  ) {
 
     const docs =
-      multiDocs[group.groupid] || []
+      multiDocs[group.groupid] || [];
 
-    return docs.length < group.min
+    if (group.min > 0) {
+
+      if (docs.length < group.min) {
+        return true;
+      }
+
+    }
+
+    return false;
   }
 
-  return false
-}
+  return false;
+};
 
 const isIdentifierMissing = (group: any) => {
 
@@ -166,8 +260,21 @@ const isIdentifierMissing = (group: any) => {
                   {" "}*
                 </span>
               )}
+               {group.max === 1 ? (
+                  <TooltipIcon
+                    id={`tooltip-single-${group.groupid}`}
+                  content={`Only one type of ${group.group_name} can be uploaded.`}
 
-            </Label>
+                  />
+                ) : (
+                  <TooltipIcon
+                    id={`tooltip-multi-${group.groupid}`}
+                    content={`A maximum of ${numberToWord(group.max)} documents can be uploaded.`}
+                  />
+                )}
+
+               </Label>
+        
 
             {/* DASHED PANEL */}
 
@@ -237,6 +344,8 @@ onChange={(e) => {
     uploadedFiles[group.groupid] || null
   }
 
+  
+
   /* BLOCK FILE PICKER */
   onBeforeSelect={() => {
 
@@ -259,20 +368,178 @@ onChange={(e) => {
   }}
 
   /*  SAVE FILE */
-  onChange={(file) => {
+onChange={async (file) => {
 
-    setIdentifierErrors(prev => ({
+   console.log(
+    "File changed:",
+    group.groupid,
+    file
+  )
+  if (file === null) {
+
+    //  DELETE FILE
+
+    setUploadedFiles(prev => {
+
+      const updated = { ...prev }
+
+      delete updated[group.groupid]
+
+      return updated
+    })
+
+    return
+  }
+
+  console.log("File selected:", file)
+  if (!file) return;
+
+  try {
+    console.log("Calling scan API...")
+
+
+    // Start scanning
+    setScanLoading(prev => ({
+      ...prev,
+      [group.groupid]: true
+    }))
+
+    setScanErrors(prev => ({
       ...prev,
       [group.groupid]: ""
     }))
 
-    setUploadedFiles(prev => ({
+    const mobile_no =
+      localStorage.getItem("userPhoneNumber") || "";
+console.log(mobile_no)
+    const documentType =
+      member.document_type;
+console.log(documentType)
+    // Call scan API
+   const response =
+  await scanUploadService(
+    file,
+    mobile_no,
+    documentType
+  );
+      console.log("Scan API response:", response)
+    // Stop scanning
+    setScanLoading(prev => ({
       ...prev,
-      [group.groupid]: file
+      [group.groupid]: false
     }))
 
-  }}
-/>   </div>  ))        )}
+    if (
+      response.status === "success" &&
+      response.scan_status === "clean"
+    ) {
+
+      // Save file
+      setUploadedFiles(prev => ({
+        ...prev,
+        [group.groupid]: file
+      }))
+
+      setScanSuccess(prev => ({
+    ...prev,
+    [group.groupid]:
+      "File scanned successfully"
+  }))
+
+  // Auto-hide after 2 seconds
+  setTimeout(() => {
+
+    setScanSuccess(prev => ({
+      ...prev,
+      [group.groupid]: ""
+    }))
+
+  }, 2000);
+
+    } else {
+
+      setScanErrors(prev => ({
+        ...prev,
+        [group.groupid]:
+          "File failed security scan"
+      }))
+
+    }
+
+  } catch (error) {
+
+     console.error("Scan API error:", error)
+
+    setScanLoading(prev => ({
+      ...prev,
+      [group.groupid]: false
+    }))
+
+    setScanErrors(prev => ({
+      ...prev,
+      [group.groupid]:
+        "Unable to scan file"
+    }))
+    setScanSuccess(prev => ({
+  ...prev,
+  [group.groupid]: ""
+}))
+
+  }
+  
+
+}}
+
+
+/>   
+{scanLoading[group.groupid] && (
+
+  <p className="text-blue-600 text-sm mt-1 flex items-center gap-2">
+
+   <Loader2 
+  className="h-4 w-4 animate-spin text-blue-600 [animation-duration:2.5s]" 
+/>
+
+    Scanning file...
+
+  </p>
+
+)}
+{/* SUCCESS MESSAGE */}
+
+{scanSuccess[group.groupid] && (
+
+  <p className="text-green-600 text-sm mt-1 flex items-center gap-2">
+
+    <CheckCircle
+      className="h-4 w-4 text-green-600"
+    />
+console.log(  {scanSuccess[group.groupid]})
+    {scanSuccess[group.groupid]}
+
+  </p>
+
+)}
+{/* ERROR MESSAGE */}
+
+{scanErrors[group.groupid] && (
+
+  <p className="text-red-600 text-sm mt-1 flex items-center gap-2">
+
+    <AlertCircle
+      className="h-4 w-4 text-red-600"
+    />
+
+    {scanErrors[group.groupid]}
+
+  </p>
+
+)}
+
+
+
+
+</div>  ))        )}
 
 
 
@@ -415,7 +682,7 @@ onChange={(e) => {
 
     {/* FILE UPLOAD */}
 
-    <FileInput
+  <FileInput
   label={`Upload ${
     selectedDocs[group.groupid]?.description || ""
   }`}
@@ -426,47 +693,207 @@ onChange={(e) => {
     uploadedFiles[group.groupid] || null
   }
 
-  /* BLOCK FILE PICKER */
+  /* ALLOW FILE PICKER EVEN IF IDENTIFIER EMPTY */
   onBeforeSelect={() => {
 
-    const identifier =
-      selectedDocs[group.groupid]
-        ?.identifierValue
-
-    const identifierName =
-      selectedDocs[group.groupid]
-        ?.identifier
-
-    if (!identifier) {
-
-      setIdentifierErrors(prev => ({
-        ...prev,
-        [group.groupid]:
-          `Please enter ${identifierName}`
-      }))
-
-      return false   // block picker
-    }
-
-    return true      // allow picker
-  }}
-
-  /* SAVE FILE */
-  onChange={(file) => {
-
+    // Clear previous identifier error
     setIdentifierErrors(prev => ({
       ...prev,
       [group.groupid]: ""
     }))
 
-    setUploadedFiles(prev => ({
+    return true   // Always allow file picker
+
+  }}
+
+  /* SAVE FILE */
+  
+  /* FILE CHANGE + SCANNING (Same as Case-1) */
+  onChange={async (file) => {
+
+    console.log(
+      "File changed:",
+      group.groupid,
+      file
+    )
+
+    if (file === null) {
+
+      // DELETE FILE
+      setUploadedFiles(prev => {
+
+        const updated = { ...prev }
+
+        delete updated[group.groupid]
+
+        return updated
+      })
+
+      return
+    }
+
+    console.log("File selected:", file)
+
+    if (!file) return;
+
+    try {
+
+      console.log("Calling scan API...")
+
+      // Start scanning
+      setScanLoading(prev => ({
+        ...prev,
+        [group.groupid]: true
+      }))
+
+      setScanErrors(prev => ({
+        ...prev,
+        [group.groupid]: ""
+      }))
+
+      const mobile_no =
+        localStorage.getItem(
+          "userPhoneNumber"
+        ) || "";
+
+      console.log(mobile_no)
+
+      const documentType =
+        selectedDocs[group.groupid]
+          ?.document_type;
+
+      console.log(documentType)
+
+      // Call scan API
+      const response =
+        await scanUploadService(
+          file,
+          mobile_no,
+          documentType
+        );
+
+      console.log(
+        "Scan API response:",
+        response
+      )
+
+      // Stop scanning
+      setScanLoading(prev => ({
+        ...prev,
+        [group.groupid]: false
+      }))
+
+      if (
+        response.status === "success" &&
+        response.scan_status === "clean"
+      ) {
+
+        // Save file
+        setUploadedFiles(prev => ({
+          ...prev,
+          [group.groupid]: file
+        }))
+         // Clear error
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
+
+        // Show success message
+  setScanSuccess(prev => ({
+    ...prev,
+    [group.groupid]:
+      "File scanned successfully"
+  }))
+
+  // Auto hide after 2 sec
+  setTimeout(() => {
+
+    setScanSuccess(prev => ({
       ...prev,
-      [group.groupid]: file
+      [group.groupid]: ""
     }))
+
+  }, 2000)
+
+
+      } else {
+
+        setScanErrors(prev => ({
+          ...prev,
+          [group.groupid]:
+            "File failed security scan. Please upload a valid file."
+        }))
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Scan API error:",
+        error
+      )
+
+      setScanLoading(prev => ({
+        ...prev,
+        [group.groupid]: false
+      }))
+
+      setScanErrors(prev => ({
+        ...prev,
+        [group.groupid]:
+          "Unable to scan file.Please try again."
+      }))
+
+    }
 
   }}
 />
+{scanLoading[group.groupid] && (
 
+  <p className="text-blue-600 text-sm mt-1 flex items-center gap-2">
+
+    <Loader2
+      className="h-4 w-4 animate-spin text-blue-600 [animation-duration:2.5s]"
+    />
+
+    Scanning file...
+
+  </p>
+
+)}
+
+{/* SUCCESS MESSAGE */}
+
+{scanSuccess[group.groupid] && (
+
+  <p className="text-green-600 text-sm mt-1 flex items-center gap-2">
+
+    <CheckCircle
+      className="h-4 w-4 text-green-600"
+    />
+
+    {scanSuccess[group.groupid]}
+
+  </p>
+
+)}
+
+{/* ERROR MESSAGE */}
+
+{scanErrors[group.groupid] && (
+
+  <p className="text-red-600 text-sm mt-1 flex items-center gap-2">
+
+    <AlertCircle
+      className="h-4 w-4 text-red-600"
+    />
+
+    {scanErrors[group.groupid]}
+
+  </p>
+
+)}
 
   </>
 
@@ -607,54 +1034,42 @@ onChange={(e) => {
         {/* FILE INPUT */}
 
         <FileInput
-          label={`Upload ${
-            tempDocs[group.groupid]
-              ?.description || ""
-          }`}
+  label={`Upload ${
+    tempDocs[group.groupid]
+      ?.description || ""
+  }`}
 
-          file={
-            multiFiles[group.groupid] || null
-          }
+  file={
+    multiFiles[group.groupid] || null
+  }
 
-          /* BLOCK FILE PICKER */
-          onBeforeSelect={() => {
+  /* ALLOW FILE PICKER EVEN IF IDENTIFIER EMPTY */
+  onBeforeSelect={() => {
 
-            const identifier =
-              tempDocs[group.groupid]
-                ?.identifierValue
+    // Clear previous identifier error
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]: ""
+    }))
 
-            const identifierName =
-              tempDocs[group.groupid]
-                ?.identifier
+    return true   // ✅ Always allow picker
 
-            if (!identifier) {
+  }}
 
-              setIdentifierErrors(prev => ({
-                ...prev,
-                [group.groupid]:
-                  `Please enter ${identifierName}`
-              }))
+  onChange={(file) => {
 
-              return false
-            }
+    setIdentifierErrors(prev => ({
+      ...prev,
+      [group.groupid]: ""
+    }))
 
-            return true
-          }}
+    setMultiFiles(prev => ({
+      ...prev,
+      [group.groupid]: file
+    }))
 
-          onChange={(file) => {
-
-            setIdentifierErrors(prev => ({
-              ...prev,
-              [group.groupid]: ""
-            }))
-
-            setMultiFiles(prev => ({
-              ...prev,
-              [group.groupid]: file
-            }))
-
-          }}
-        />
+  }}
+/>
 
  {/* IDENTIFIER ERROR MESSAGE */}
 
