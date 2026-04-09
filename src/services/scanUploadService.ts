@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://150.241.244.100:8000"
+const API_BASE_URL = "https://150.241.244.100:8000"
 
 export const scanUploadService = async (
   file: File,
