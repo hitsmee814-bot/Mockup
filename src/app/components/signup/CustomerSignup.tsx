@@ -345,14 +345,14 @@ export default function CustomerSignup(): JSX.Element {
       if (response?.available === true) {
         setPhoneStatus("available");
         setPhoneCheckedManually(true);
-        toast.success(" Phone number is available!", {
+        toast.success("Phone number is available!", {
           position: "top-right",
           duration: 3000,
         });
       } else {
         setPhoneStatus("unavailable");
         setPhoneCheckedManually(true);
-        toast.error(" Phone number is not available. Please use a different number.", {
+        toast.error("Phone number is not available. Please use a different number.", {
           position: "top-right",
           duration: 3000,
         });
@@ -362,7 +362,7 @@ export default function CustomerSignup(): JSX.Element {
       // Default to available on error (since database integration pending)
       setPhoneStatus("available");
       setPhoneCheckedManually(true);
-      toast.success(" Phone number is available!", {
+      toast.success("Phone number is available!", {
         position: "top-right",
         duration: 3000,
       });
@@ -385,14 +385,14 @@ export default function CustomerSignup(): JSX.Element {
       if (response?.available === true) {
         setUsernameStatus("available");
         setUsernameCheckedManually(true);
-        toast.success("✓ Username is available!", {
+        toast.success("Username is available!", {
           position: "top-right",
           duration: 3000,
         });
       } else {
         setUsernameStatus("unavailable");
         setUsernameCheckedManually(true);
-        toast.error(" Username is not available. Please choose a different username.", {
+        toast.error("Username is not available. Please choose a different username.", {
           position: "top-right",
           duration: 3000,
         });
@@ -402,7 +402,7 @@ export default function CustomerSignup(): JSX.Element {
       // Default to available on error (since database integration pending)
       setUsernameStatus("available");
       setUsernameCheckedManually(true);
-      toast.success(" Username is available!", {
+      toast.success("Username is available!", {
         position: "top-right",
         duration: 3000,
       });

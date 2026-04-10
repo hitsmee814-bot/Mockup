@@ -482,7 +482,7 @@ export default function AgentSignup(): JSX.Element {
       } else {
         setPhoneStatus("unavailable");
         setPhoneCheckedManually(true);
-        toast.error("✗ Phone number is not available. Please use a different number.", {
+        toast.error(" Phone number is not available. Please use a different number.", {
           position: "top-right",
           duration: 3000,
         });
@@ -491,7 +491,7 @@ export default function AgentSignup(): JSX.Element {
       console.error("Phone availability check error:", error);
       setPhoneStatus("available");
       setPhoneCheckedManually(true);
-      toast.success("✓ Phone number is available!", {
+      toast.success(" Phone number is available!", {
         position: "top-right",
         duration: 3000,
       });
@@ -1072,13 +1072,13 @@ export default function AgentSignup(): JSX.Element {
             setPhoneStatus("available");
             phoneAvailable = true;
             // Show success toast for auto-check
-            toast.success("✓ Phone number is available!", {
+            toast.success("Phone number is available!", {
               position: "top-right",
               duration: 3000,
             });
           } else {
             setPhoneStatus("unavailable");
-            toast.error("✗ Phone number is not available. Please use a different number.", {
+            toast.error("Phone number is not available. Please use a different number.", {
               position: "top-right",
               duration: 3000,
             });
@@ -1091,7 +1091,7 @@ export default function AgentSignup(): JSX.Element {
       } else if (phoneStatus === "available") {
         phoneAvailable = true;
       } else if (phoneStatus === "unavailable") {
-        toast.error("✗ Phone number is not available. Please use a different number.", {
+        toast.error("Phone number is not available. Please use a different number.", {
           position: "top-right",
           duration: 3000,
         });
@@ -1108,13 +1108,13 @@ export default function AgentSignup(): JSX.Element {
             usernameAvailable = true;
             // Small delay to ensure phone success toast is seen first, then show username success
           await new Promise(resolve => setTimeout(resolve, 900));
-          toast.success("✓ Username is available!", {
+          toast.success("Username is available!", {
             position: "top-right",
             duration: 2000,
           });
           } else {
             setUsernameStatus("unavailable");
-            toast.error("✗ Username is not available. Please choose a different username.", {
+            toast.error("Username is not available. Please choose a different username.", {
               position: "top-right",
               duration: 3000,
             });
@@ -1127,7 +1127,7 @@ export default function AgentSignup(): JSX.Element {
       } else if (usernameStatus === "available") {
         usernameAvailable = true;
       } else if (usernameStatus === "unavailable") {
-        toast.error("✗ Username is not available. Please choose a different username.", {
+        toast.error("Username is not available. Please choose a different username.", {
           position: "top-right",
           duration: 3000,
         });
