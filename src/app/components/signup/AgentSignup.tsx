@@ -2,10 +2,11 @@
 import { DocumentUploadSection } from "@/components/DocumentUploadSection";
 import React, { useState, useEffect, useLayoutEffect, ChangeEvent, FormEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Upload, X, Paperclip, Info } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Upload, X, Paperclip, Info, ChevronsUpDown } from "lucide-react";
 import Image from "next/image";
 import type { JSX } from "react";
 import { passwordStrength } from "check-password-strength";
+import { toast } from "sonner";
 import logovar from "../../assets/images/logoPrimary.png";
 import UIpic from "../../assets/images/agent-signup.jpg";
 import { parsePhoneNumberFromString, CountryCode } from 'libphonenumber-js';
@@ -166,6 +167,16 @@ export default function AgentSignup(): JSX.Element {
   const [showPassword, setShowPassword] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
+  // State for localStorage data and field disabled status
+  const [isPhoneFromStorage, setIsPhoneFromStorage] = useState<boolean>(false);
+  const [isEmailFromStorage, setIsEmailFromStorage] = useState<boolean>(false);
+  const [storedCountryIso, setStoredCountryIso] = useState<string>("");
+  const [storedDialCode, setStoredDialCode] = useState<string>("");
+
+  // Track if checks were manually performed
+  const [phoneCheckedManually, setPhoneCheckedManually] = useState<boolean>(false);
+  const [usernameCheckedManually, setUsernameCheckedManually] = useState<boolean>(false);
+
   const [form, setForm] = useState<FormState>({
     agencyName: "",
     firstName: "",
@@ -217,6 +228,44 @@ export default function AgentSignup(): JSX.Element {
       document.body.style.overflow = originalOverflow;
     };
   }, []);
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const loadStoredData = () => {
+      const storedPhone = localStorage.getItem("userPhoneNumber");
+      const storedCountryCodeRaw = localStorage.getItem("userCountryCode");
+      const storedEmail = localStorage.getItem("userEmail");
+
+      if (storedCountryCodeRaw) {
+        const parts = storedCountryCodeRaw.split("-");
+        if (parts.length === 2) {
+          const isoCode = parts[0];
+          const dialCode = parts[1];
+          setStoredCountryIso(isoCode);
+          setStoredDialCode(dialCode);
+          // Update form with stored country data
+          setForm(prev => ({ ...prev, countryCode: dialCode, countryIso2: isoCode }));
+          // Find and set selected country
+          const matchedCountry = countries.find(c => c.iso2 === isoCode);
+          if (matchedCountry) {
+            setSelectedCountry(matchedCountry);
+          }
+        }
+      }
+
+      if (storedPhone) {
+        setForm(prev => ({ ...prev, phone: storedPhone }));
+        setIsPhoneFromStorage(true);
+      }
+
+      if (storedEmail) {
+        setForm(prev => ({ ...prev, email: storedEmail }));
+        setIsEmailFromStorage(true);
+      }
+    };
+
+    loadStoredData();
+  }, [countries]);
 
   // Fetch document types when component mounts
   useEffect(() => {
@@ -321,14 +370,16 @@ export default function AgentSignup(): JSX.Element {
 
         setCountries(sorted);
         
-        // Set default selected country (India)
-        const indiaCountry = sorted.find(c => c.iso2 === "IN");
-        if (indiaCountry) {
-          setSelectedCountry(indiaCountry);
-          setForm(prev => ({ ...prev, countryCode: indiaCountry.code, countryIso2: indiaCountry.iso2 }));
-        } else if (sorted.length > 0) {
-          setSelectedCountry(sorted[0]);
-          setForm(prev => ({ ...prev, countryCode: sorted[0].code, countryIso2: sorted[0].iso2 }));
+        // Set default selected country (India) only if no stored data
+        if (!storedCountryIso) {
+          const indiaCountry = sorted.find(c => c.iso2 === "IN");
+          if (indiaCountry) {
+            setSelectedCountry(indiaCountry);
+            setForm(prev => ({ ...prev, countryCode: indiaCountry.code, countryIso2: indiaCountry.iso2 }));
+          } else if (sorted.length > 0) {
+            setSelectedCountry(sorted[0]);
+            setForm(prev => ({ ...prev, countryCode: sorted[0].code, countryIso2: sorted[0].iso2 }));
+          }
         }
       } catch (error) {
         console.error("❌ Country API FAILED:", error);
@@ -336,7 +387,7 @@ export default function AgentSignup(): JSX.Element {
       }
     };
     fetchCodes();
-  }, []);
+  }, [storedCountryIso]);
 
   // Phone number validation using libphonenumber-js (works for ANY country dynamically)
   const validatePhoneNumber = (
@@ -381,15 +432,32 @@ export default function AgentSignup(): JSX.Element {
     setIsCheckingUser(true);
     setUsernameStatus(null);
     try {
-      const res = await userNameService.checkAvailability(form.username);
-      // Currently: "test" returns false, all others return true
-      if (res?.data?.available === false || res?.data?.available === "test") {
-        setUsernameStatus("unavailable");
-      } else {
+      const response = await userNameService.checkAvailability(form.username);
+      console.log("Username availability response:", response);
+      
+      if (response?.available === true) {
         setUsernameStatus("available");
+        setUsernameCheckedManually(true);
+        toast.success("✓ Username is available!", {
+          position: "top-right",
+          duration: 3000,
+        });
+      } else {
+        setUsernameStatus("unavailable");
+        setUsernameCheckedManually(true);
+        toast.error("✗ Username is not available. Please choose a different username.", {
+          position: "top-right",
+          duration: 3000,
+        });
       }
-    } catch {
+    } catch (error: any) {
+      console.error("Username availability check error:", error);
       setUsernameStatus("available");
+      setUsernameCheckedManually(true);
+      toast.success("✓ Username is available!", {
+        position: "top-right",
+        duration: 3000,
+      });
     } finally {
       setIsCheckingUser(false);
     }
@@ -401,22 +469,41 @@ export default function AgentSignup(): JSX.Element {
     setIsCheckingPhone(true);
     setPhoneStatus(null);
     try {
-      const res = await phoneNumberAvailService.checkAvailability(form.phone);
-      // Currently all valid phone numbers are available
-      if (res?.data?.available === true) {
+      const response = await phoneNumberAvailService.checkAvailability(form.phone);
+      console.log("Phone availability response:", response);
+      
+      if (response?.available === true) {
         setPhoneStatus("available");
+        setPhoneCheckedManually(true);
+        toast.success("✓ Phone number is available!", {
+          position: "top-right",
+          duration: 3000,
+        });
       } else {
-        setPhoneStatus("available");
+        setPhoneStatus("unavailable");
+        setPhoneCheckedManually(true);
+        toast.error("✗ Phone number is not available. Please use a different number.", {
+          position: "top-right",
+          duration: 3000,
+        });
       }
-    } catch {
+    } catch (error: any) {
+      console.error("Phone availability check error:", error);
       setPhoneStatus("available");
+      setPhoneCheckedManually(true);
+      toast.success("✓ Phone number is available!", {
+        position: "top-right",
+        duration: 3000,
+      });
     } finally {
       setIsCheckingPhone(false);
     }
   };
 
-  // Handle country selection change
+  // Handle country selection change - only allowed if phone not from storage
   const handleCountryChange = (value: string) => {
+    if (isPhoneFromStorage) return; // Disable if phone is from OTP storage
+    
     const [iso2, code] = value.split("-");
     const selected = countries.find(c => c.iso2 === iso2 && c.code === code);
     if (selected) {
@@ -436,6 +523,7 @@ export default function AgentSignup(): JSX.Element {
         });
         // Reset phone status when country changes
         setPhoneStatus(null);
+        setPhoneCheckedManually(false);
       }
     }
   };
@@ -518,8 +606,14 @@ export default function AgentSignup(): JSX.Element {
     const updatedForm = { ...form, [name]: value };
     setForm(updatedForm);
     setMandatoryError("");
-    if (name === "username") setUsernameStatus(null);
-    if (name === "phone") setPhoneStatus(null);
+    if (name === "username") {
+      setUsernameStatus(null);
+      setUsernameCheckedManually(false);
+    }
+    if (name === "phone") {
+      setPhoneStatus(null);
+      setPhoneCheckedManually(false);
+    }
     if (name === "confirmPassword" && value.length > 0) setShowPassword(false);
     let fieldError = "";
     
@@ -542,7 +636,7 @@ export default function AgentSignup(): JSX.Element {
           fieldError = "Username cannot end with a period.";
         }
       }
-      if (name === "email") {
+      if (name === "email" && !isEmailFromStorage) {
         const validation = emailValid(value);
         if (!validation.valid) {
           fieldError = validation.errorType === "casing"
@@ -550,7 +644,7 @@ export default function AgentSignup(): JSX.Element {
             : "Please enter a valid email address";
         }
       }
-      if (name === "phone") {
+      if (name === "phone" && !isPhoneFromStorage) {
         // Use libphonenumber-js for dynamic validation for ANY country
         fieldError = validatePhoneNumber(value, updatedForm.countryCode, updatedForm.countryIso2);
       }
@@ -600,6 +694,7 @@ export default function AgentSignup(): JSX.Element {
       return newErrs;
     });
     setUsernameStatus(null);
+    setUsernameCheckedManually(false);
   };
 
   // Check if a group is valid (without setting errors)
@@ -932,6 +1027,24 @@ export default function AgentSignup(): JSX.Element {
     return `Upload ${group.min} to ${group.max} document(s)`;
   };
 
+  // Get tooltip text for phone number based on disabled state
+  const getPhoneTooltipText = () => {
+    if (isPhoneFromStorage) {
+      return "Enter exactly 10 digits. Phone number has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
+    }
+    return "Enter phone number with correct format for selected country";
+  };
+
+  // Get tooltip text for email based on disabled state
+  const getEmailTooltipText = () => {
+    if (isEmailFromStorage) {
+      return "Enter a valid email address like name@example.com. Email has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
+    }
+    return "Enter a valid email address like name@example.com";
+  };
+
+  // FIXED: Complete handleNextStep with all 3 API calls in sequence
+  // Auto-check errors and success now use toast notifications
   const handleNextStep = async () => {
     const mandatoryFields: (keyof FormState)[] = [
       "agencyName", "firstName", "lastName",
@@ -941,7 +1054,7 @@ export default function AgentSignup(): JSX.Element {
     const emptyFields = mandatoryFields.filter(f => !form[f]);
     const hasInvalidFields = Object.values(errors).some(e => e);
     if (emptyFields.length > 0 || hasInvalidFields || strengthLabel === "weak password") {
-      setMandatoryError("Kindly fill-up all the mandatory fields correctly to proceed to next step");
+      setMandatoryError("Kindly fill-up all the mandatory fields correctly for a successful registration");
       const newErrors = { ...errors };
       emptyFields.forEach(f => newErrors[f] = "Required");
       setErrors(newErrors);
@@ -949,29 +1062,147 @@ export default function AgentSignup(): JSX.Element {
       return;
     }
     
-    // Auto-check username and phone when clicking Save and Next
-    if (!usernameStatus && !errors.username) {
-      await checkUsername();
+    try {
+      // STEP 1: Auto-check phone availability
+      let phoneAvailable = false;
+      if (!phoneCheckedManually) {
+        try {
+          const phoneResponse = await phoneNumberAvailService.checkAvailability(form.phone);
+          if (phoneResponse?.available === true) {
+            setPhoneStatus("available");
+            phoneAvailable = true;
+            // Show success toast for auto-check
+            toast.success("✓ Phone number is available!", {
+              position: "top-right",
+              duration: 3000,
+            });
+          } else {
+            setPhoneStatus("unavailable");
+            toast.error("✗ Phone number is not available. Please use a different number.", {
+              position: "top-right",
+              duration: 3000,
+            });
+            return;
+          }
+        } catch (error) {
+          console.error("Auto phone check error:", error);
+          phoneAvailable = true;
+        }
+      } else if (phoneStatus === "available") {
+        phoneAvailable = true;
+      } else if (phoneStatus === "unavailable") {
+        toast.error("✗ Phone number is not available. Please use a different number.", {
+          position: "top-right",
+          duration: 3000,
+        });
+        return;
+      }
+      
+      // STEP 2: Auto-check username availability
+      let usernameAvailable = false;
+      if (!usernameCheckedManually) {
+        try {
+          const usernameResponse = await userNameService.checkAvailability(form.username);
+          if (usernameResponse?.available === true) {
+            setUsernameStatus("available");
+            usernameAvailable = true;
+            // Small delay to ensure phone success toast is seen first, then show username success
+          await new Promise(resolve => setTimeout(resolve, 900));
+          toast.success("✓ Username is available!", {
+            position: "top-right",
+            duration: 2000,
+          });
+          } else {
+            setUsernameStatus("unavailable");
+            toast.error("✗ Username is not available. Please choose a different username.", {
+              position: "top-right",
+              duration: 3000,
+            });
+            return;
+          }
+        } catch (error) {
+          console.error("Auto username check error:", error);
+          usernameAvailable = true;
+        }
+      } else if (usernameStatus === "available") {
+        usernameAvailable = true;
+      } else if (usernameStatus === "unavailable") {
+        toast.error("✗ Username is not available. Please choose a different username.", {
+          position: "top-right",
+          duration: 3000,
+        });
+        return;
+      }
+      
+      // STEP 3: Fetch document types (only if both phone and username are available)
+      if (phoneAvailable && usernameAvailable) {
+        setIsLoadingDocs(true);
+        try {
+          const response = await docTypelookupService.getDocTypes("AGENT");
+          console.log("Document Types API Response:", response);
+          
+          let groups: DocumentGroup[] = [];
+          
+          if (response && Array.isArray(response) && response.length > 0 && response[0].json_agg) {
+            const parsedData = JSON.parse(response[0].json_agg);
+            groups = parsedData;
+          } else if (Array.isArray(response)) {
+            groups = response;
+          }
+          
+          if (groups && groups.length > 0) {
+            setDocumentGroups(groups);
+            const initialSelectedDocs: GroupSelectedDoc = {};
+            const initialIdentifierValues: GroupIdentifierValue = {};
+            const initialUploadedFiles: { [key: number]: File | null } = {};
+            const initialTempDocs: GroupTempDoc = {};
+            const initialMultiFiles: { [key: number]: File | null } = {};
+            const initialMultiDocs: GroupMultiDocs = {};
+            const initialErrors: GroupErrorState = {};
+            
+            groups.forEach(group => {
+              initialSelectedDocs[group.groupid] = null;
+              initialIdentifierValues[group.groupid] = "";
+              initialUploadedFiles[group.groupid] = null;
+              initialTempDocs[group.groupid] = null;
+              initialMultiFiles[group.groupid] = null;
+              initialMultiDocs[group.groupid] = [];
+              initialErrors[group.groupid] = "";
+            });
+            
+            setSelectedDocs(initialSelectedDocs);
+            setIdentifierValues(initialIdentifierValues);
+            setUploadedFiles(initialUploadedFiles);
+            setTempDocs(initialTempDocs);
+            setMultiFiles(initialMultiFiles);
+            setMultiDocs(initialMultiDocs);
+            setGroupErrors(initialErrors);
+            
+            // Proceed to Step 2
+            setCurrentStep(2);
+            setSubmitAttempted(false);
+          } else {
+            setDocFetchError("No document groups found");
+            toast.error("Failed to load document requirements. Please try again.", {
+              position: "top-right",
+              duration: 3000,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch document types:", error);
+          setDocFetchError("Failed to load document requirements. Please refresh the page.");
+          toast.error("Failed to load document requirements. Please try again.", {
+            position: "top-right",
+            duration: 3000,
+          });
+        } finally {
+          setIsLoadingDocs(false);
+        }
+      }
+    } finally {
+      setIsCheckingPhone(false);
+      setIsCheckingUser(false);
     }
-    if (!phoneStatus && !errors.phone) {
-      await checkPhone();
-    }
-    
-    // After checks, verify they are available
-    if (usernameStatus === "unavailable") {
-      setMandatoryError("Username is not available. Please choose a different username.");
-      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    
-    if (phoneStatus === "unavailable") {
-      setMandatoryError("Phone number is already registered. Please use a different number.");
-      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    
-    setCurrentStep(2);
-    setSubmitAttempted(false);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -1100,24 +1331,41 @@ export default function AgentSignup(): JSX.Element {
                   <InputField label="Middle Name (Optional)" name="middleName" placeholder="Enter middle name" form={form} errors={errors} handleChange={handleChange} />
                   <InputField label="Last Name" name="lastName" placeholder="Enter last name" required form={form} errors={errors} handleChange={handleChange} />
 
+                  {/* Email field - disabled if from storage */}
                   <div className="mb-4">
-                    <InputWithError label="Email" name="email" placeholder="Enter email address" required tooltip="Enter a valid email address like name@example.com" form={form} errors={errors} handleChange={handleChange} />
+                    <div>
+                      <Label className={`${LABEL_STYLING} flex items-center`}>
+                        Email<span className="text-red-500 ml-1">*</span>
+                        <Tooltip text={getEmailTooltipText()} />
+                      </Label>
+                      <Input
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        placeholder="Enter email address"
+                        disabled={isEmailFromStorage}
+                        className={`${INPUT_STYLING} ${errors.email ? 'border-red-600' : ''} ${isEmailFromStorage ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                      />
+                    </div>
                     <ErrorMessage message={errors.email} />
                   </div>
 
+                  {/* Phone Number Section with Chevron icon - only ONE chevron visible */}
                   <div className="mb-4">
                     <Label className={`${LABEL_STYLING} flex items-center`}>
                       Phone Number<span className="text-red-500 ml-1">*</span>
-                      <Tooltip text="Enter phone number with correct format for selected country" />
+                      <Tooltip text={getPhoneTooltipText()} />
                     </Label>
                     <div className="flex gap-3 items-center">
-                      <div className="mt-2 w-[110px] shrink-0">
+                      <div className="mt-2 w-[96px] shrink-0">
                         <Select
                           value={selectedCountry ? `${selectedCountry.iso2}-${selectedCountry.code}` : ""}
                           onValueChange={handleCountryChange}
+                          disabled={isPhoneFromStorage}
                         >
-                          <SelectTrigger className={`w-full !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"}`}>
+                          <SelectTrigger className={`w-full !h-12 bg-white text-slate-900 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] border-solid border-[1px] ${errors.phone ? "border-red-500 ring-1 ring-red-500" : "border-slate-300"} ${isPhoneFromStorage ? "bg-gray-100 cursor-not-allowed" : ""} [&_.lucide-chevron-down]:hidden`}>
                             <SelectValue placeholder="Select country" />
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </SelectTrigger>
                           <SelectContent className="bg-white max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00AFEF] scrollbar-track-gray-100">
                             {countries.length > 0 ? (
@@ -1141,8 +1389,10 @@ export default function AgentSignup(): JSX.Element {
                         }}
                         inputMode="numeric"
                         placeholder="Enter phone number"
-                        className={`${INPUT_STYLING} flex-grow ${errors.phone ? 'border-red-600' : ''}`}
+                        disabled={isPhoneFromStorage}
+                        className={`${INPUT_STYLING} flex-grow ${errors.phone ? 'border-red-600' : ''} ${isPhoneFromStorage ? "bg-gray-100 cursor-not-allowed" : ""}`}
                       />
+                      {/* CHECK button always enabled */}
                       <PremiumButton
                         type="button"
                         variant="accent"
@@ -1161,8 +1411,16 @@ export default function AgentSignup(): JSX.Element {
                         <span className="text-green-700 text-xs font-bold tracking-tight">Phone number is available!</span>
                       </div>
                     )}
+
+                    {phoneStatus === "unavailable" && !errors.phone && form.phone && (
+                      <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <AlertCircle size={14} className="text-red-600" />
+                        <span className="text-red-700 text-xs font-bold tracking-tight">This phone number already exists. Please use another number.</span>
+                      </div>
+                    )}
                   </div>
 
+                  {/* Username Section with Check Button */}
                   <div className="mb-4">
                     <Label className={`${LABEL_STYLING} flex items-center`}>
                       Username<span className="text-red-500 ml-1">*</span>
@@ -1192,6 +1450,13 @@ export default function AgentSignup(): JSX.Element {
                       <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100 animate-in fade-in slide-in-from-top-1 duration-300">
                         <CheckCircle2 size={14} className="text-green-600" />
                         <span className="text-green-700 text-xs font-bold tracking-tight">Username is available!</span>
+                      </div>
+                    )}
+
+                    {usernameStatus === "unavailable" && !errors.username && form.username && (
+                      <div className="mt-2.5 flex items-center gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 animate-in fade-in slide-in-from-top-1 duration-300">
+                        <AlertCircle size={14} className="text-red-600" />
+                        <span className="text-red-700 text-xs font-bold tracking-tight">This username already exists. Please choose another username.</span>
                       </div>
                     )}
                   </div>
@@ -1251,7 +1516,7 @@ export default function AgentSignup(): JSX.Element {
                   <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} errors={errors} handleChange={handleChange} />
                 </div>
               ) : (
-                /* STEP 2: DOCUMENTS */
+                /* STEP 2: DOCUMENTS - UNCHANGED */
                 <div className="animate-in fade-in slide-in-from-left-4 duration-500 space-y-6">
                   {!isLoadingDocs && !docFetchError && documentGroups.length > 0 ? (
                     documentGroups.map((group) => (
@@ -1361,26 +1626,7 @@ const InputField = ({ label, name, required, placeholder, form, errors, handleCh
   </div>
 );
 
-interface InputWithErrorProps extends InputFieldProps {
-  tooltip?: string;
-}
-
-const InputWithError = ({ label, name, required, placeholder, tooltip, form, errors, handleChange }: InputWithErrorProps) => (
-  <div>
-    <Label className={`${LABEL_STYLING} flex items-center`}>
-      {label}{required && <span className="text-red-500 ml-1">*</span>}
-      {tooltip && <Tooltip text={tooltip} />}
-    </Label>
-    <Input
-      name={name}
-      value={form[name as keyof FormState]}
-      onChange={handleChange}
-      placeholder={placeholder}
-      className={`${INPUT_STYLING} ${errors[name] ? 'border-red-600' : ''}`}
-    />
-  </div>
-);
-
+// Reused Tooltip component for backward compatibility
 const Tooltip = ({ text }: { text: string }) => (
   <div className="relative group inline-block ml-2">
     <span className="text-[#00AFEF] text-xs cursor-help">ⓘ</span>

@@ -664,7 +664,7 @@ export default function CustomerSignup(): JSX.Element {
   // Get tooltip text for phone number based on disabled state
   const getPhoneTooltipText = () => {
     if (isPhoneFromStorage) {
-      return "Enter exactly 10 digits. ✓ Phone number has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
+      return "Enter exactly 10 digits.Phone number has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
     }
     return "Enter exactly 10 digits.";
   };
@@ -672,7 +672,7 @@ export default function CustomerSignup(): JSX.Element {
   // Get tooltip text for email based on disabled state
   const getEmailTooltipText = () => {
     if (isEmailFromStorage) {
-      return "Enter a valid email address like name@example.com. ✓ Email has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
+      return "Enter a valid email address like name@example.com. Email has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
     }
     return "Enter a valid email address like name@example.com";
   };
