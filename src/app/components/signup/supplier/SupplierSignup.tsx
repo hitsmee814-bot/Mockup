@@ -4,7 +4,6 @@
 import React,{ useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tooltip } from 'react-tooltip'
-import 'react-tooltip/dist/react-tooltip.css'
 import Image from "next/image";
 import logo from "../../../assets/images/logoPrimary.png"
 import supplierPic from "../../../assets/images/traveling-concept-with-landmarks.jpg"
@@ -16,6 +15,8 @@ import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { phoneNoService } from "@/services/phoneNoService";
 import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
 import { CountryCodeCombobox } from "../../login/CountryCodeCombobox";
+import { userCreationService } from "@/services/userCreationService";
+import { supplierProfileCreationService } from "@/services/supplierProfileCreationService";
 
 import {
   validateEmail,
@@ -721,6 +722,69 @@ if (name === "confirmPassword") {
   setConfirmPasswordError(confirmError)
 }
   }
+
+
+  const handleRegister = async () => {
+    const serviceTypeObject: Record<string, {}> = {};
+
+(form.serviceTypes || []).forEach((type) => {
+  if (type?.trim()) {
+    serviceTypeObject[type.trim()] = {};
+  }
+});
+  // Step 1: optional client-side validation before API call
+  if (!form.username || !form.password || !form.email || !form.phone) {
+    setError("Please fill all required fields.");
+    return;
+  }
+
+  try {
+    //  Call the API
+    const response = await userCreationService.createUser({
+      username: form.username,
+      password: form.password,
+      email: form.email,
+      phone: form.phone,
+      user_org_id: 4, // replace with actual org id
+    });
+
+    console.log("User creation response:", response);
+
+    //  Extract user_id from response
+    const userId = response?.user_id || response?.id;
+    if (userId) {
+      console.log("Created User ID:", userId);
+      alert(`User ID: ${userId}`);
+      // You can store it in state or localStorage
+      localStorage.setItem("userId", userId);
+  
+    // 3. Call supplier profile API using received user_id
+    const supplierResponse =
+      await supplierProfileCreationService.createSupplierProfile({
+  user_id: userId,
+  firstname: form.firstName?.trim() || "",
+  middlename: form.middleName?.trim() || "",
+  lastname: form.lastName?.trim() || "",
+  email: form.email || "",
+  countrycode: "+91" ,//form.countryCode?.trim() || "",
+  phonenumber: form.phone?.trim() || "",
+  suppliername: form.supplierLegalName?.trim() || "",
+  tradename: form.tradeName?.trim() || "",
+  servicetype: serviceTypeObject,
+  country: form.countryOfRegistration?.trim() || "",
+  websiteurl: form.websiteUrl?.trim() || "",
+});
+
+    console.log("Supplier profile response:", supplierResponse);
+
+    // 4. Navigate only after both APIs succeed
+    router.push("/next-step"); // replace with actual route
+  } 
+}catch (err: any) {
+    console.error("Error in registration flow:", err);
+    setError(err?.message || "Failed to register. Please try again.");
+  }
+};
 
    const getBorderClass = (
   stepSubmitted: boolean,
@@ -1584,25 +1648,25 @@ if (!isPhoneAvailable) {
                         variant="primary"
                         size="lg"
                         className='w-full'          
-                    onClick={() => {
-                      setSubmitted(prev => ({ ...prev, step3: true }))
-                      const result = validateStep3(
-                        form,
-                        taxIdError
-                      )
-            if (result === 'EMPTY') {
-              setError('Kindly fill-up all the mandatory fields.')
-              return
-            }
+            onClick={async () => {
+  setSubmitted(prev => ({ ...prev, step3: true }))
 
-            if (result === 'INVALID') {
-              setError('Please fill the mandatory fields correctly')
-              return
-            }
+  // const result = validateStep3(form, taxIdError)
 
-            setError('')
-            router.push('/')
-          }}
+  // if (result === 'EMPTY') {
+  //   setError('Kindly fill-up all the mandatory fields.')
+  //   return
+  // }
+
+  // if (result === 'INVALID') {
+  //   setError('Please fill the mandatory fields correctly')
+  //   return
+  // }
+
+  setError('')
+
+  await handleRegister()   //  CLEAN CALL HERE
+}}
            
           >
             Register
