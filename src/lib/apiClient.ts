@@ -26,9 +26,6 @@ export async function apiClient(endpoint: string, options: ApiOptions = {}) {
 
     const isFormData = body instanceof FormData;
   
-  console.log("BASE_URL:", BASE_URL);
-  console.log("endpoint:", endpoint);
-   console.log("Is FormData:", isFormData);
 
 const response = await fetch(`${BASE_URL}${endpoint}`, {
     method,
@@ -55,7 +52,6 @@ const response = await fetch(`${BASE_URL}${endpoint}`, {
     }
 
     if (!response.ok) {
-        
         let errorMessage = "Failed to process your request.";
         
         // Check for 409 Conflict (duplicate username/phone)

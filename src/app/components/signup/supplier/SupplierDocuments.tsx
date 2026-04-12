@@ -519,12 +519,12 @@ console.log(documentType)
     mobile_no,
     documentType
   );
-      console.log("Scan API response:", response)
-      console.log(response.status);
-console.log(response.scan_status);
-console.log(response.bucket);
-console.log(response.object_name);
-console.log(response.file_path);
+//       console.log("Scan API response:", response)
+//       console.log(response.status);
+// console.log(response.scan_status);
+// console.log(response.bucket);
+// console.log(response.object_name);
+// console.log(response.file_path);
     // Stop scanning
     setScanLoading(prev => ({
       ...prev,
