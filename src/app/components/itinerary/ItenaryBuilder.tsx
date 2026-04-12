@@ -34,7 +34,7 @@ export default function ItenaryBuilder({
           <ItinerarySidebar />
 
           <SidebarInset className="flex flex-col flex-1">
-            <main className="flex-1 overflow-y-auto bg-gray-50">
+            <main className="flex-1 overflow-y-auto bg-gray-50 p-[2rem]">
               {children}
             </main>
           </SidebarInset>
