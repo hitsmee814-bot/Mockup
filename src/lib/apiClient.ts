@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://ascendus.bonhomiee.com";
+const BASE_URL =  "https://ascendus.bonhomiee.com";
 
 type RequestMethod = "GET" | "POST" | "PUT" | "DELETE";
 
