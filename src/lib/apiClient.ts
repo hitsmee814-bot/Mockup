@@ -10,8 +10,14 @@ interface ApiOptions {
 
 export async function apiClient(endpoint: string, options: ApiOptions = {}) {
     const { method = "GET", body, headers = {} } = options;
+       console.log("BASE_URL1 =", process.env.NEXT_PUBLIC_BASE_URL)
+       console.log("Final API URL1 =", `${BASE_URL}/files/scan-upload`)
+    console.log("BASE_URL2 =", BASE_URL);
+    console.log("FULL API URL2 =", `${BASE_URL}${endpoint}`);
 
-    console.log(`📡 API Call: ${method} ${BASE_URL}${endpoint}`);
+    console.log(`📡 API Call1: ${method} ${BASE_URL}${endpoint}`);
+
+    console.log(`📡 API Call2: ${method} ${BASE_URL}${endpoint}`);
     if (body) {
         console.log(`📡 Request Body:`, body);
     }
