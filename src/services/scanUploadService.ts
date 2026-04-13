@@ -15,7 +15,7 @@ export const scanUploadService = async (
 
     console.log("📡 Calling scan-upload API");
 
-    const data = await apiClient("/files/scan-upload/", {
+    const data = await apiClient("/files/scan-upload", {
       method: "POST",
       body: formData,
     });
