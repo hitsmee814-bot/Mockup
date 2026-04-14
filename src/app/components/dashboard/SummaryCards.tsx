@@ -4,12 +4,25 @@ import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { CalendarCheck, DollarSign, TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react"
 
-const cards = [
-  { title: "Active Bookings", value: "24", change: "+12%", changeType: "up" as const, icon: CalendarCheck, color: "text-primary", bg: "bg-primary/10", gradient: "from-primary/5 to-transparent" },
-  { title: "Total Revenue", value: "₹18.4L", change: "+8.2%", changeType: "up" as const, icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10", gradient: "from-emerald-500/5 to-transparent" },
-  { title: "Avg. Booking Value", value: "₹76,667", change: "+3.5%", changeType: "up" as const, icon: TrendingUp, color: "text-violet-500", bg: "bg-violet-500/10", gradient: "from-violet-500/5 to-transparent" },
-  { title: "Outstanding Amount", value: "₹4.92L", change: "6 pending", changeType: "neutral" as const, icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10", gradient: "from-amber-500/5 to-transparent" },
-  { title: "Commission Earned", value: "₹4.66L", change: "+15%", changeType: "up" as const, icon: DollarSign, color: "text-pink-500", bg: "bg-pink-500/10", gradient: "from-pink-500/5 to-transparent" },
+type ChangeType = "up" | "down" | "neutral"
+
+type CardItem = {
+  title: string
+  value: string
+  change: string
+  changeType: ChangeType
+  icon: any
+  color: string
+  bg: string
+  gradient: string
+}
+
+const cards: CardItem[] = [
+  { title: "Active Bookings", value: "24", change: "+12%", changeType: "up", icon: CalendarCheck, color: "text-primary", bg: "bg-primary/10", gradient: "from-primary/5 to-transparent" },
+  { title: "Total Revenue", value: "₹18.4L", change: "+8.2%", changeType: "up", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10", gradient: "from-emerald-500/5 to-transparent" },
+  { title: "Avg. Booking Value", value: "₹76,667", change: "+3.5%", changeType: "up", icon: TrendingUp, color: "text-violet-500", bg: "bg-violet-500/10", gradient: "from-violet-500/5 to-transparent" },
+  { title: "Outstanding Amount", value: "₹4.92L", change: "6 pending", changeType: "neutral", icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10", gradient: "from-amber-500/5 to-transparent" },
+  { title: "Commission Earned", value: "₹4.66L", change: "+15%", changeType: "up", icon: DollarSign, color: "text-pink-500", bg: "bg-pink-500/10", gradient: "from-pink-500/5 to-transparent" },
 ]
 
 const container = {
@@ -20,10 +33,13 @@ const container = {
 const item = {
   hidden: { opacity: 0, y: 24, scale: 0.96, filter: "blur(6px)" },
   show: {
-    opacity: 1, y: 0, scale: 1, filter: "blur(0px)",
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
     transition: { type: "spring", stiffness: 260, damping: 20 },
   },
-}
+} as const
 
 export function SummaryCards() {
   return (
