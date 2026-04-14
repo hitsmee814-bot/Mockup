@@ -531,19 +531,7 @@ console.log(documentType)
       console.log("calling scan api directly")
 
     const response = await callScanAPI(file, mobile_no, documentType);
-  //  const response =
-  // await scanUploadService(
-  //   file,
-  //   mobile_no,
-  //   documentType
-  // );
-//       console.log("Scan API response:", response)
-//       console.log(response.status);
-// console.log(response.scan_status);
-// console.log(response.bucket);
-// console.log(response.object_name);
-// console.log(response.file_path);
-    // Stop scanning
+  
     setScanLoading(prev => ({
       ...prev,
       [group.groupid]: false
@@ -907,12 +895,7 @@ if (
 
       // Call scan API
       const response = await callScanAPI(file, mobile_no, documentType);
-      // const response =
-      //   await scanUploadService(
-      //     file,
-      //     mobile_no,
-      //     documentType
-      //   );
+     
 
       console.log(
         "Scan API response:",
@@ -1251,12 +1234,7 @@ if (
                 console.log("calling scan api directly")
 
               const response = await callScanAPI(file, mobile_no, documentType);
-          // const response =
-          //   await scanUploadService(
-          //     file,
-          //     mobile_no,
-          //     documentType
-          //   );
+         
 
           /* STOP LOADING */
 
@@ -1548,10 +1526,7 @@ if (
   message="Required"
   
 />
-  // <p className="text-red-500 text-sm flex items-center gap-1">
-  //   <AlertCircle className="h-4 w-4" />
-  //   Required
-  // </p>
+
 )}
           </div>
 
