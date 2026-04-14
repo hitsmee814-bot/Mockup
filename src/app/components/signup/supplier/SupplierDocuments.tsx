@@ -150,7 +150,22 @@ const getPanelBorderClass = (group: any) => {
   return "border-[#00AFEF]";
 };
 
+const callScanAPI = async (file: File, mobile: string, documentType: string) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("mobile_no", mobile);
+  formData.append("document_type", documentType);
 
+  const response = await fetch(
+    "https://ascendus.bonhomiee.com/files/scan-upload",
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  return await response.json();
+};
 const isGroupInvalid = (group: any) => {
 
   // Do not validate until Register clicked
@@ -513,12 +528,15 @@ console.log(mobile_no)
       member.document_type;
 console.log(documentType)
     // Call scan API
-   const response =
-  await scanUploadService(
-    file,
-    mobile_no,
-    documentType
-  );
+      console.log("calling scan api directly")
+
+    const response = await callScanAPI(file, mobile_no, documentType);
+  //  const response =
+  // await scanUploadService(
+  //   file,
+  //   mobile_no,
+  //   documentType
+  // );
 //       console.log("Scan API response:", response)
 //       console.log(response.status);
 // console.log(response.scan_status);
@@ -884,14 +902,17 @@ if (
           ?.document_type;
 
       console.log(documentType)
+        console.log("calling scan api directly")
+
 
       // Call scan API
-      const response =
-        await scanUploadService(
-          file,
-          mobile_no,
-          documentType
-        );
+      const response = await callScanAPI(file, mobile_no, documentType);
+      // const response =
+      //   await scanUploadService(
+      //     file,
+      //     mobile_no,
+      //     documentType
+      //   );
 
       console.log(
         "Scan API response:",
@@ -1227,13 +1248,15 @@ if (
           const documentType =
             selectedDocs[group.groupid]
               ?.document_type;
+                console.log("calling scan api directly")
 
-          const response =
-            await scanUploadService(
-              file,
-              mobile_no,
-              documentType
-            );
+              const response = await callScanAPI(file, mobile_no, documentType);
+          // const response =
+          //   await scanUploadService(
+          //     file,
+          //     mobile_no,
+          //     documentType
+          //   );
 
           /* STOP LOADING */
 
