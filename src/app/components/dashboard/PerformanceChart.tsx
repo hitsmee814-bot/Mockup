@@ -30,8 +30,13 @@ export function PerformanceChart() {
               <YAxis yAxisId="right" orientation="right" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} width={30} />
               <Tooltip
                 contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                formatter={(value: number, name: string) => [name === "revenue" ? `₹${(value / 1000).toFixed(0)}k` : value, name === "revenue" ? "Revenue" : "Bookings"]}
-              />
+  formatter={(value, name) => {
+    if (name === "revenue") {
+      const num = Number(value ?? 0)
+      return [`₹${(num / 1000).toFixed(0)}k`, "Revenue"]
+    }
+    return [value ?? 0, "Bookings"]
+  }}              />
               <Bar yAxisId="left" dataKey="revenue" fill="var(--primary)" radius={[4, 4, 0, 0]} opacity={0.8} />
               <Line yAxisId="right" type="monotone" dataKey="bookings" stroke="var(--secondary)" strokeWidth={2} dot={{ fill: "var(--secondary)", r: 4 }} />
             </ComposedChart>
