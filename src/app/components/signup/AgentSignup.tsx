@@ -17,6 +17,9 @@ import { phoneNoService } from "@/services/phoneNoService";
 import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
 import { userNameService } from "@/services/userNameService";
 import { docTypelookupService } from "@/services/docTypes";
+import { userCreationService } from "@/services/userCreationService";
+import { agentProfileCreationService } from "@/services/agentProfileCreationService";
+import { documentCreationService } from "@/services/documentCreationService";
 
 // Shadcn UI Imports
 import { Input } from "@/components/ui/input";
@@ -77,36 +80,11 @@ interface DocumentGroup {
   members: DocumentMember[];
 }
 
-interface UploadedDocument {
-  id: string;
-  file: File;
-  member: DocumentMember;
+interface UploadedDocumentInfo {
+  document_type: string;
   identifierValue: string;
-  groupid: number;
-}
-
-interface GroupSelectedDoc {
-  [groupid: number]: DocumentMember | null;
-}
-
-interface GroupIdentifierValue {
-  [groupid: number]: string;
-}
-
-interface GroupTempDoc {
-  [groupid: number]: {
-    member: DocumentMember;
-    identifierValue: string;
-    file: File | null;
-  } | null;
-}
-
-interface GroupMultiDocs {
-  [groupid: number]: UploadedDocument[];
-}
-
-interface GroupErrorState {
-  [groupid: number]: string;
+  filePath: string;
+  description: string;
 }
 
 /* ---------------- CONSTANTS ---------------- */
@@ -166,6 +144,10 @@ export default function AgentSignup(): JSX.Element {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [showPassword, setShowPassword] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  // Refs to access document data from DocumentUploadSection components
+  const documentSectionsRef = useRef<{ [key: number]: any }>({});
 
   // State for localStorage data and field disabled status
   const [isPhoneFromStorage, setIsPhoneFromStorage] = useState<boolean>(false);
@@ -204,20 +186,11 @@ export default function AgentSignup(): JSX.Element {
   
   // Document state
   const [documentGroups, setDocumentGroups] = useState<DocumentGroup[]>([]);
-  const [selectedDocs, setSelectedDocs] = useState<GroupSelectedDoc>({});
-  const [identifierValues, setIdentifierValues] = useState<GroupIdentifierValue>({});
-  const [uploadedFiles, setUploadedFiles] = useState<{ [key: number]: File | null }>({});
-  
-  // Multi-document state
-  const [tempDocs, setTempDocs] = useState<GroupTempDoc>({});
-  const [multiFiles, setMultiFiles] = useState<{ [key: number]: File | null }>({});
-  const [multiDocs, setMultiDocs] = useState<GroupMultiDocs>({});
-  
-  const [groupErrors, setGroupErrors] = useState<GroupErrorState>({});
+  const [groupValidity, setGroupValidity] = useState<{ [key: number]: boolean }>({});
   const [globalDocError, setGlobalDocError] = useState("");
   const [isLoadingDocs, setIsLoadingDocs] = useState(false);
   const [docFetchError, setDocFetchError] = useState("");
-  const [groupValidity, setGroupValidity] = useState<{ [key: number]: boolean }>({});
+  
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
 
@@ -243,9 +216,7 @@ export default function AgentSignup(): JSX.Element {
           const dialCode = parts[1];
           setStoredCountryIso(isoCode);
           setStoredDialCode(dialCode);
-          // Update form with stored country data
           setForm(prev => ({ ...prev, countryCode: dialCode, countryIso2: isoCode }));
-          // Find and set selected country
           const matchedCountry = countries.find(c => c.iso2 === isoCode);
           if (matchedCountry) {
             setSelectedCountry(matchedCountry);
@@ -287,31 +258,6 @@ export default function AgentSignup(): JSX.Element {
         
         if (groups && groups.length > 0) {
           setDocumentGroups(groups);
-          const initialSelectedDocs: GroupSelectedDoc = {};
-          const initialIdentifierValues: GroupIdentifierValue = {};
-          const initialUploadedFiles: { [key: number]: File | null } = {};
-          const initialTempDocs: GroupTempDoc = {};
-          const initialMultiFiles: { [key: number]: File | null } = {};
-          const initialMultiDocs: GroupMultiDocs = {};
-          const initialErrors: GroupErrorState = {};
-          
-          groups.forEach(group => {
-            initialSelectedDocs[group.groupid] = null;
-            initialIdentifierValues[group.groupid] = "";
-            initialUploadedFiles[group.groupid] = null;
-            initialTempDocs[group.groupid] = null;
-            initialMultiFiles[group.groupid] = null;
-            initialMultiDocs[group.groupid] = [];
-            initialErrors[group.groupid] = "";
-          });
-          
-          setSelectedDocs(initialSelectedDocs);
-          setIdentifierValues(initialIdentifierValues);
-          setUploadedFiles(initialUploadedFiles);
-          setTempDocs(initialTempDocs);
-          setMultiFiles(initialMultiFiles);
-          setMultiDocs(initialMultiDocs);
-          setGroupErrors(initialErrors);
         } else {
           setDocFetchError("No document groups found");
         }
@@ -370,7 +316,6 @@ export default function AgentSignup(): JSX.Element {
 
         setCountries(sorted);
         
-        // Set default selected country (India) only if no stored data
         if (!storedCountryIso) {
           const indiaCountry = sorted.find(c => c.iso2 === "IN");
           if (indiaCountry) {
@@ -389,7 +334,7 @@ export default function AgentSignup(): JSX.Element {
     fetchCodes();
   }, [storedCountryIso]);
 
-  // Phone number validation using libphonenumber-js (works for ANY country dynamically)
+  // Phone number validation using libphonenumber-js
   const validatePhoneNumber = (
     phoneNumberStr: string,
     countryCode: string,
@@ -397,12 +342,10 @@ export default function AgentSignup(): JSX.Element {
   ): string => {
     if (!phoneNumberStr) return "";
     
-    // Remove all non-digit characters
     const digits = phoneNumberStr.replace(/\D/g, "");
     if (digits.length === 0) return "";
     
     try {
-      // Use libphonenumber-js to parse and validate
       const phoneNumber = parsePhoneNumberFromString(
         `${countryCode}${digits}`,
         iso2 as CountryCode
@@ -420,7 +363,7 @@ export default function AgentSignup(): JSX.Element {
         return `Invalid length for ${iso2} number`;
       }
       
-      return ""; // Valid phone number
+      return "";
     } catch (error) {
       return "Enter a valid phone number";
     }
@@ -500,16 +443,15 @@ export default function AgentSignup(): JSX.Element {
     }
   };
 
-  // Handle country selection change - only allowed if phone not from storage
+  // Handle country selection change
   const handleCountryChange = (value: string) => {
-    if (isPhoneFromStorage) return; // Disable if phone is from OTP storage
+    if (isPhoneFromStorage) return;
     
     const [iso2, code] = value.split("-");
     const selected = countries.find(c => c.iso2 === iso2 && c.code === code);
     if (selected) {
       setSelectedCountry(selected);
       setForm(prev => ({ ...prev, countryCode: selected.code, countryIso2: selected.iso2 }));
-      // Re-validate phone when country changes
       if (form.phone) {
         const phoneError = validatePhoneNumber(form.phone, selected.code, selected.iso2);
         setErrors(prev => {
@@ -521,7 +463,6 @@ export default function AgentSignup(): JSX.Element {
           }
           return newErrors;
         });
-        // Reset phone status when country changes
         setPhoneStatus(null);
         setPhoneCheckedManually(false);
       }
@@ -645,7 +586,6 @@ export default function AgentSignup(): JSX.Element {
         }
       }
       if (name === "phone" && !isPhoneFromStorage) {
-        // Use libphonenumber-js for dynamic validation for ANY country
         fieldError = validatePhoneNumber(value, updatedForm.countryCode, updatedForm.countryIso2);
       }
       if (name === "password") {
@@ -697,334 +637,8 @@ export default function AgentSignup(): JSX.Element {
     setUsernameCheckedManually(false);
   };
 
-  // Check if a group is valid (without setting errors)
-  const isGroupValid = (group: DocumentGroup): boolean => {
-    const uploadedCount = multiDocs[group.groupid]?.length || 0;
-    const singleUploaded = uploadedFiles[group.groupid] !== null;
-    
-    if (group.members.length === 1) {
-      const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
-      if (group.min > 0) {
-        if (!singleUploaded) return false;
-        if (!hasIdentifier) return false;
-      }
-      return true;
-    } else if (group.max === 1) {
-      const selectedMember = selectedDocs[group.groupid];
-      const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
-      if (group.min > 0) {
-        if (!selectedMember) return false;
-        if (!uploadedFiles[group.groupid]) return false;
-        if (!hasIdentifier) return false;
-      }
-      return true;
-    } else {
-      if (group.min > 0 && uploadedCount < group.min) return false;
-      if (uploadedCount > group.max) return false;
-      const hasInvalid = multiDocs[group.groupid]?.some(
-        doc => !doc.identifierValue || doc.identifierValue.trim() === ""
-      );
-      if (hasInvalid) return false;
-      return true;
-    }
-  };
-
-  // Validate all document sections - only shows errors if submit attempted
-  const validateAllDocumentSections = (showErrors: boolean = false) => {
-    let isValid = true;
-    const newGroupErrors: GroupErrorState = {};
-    
-    for (const group of documentGroups) {
-      const uploadedCount = multiDocs[group.groupid]?.length || 0;
-      const singleUploaded = uploadedFiles[group.groupid] !== null;
-      
-      if (group.members.length === 1) {
-        const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
-        
-        if (group.min > 0) {
-          if (!singleUploaded) {
-            if (showErrors) newGroupErrors[group.groupid] = `Please upload ${group.group_name} document`;
-            isValid = false;
-          } else if (!hasIdentifier) {
-            if (showErrors) newGroupErrors[group.groupid] = `Please enter ${group.members[0].identifier}`;
-            isValid = false;
-          }
-        }
-      } else if (group.max === 1) {
-        const selectedMember = selectedDocs[group.groupid];
-        const hasIdentifier = identifierValues[group.groupid] && identifierValues[group.groupid].trim() !== "";
-        
-        if (group.min > 0) {
-          if (!selectedMember) {
-            if (showErrors) newGroupErrors[group.groupid] = `Please select a document type for ${group.group_name}`;
-            isValid = false;
-          } else if (!uploadedFiles[group.groupid]) {
-            if (showErrors) newGroupErrors[group.groupid] = `Please upload ${selectedMember.description}`;
-            isValid = false;
-          } else if (!hasIdentifier) {
-            if (showErrors) newGroupErrors[group.groupid] = `Please enter ${selectedMember.identifier}`;
-            isValid = false;
-          }
-        }
-      } else {
-        if (group.min > 0 && uploadedCount < group.min) {
-          if (showErrors) newGroupErrors[group.groupid] = `Please upload at least ${group.min} document(s) for ${group.group_name}`;
-          isValid = false;
-        } else if (uploadedCount > group.max) {
-          if (showErrors) newGroupErrors[group.groupid] = `Maximum ${group.max} document(s) allowed for ${group.group_name}`;
-          isValid = false;
-        }
-        
-        const hasInvalid = multiDocs[group.groupid]?.some(
-          doc => !doc.identifierValue || doc.identifierValue.trim() === ""
-        );
-        if (hasInvalid) {
-          if (showErrors) newGroupErrors[group.groupid] = `Please fill all identifier fields for ${group.group_name}`;
-          isValid = false;
-        }
-      }
-    }
-    
-    if (showErrors) {
-      setGroupErrors(newGroupErrors);
-    }
-    
-    return isValid;
-  };
-
-  // Handle adding multi-document
-  const handleAddMultiDocument = (group: DocumentGroup) => {
-    const tempDoc = tempDocs[group.groupid];
-    const currentMultiDocs = multiDocs[group.groupid] || [];
-    
-    if (!tempDoc?.member) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [group.groupid]: "Please select a document type"
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    if (!tempDoc.identifierValue || tempDoc.identifierValue.trim() === "") {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [group.groupid]: `Please enter ${tempDoc.member.identifier}`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    if (!tempDoc.file) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [group.groupid]: `Please upload ${tempDoc.member.description}`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    // Check for duplicate
-    const alreadyExists = currentMultiDocs.some(
-      doc => doc.member.document_type === tempDoc.member?.document_type
-    );
-    
-    if (alreadyExists) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [group.groupid]: `${tempDoc.member?.description} has already been uploaded`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    // Check max limit
-    if (currentMultiDocs.length >= group.max) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [group.groupid]: `Maximum ${group.max} document(s) allowed`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    // Create new document
-    const newDoc: UploadedDocument = {
-      id: `${group.groupid}-${tempDoc.member.document_type}-${Date.now()}`,
-      file: tempDoc.file,
-      member: tempDoc.member,
-      identifierValue: tempDoc.identifierValue,
-      groupid: group.groupid
-    };
-    
-    setMultiDocs(prev => ({
-      ...prev,
-      [group.groupid]: [...currentMultiDocs, newDoc]
-    }));
-    
-    // Reset temp state
-    setTempDocs(prev => ({
-      ...prev,
-      [group.groupid]: null
-    }));
-    setMultiFiles(prev => ({
-      ...prev,
-      [group.groupid]: null
-    }));
-    
-    // Clear error for this group if it exists
-    if (submitAttempted && isGroupValid(group)) {
-      setGroupErrors(prev => ({ ...prev, [group.groupid]: "" }));
-    }
-  };
-  
-  // Handle file selection for single member group
-  const handleSingleFileSelect = (groupid: number, file: File) => {
-    const group = documentGroups.find(g => g.groupid === groupid);
-    if (!group) return;
-    
-    // Validate file size (15MB)
-    if (file.size > 15 * 1024 * 1024) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [groupid]: `File "${file.name}" exceeds 15MB limit`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    // Validate file type
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [groupid]: `File "${file.name}" must be PDF, JPG, or PNG format`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    setUploadedFiles(prev => ({ ...prev, [groupid]: file }));
-    
-    // Clear error for this group if it becomes valid
-    if (submitAttempted && isGroupValid(group)) {
-      setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
-    }
-  };
-  
-  // Handle file selection for single select group
-  const handleSingleSelectFileSelect = (groupid: number, file: File) => {
-    const group = documentGroups.find(g => g.groupid === groupid);
-    if (!group) return;
-    
-    // Validate file size (15MB)
-    if (file.size > 15 * 1024 * 1024) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [groupid]: `File "${file.name}" exceeds 15MB limit`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    // Validate file type
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-      if (submitAttempted) {
-        setGroupErrors(prev => ({
-          ...prev,
-          [groupid]: `File "${file.name}" must be PDF, JPG, or PNG format`
-        }));
-        setTimeout(() => {
-          setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
-        }, 3000);
-      }
-      return;
-    }
-    
-    setUploadedFiles(prev => ({ ...prev, [groupid]: file }));
-    
-    // Clear error for this group if it becomes valid
-    if (submitAttempted && isGroupValid(group)) {
-      setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
-    }
-  };
-  
-  // Handle file removal for single member/single select
-  const handleFileRemove = (groupid: number) => {
-    setUploadedFiles(prev => ({ ...prev, [groupid]: null }));
-    
-    // Check if error should show after removal
-    const group = documentGroups.find(g => g.groupid === groupid);
-    if (submitAttempted && group && !isGroupValid(group)) {
-      validateAllDocumentSections(true);
-    }
-  };
-  
-  // Handle multi-document removal
-  const handleMultiDocRemove = (groupid: number, docId: string) => {
-    setMultiDocs(prev => ({
-      ...prev,
-      [groupid]: (prev[groupid] || []).filter(doc => doc.id !== docId)
-    }));
-    
-    // Check if error should show after removal
-    const group = documentGroups.find(g => g.groupid === groupid);
-    if (submitAttempted && group && !isGroupValid(group)) {
-      validateAllDocumentSections(true);
-    } else if (submitAttempted && group && isGroupValid(group)) {
-      setGroupErrors(prev => ({ ...prev, [groupid]: "" }));
-    }
-  };
-  
   const handleValidationChange = (groupId: number, isValid: boolean) => {
     setGroupValidity(prev => ({ ...prev, [groupId]: isValid }));
-  };
-  
-  // Get tooltip text based on min/max values
-  const getTooltipText = (group: DocumentGroup) => {
-    if (group.min === group.max && group.min > 0) {
-      return `You are required to upload exactly ${group.min} document(s)`;
-    } else if (group.min === group.max && group.min === 0) {
-      return `You can upload exactly ${group.max} document(s) (Optional)`;
-    } else if (group.min > 0 && group.max > group.min) {
-      return `You are required to upload ${group.min} to ${group.max} document(s)`;
-    } else if (group.min === 0 && group.max > 0) {
-      return `You can upload up to ${group.max} document(s) (Optional)`;
-    }
-    return `Upload ${group.min} to ${group.max} document(s)`;
   };
 
   // Get tooltip text for phone number based on disabled state
@@ -1043,8 +657,6 @@ export default function AgentSignup(): JSX.Element {
     return "Enter a valid email address like name@example.com";
   };
 
-  // FIXED: Complete handleNextStep with all 3 API calls in sequence
-  // Auto-check errors and success now use toast notifications
   const handleNextStep = async () => {
     const mandatoryFields: (keyof FormState)[] = [
       "agencyName", "firstName", "lastName",
@@ -1071,7 +683,6 @@ export default function AgentSignup(): JSX.Element {
           if (phoneResponse?.available === true) {
             setPhoneStatus("available");
             phoneAvailable = true;
-            // Show success toast for auto-check
             toast.success("Phone number is available!", {
               position: "top-right",
               duration: 3000,
@@ -1106,12 +717,11 @@ export default function AgentSignup(): JSX.Element {
           if (usernameResponse?.available === true) {
             setUsernameStatus("available");
             usernameAvailable = true;
-            // Small delay to ensure phone success toast is seen first, then show username success
-          await new Promise(resolve => setTimeout(resolve, 900));
-          toast.success("Username is available!", {
-            position: "top-right",
-            duration: 2000,
-          });
+            await new Promise(resolve => setTimeout(resolve, 900));
+            toast.success("Username is available!", {
+              position: "top-right",
+              duration: 2000,
+            });
           } else {
             setUsernameStatus("unavailable");
             toast.error("Username is not available. Please choose a different username.", {
@@ -1134,7 +744,7 @@ export default function AgentSignup(): JSX.Element {
         return;
       }
       
-      // STEP 3: Fetch document types (only if both phone and username are available)
+      // STEP 3: Fetch document types
       if (phoneAvailable && usernameAvailable) {
         setIsLoadingDocs(true);
         try {
@@ -1152,33 +762,6 @@ export default function AgentSignup(): JSX.Element {
           
           if (groups && groups.length > 0) {
             setDocumentGroups(groups);
-            const initialSelectedDocs: GroupSelectedDoc = {};
-            const initialIdentifierValues: GroupIdentifierValue = {};
-            const initialUploadedFiles: { [key: number]: File | null } = {};
-            const initialTempDocs: GroupTempDoc = {};
-            const initialMultiFiles: { [key: number]: File | null } = {};
-            const initialMultiDocs: GroupMultiDocs = {};
-            const initialErrors: GroupErrorState = {};
-            
-            groups.forEach(group => {
-              initialSelectedDocs[group.groupid] = null;
-              initialIdentifierValues[group.groupid] = "";
-              initialUploadedFiles[group.groupid] = null;
-              initialTempDocs[group.groupid] = null;
-              initialMultiFiles[group.groupid] = null;
-              initialMultiDocs[group.groupid] = [];
-              initialErrors[group.groupid] = "";
-            });
-            
-            setSelectedDocs(initialSelectedDocs);
-            setIdentifierValues(initialIdentifierValues);
-            setUploadedFiles(initialUploadedFiles);
-            setTempDocs(initialTempDocs);
-            setMultiFiles(initialMultiFiles);
-            setMultiDocs(initialMultiDocs);
-            setGroupErrors(initialErrors);
-            
-            // Proceed to Step 2
             setCurrentStep(2);
             setSubmitAttempted(false);
           } else {
@@ -1205,9 +788,26 @@ export default function AgentSignup(): JSX.Element {
     }
   };
 
+  // Collect all uploaded documents from DocumentUploadSection components
+  const collectUploadedDocuments = (): UploadedDocumentInfo[] => {
+    const allDocs: UploadedDocumentInfo[] = [];
+    
+    for (const group of documentGroups) {
+      const sectionRef = documentSectionsRef.current[group.groupid];
+      if (sectionRef) {
+        // Get documents from the section
+        const docs = sectionRef.getUploadedDocuments?.() || [];
+        allDocs.push(...docs);
+      }
+    }
+    
+    return allDocs;
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitAttempted(true);
+    setIsRegistering(true);
     
     // Check each mandatory group
     let allValid = true;
@@ -1223,12 +823,120 @@ export default function AgentSignup(): JSX.Element {
     if (!allValid) {
       scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       setGlobalDocError("Kindly fill-up all the mandatory fields correctly for successful registration");
+      setIsRegistering(false);
+      return;
+    }
+    
+    // Collect all uploaded documents
+    const allUploadedDocs = collectUploadedDocuments();
+    
+    if (allUploadedDocs.length === 0) {
+      setGlobalDocError("Please upload at least one document to complete registration");
+      setIsRegistering(false);
       return;
     }
     
     setGlobalDocError("");
-    alert("Registered successfully");
-    router.push("/");
+    
+    try {
+      // STEP 1: Create User API Call (runs ONCE)
+      const createUserPayload = {
+        username: form.username,
+        password: form.password,
+        user_org_id: 3,
+        email: form.email,
+        phone: form.phone
+      };
+      
+      const userResponse = await userCreationService.createUser(createUserPayload);
+      const userId = userResponse.user_id;
+      console.log("User created with ID:", userId);
+      toast.success("✓ User account created successfully!", { position: "top-right", duration: 2000 });
+      
+      // STEP 2: Create Agent Profile API Call (runs ONCE)
+      const agentProfilePayload = {
+        user_id: userId,
+        agencyname: form.agencyName,
+        firstname: form.firstName,
+        middlename: form.middleName || "",
+        lastname: form.lastName,
+        email: form.email,
+        countrycode: storedDialCode || form.countryCode,
+        phonenumber: form.phone,
+        websiteurl: form.website || ""
+      };
+      
+      await agentProfileCreationService.createAgentProfile(agentProfilePayload);
+      toast.success("✓ Agent profile created successfully!", { position: "top-right", duration: 2000 });
+      
+      // STEP 3: Create Document Records (runs in LOOP for each uploaded document)
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < allUploadedDocs.length; i++) {
+        const doc = allUploadedDocs[i];
+        
+        try {
+          const documentPayload = {
+            user_id: userId,
+            document_type: doc.document_type,
+            path: doc.filePath
+          };
+          
+          await documentCreationService.createDocument(documentPayload);
+          successCount++;
+          toast.success(`✓ ${doc.description} document saved!`, {
+            position: "top-right",
+            duration: 2000,
+          });
+          await new Promise(resolve => setTimeout(resolve, 800));
+        } catch (docError: any) {
+          console.error(`Failed to save document ${doc.description}:`, docError);
+          toast.error(`✗ Failed to save "${doc.description}". ${docError?.message || "Please try again."}`, {
+            position: "top-right",
+            duration: 3000,
+          });
+          failCount++;
+        }
+      }
+      
+      if (failCount > 0) {
+        toast.warning(`Registration partially completed. ${successCount} documents saved, ${failCount} failed.`, {
+          position: "top-right",
+          duration: 5000,
+        });
+      } else {
+        toast.success("🎉 Registration Successful! You have successfully registered as Agent.", {
+          position: "top-right",
+          duration: 4000,
+        });
+      }
+      
+      // Clear localStorage
+      localStorage.removeItem("userPhoneNumber");
+      localStorage.removeItem("userCountryCode");
+      localStorage.removeItem("userEmail");
+      
+      // Redirect to home page
+      setTimeout(() => {
+        router.push("/");
+      }, 3000);
+      
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      let errorMessage = "Failed to process your request.";
+      
+      if (error?.message && error.message !== "Failed to fetch") {
+        errorMessage = error.message;
+      } else if (error?.toString && error.toString() !== "Failed to fetch") {
+        errorMessage = error.toString();
+      }
+      
+      toast.error(errorMessage, { position: "top-right", duration: 5000 });
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   return (
@@ -1350,7 +1058,7 @@ export default function AgentSignup(): JSX.Element {
                     <ErrorMessage message={errors.email} />
                   </div>
 
-                  {/* Phone Number Section with Chevron icon - only ONE chevron visible */}
+                  {/* Phone Number Section */}
                   <div className="mb-4">
                     <Label className={`${LABEL_STYLING} flex items-center`}>
                       Phone Number<span className="text-red-500 ml-1">*</span>
@@ -1392,7 +1100,6 @@ export default function AgentSignup(): JSX.Element {
                         disabled={isPhoneFromStorage}
                         className={`${INPUT_STYLING} flex-grow ${errors.phone ? 'border-red-600' : ''} ${isPhoneFromStorage ? "bg-gray-100 cursor-not-allowed" : ""}`}
                       />
-                      {/* CHECK button always enabled */}
                       <PremiumButton
                         type="button"
                         variant="accent"
@@ -1420,7 +1127,7 @@ export default function AgentSignup(): JSX.Element {
                     )}
                   </div>
 
-                  {/* Username Section with Check Button */}
+                  {/* Username Section */}
                   <div className="mb-4">
                     <Label className={`${LABEL_STYLING} flex items-center`}>
                       Username<span className="text-red-500 ml-1">*</span>
@@ -1516,15 +1223,21 @@ export default function AgentSignup(): JSX.Element {
                   <InputField label="Website (Optional)" name="website" placeholder="Enter agency website URL" form={form} errors={errors} handleChange={handleChange} />
                 </div>
               ) : (
-                /* STEP 2: DOCUMENTS - UNCHANGED */
+                /* STEP 2: DOCUMENTS */
                 <div className="animate-in fade-in slide-in-from-left-4 duration-500 space-y-6">
                   {!isLoadingDocs && !docFetchError && documentGroups.length > 0 ? (
                     documentGroups.map((group) => (
                       <DocumentUploadSection
                         key={group.groupid}
+                        ref={(el) => {
+                          if (el) {
+                            documentSectionsRef.current[group.groupid] = el;
+                          }
+                        }}
                         group={group}
                         submitAttempted={submitAttempted}
                         onValidationChange={handleValidationChange}
+                        phoneNumber={form.phone}
                       />
                     ))
                   ) : !isLoadingDocs && !docFetchError && documentGroups.length === 0 ? (
@@ -1585,8 +1298,10 @@ export default function AgentSignup(): JSX.Element {
                     variant="primary"
                     size="lg"
                     className="w-full"
+                    disabled={isRegistering}
+                    icon={isRegistering ? <Loader2 size={16} className="animate-spin" /> : null}
                   >
-                    Register
+                    {isRegistering ? "Registering..." : "Register"}
                   </PremiumButton>
                 </div>
               )}
