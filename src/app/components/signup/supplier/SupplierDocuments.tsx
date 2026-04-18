@@ -39,7 +39,21 @@ type Props = {
   >
 
   handleAddMultiDocument: (group: any) => void
+  documentCollection: {
+  groupId: number;
+  document_type: string;
+  file_path: string;
+}[]
 
+setDocumentCollection: React.Dispatch<
+  React.SetStateAction<
+    {
+      groupId: number;
+      document_type: string;
+      file_path: string;
+    }[]
+  >
+>
   
   submitted: {
     step3: boolean
@@ -61,8 +75,9 @@ export default function SupplierDocuments({
   multiDocs,
   setMultiDocs,
   handleAddMultiDocument,
-
-  submitted   //  ADD THIS
+  submitted   ,
+   documentCollection,
+  setDocumentCollection
 
 }: Props)
 
@@ -77,8 +92,109 @@ React.useState<{ [key: number]: boolean }>({})
 const [scanErrors, setScanErrors] =
 React.useState<{ [key: number]: string }>({})
 
+const [scannedFilePaths, setScannedFilePaths] = React.useState<{
+  [key: number]: string
+}>({})
+
 const [scanSuccess, setScanSuccess] =
 React.useState<{ [key: number]: string }>({})
+
+// for documrnt collection
+const saveScannedFilePath = (
+  groupId: number,
+  filePath: string
+) => {
+  setScannedFilePaths(prev => ({
+    ...prev,
+    [groupId]: filePath
+  }))
+}
+
+const upsertDocumentCollection = (
+  groupId: number,
+  documentType: string,
+  filePath: string
+) => {
+  setDocumentCollection(prev => {
+    const filtered = prev.filter(
+      item =>
+        !(
+          item.groupId === groupId &&
+          item.document_type === documentType
+        )
+    )
+
+    return [
+      ...filtered,
+      {
+        groupId,
+        document_type: documentType,
+        file_path: filePath
+      }
+    ]
+  })
+}
+
+const removeFromDocumentCollection = (
+  groupId: number,
+  documentType: string,
+  filePath?: string
+) => {
+  setDocumentCollection(prev =>
+    prev.filter(item => {
+      if (
+        item.groupId !== groupId ||
+        item.document_type !== documentType
+      ) {
+        return true
+      }
+
+      // if filePath passed, remove exact match only
+      if (filePath) {
+        return item.file_path !== filePath
+      }
+
+      return false
+    })
+  )
+}
+
+const handleScanSuccess = (
+  groupId: number,
+  documentType: string,
+  response: any,
+  shouldAddToCollection: boolean = true
+) => {
+  const returnedFilePath = response.file_path || ""
+
+  saveScannedFilePath(groupId, returnedFilePath)
+
+  if (shouldAddToCollection) {
+    upsertDocumentCollection(
+      groupId,
+      documentType,
+      returnedFilePath
+    )
+  }
+
+  setScanErrors(prev => ({
+    ...prev,
+    [groupId]: ""
+  }))
+
+  setScanSuccess(prev => ({
+    ...prev,
+    [groupId]: "File scanned successfully"
+  }))
+
+  setTimeout(() => {
+    setScanSuccess(prev => ({
+      ...prev,
+      [groupId]: ""
+    }))
+  }, 2000)
+}
+//-----------------
 
 const getPanelBorderClass = (group: any) => {
 
@@ -150,21 +266,46 @@ const getPanelBorderClass = (group: any) => {
   return "border-[#00AFEF]";
 };
 
-const callScanAPI = async (file: File, mobile: string, documentType: string) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("mobile_no", mobile);
-  formData.append("document_type", documentType);
+// const callScanAPI = async (file: File, mobile: string, documentType: string) => {
+//   const formData = new FormData();
+//   formData.append("file", file);
+//   formData.append("mobile_no", mobile);
+//   formData.append("document_type", documentType);
 
-  const response = await fetch(
-    "https://ascendus.bonhomiee.com/files/scan-upload",
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+//   const response = await fetch(
+//     "https://ascendus.bonhomiee.com/files/scan-upload",
+//     {
+//       method: "POST",
+//       body: formData,
+//     }
+//   );
 
-  return await response.json();
+//   return await response.json();
+// };
+
+const callScanAPI = async (
+  file: File,
+  mobile: string,
+  documentType: string
+) => {
+  try {
+    const response = await scanUploadService(
+      file,
+      mobile,
+      documentType
+    );
+
+    
+    // Example: status, scan_status, file_path, etc.
+
+    console.log("Scan API Response:", response);
+
+    return response;
+
+  } catch (error) {
+    console.error(" Scan API Error:", error);
+    throw error;
+  }
 };
 const isGroupInvalid = (group: any) => {
 
@@ -237,23 +378,6 @@ if (
   return false;
 };
 
-const isIdentifierMissing = (group: any) => {
-
-  if (!submitted.step3) return false
-
-  if (group.min === 0) return false
-
-  const identifier =
-    tempDocs[group.groupid]
-      ?.identifierValue
-
-  const file =
-    uploadedFiles[group.groupid]
-
-  // identifier missing but file exists
-  return !identifier && file
-}
-
   return (
     <>
       {docGroups.length === 0 ? (
@@ -307,7 +431,7 @@ const isIdentifierMissing = (group: any) => {
                 ${getPanelBorderClass(group)}
               `}>
 
-              {/* ===== SINGLE MEMBER ===== */}
+              {/* ===== case-1 SINGLE MEMBER ===== */}
 
               {group.members.length === 1 && (
 
@@ -470,21 +594,31 @@ onChange={async (file) => {
     group.groupid,
     file
   )
-  if (file === null) {
+ if (file === null) {
+  setUploadedFiles(prev => ({
+    ...prev,
+    [group.groupid]: null
+  }))
 
-    //  DELETE FILE
+  removeFromDocumentCollection(
+    group.groupid,
+    member.document_type
+  )
 
-    setUploadedFiles(prev => {
+  saveScannedFilePath(group.groupid, "")
 
-      const updated = { ...prev }
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
 
-      delete updated[group.groupid]
+  setScanSuccess(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
 
-      return updated
-    })
-
-    return
-  }
+  return
+}
 
   console.log("File selected:", file)
   if (!file) return;
@@ -542,48 +676,27 @@ console.log(documentType)
       }))
 
       if (
-        response.status === "success" &&
-        response.scan_status === "clean"
-      ) {
+  response.status === "success" &&
+  response.scan_status === "clean"
+) {
+  setUploadedFiles(prev => ({
+    ...prev,
+    [group.groupid]: file
+  }))
 
-        // Save file
-        setUploadedFiles(prev => ({
-          ...prev,
-          [group.groupid]: file
-        }))
-         // Clear error
+  handleScanSuccess(
+    group.groupid,
+    member.document_type,
+    response,
+    true
+  )
+} else {
   setScanErrors(prev => ({
     ...prev,
-    [group.groupid]: ""
-  }))
-
-        // Show success message
-  setScanSuccess(prev => ({
-    ...prev,
     [group.groupid]:
-      "File scanned successfully"
+      "File failed security scan. Please upload a valid file."
   }))
-
-  // Auto hide after 2 sec
-  setTimeout(() => {
-
-    setScanSuccess(prev => ({
-      ...prev,
-      [group.groupid]: ""
-    }))
-
-  }, 2000)
-
-
-      } else {
-
-        setScanErrors(prev => ({
-          ...prev,
-          [group.groupid]:
-            "File failed security scan. Please upload a valid file."
-        }))
-
-      }
+}
 
     } catch (error) {
 
@@ -654,7 +767,7 @@ console.log(documentType)
 
 
 
-              {/* ===== MULTIPLE MEMBER ===== */}
+              {/* ===== MULTIPLE MEMBER case-2 ===== */}
 
               {group.members.length > 1 && group.max === 1 && (
 
@@ -827,20 +940,31 @@ console.log(documentType)
       file
     )
 
-    if (file === null) {
+  if (file === null) {
+  setUploadedFiles(prev => ({
+    ...prev,
+    [group.groupid]: null
+  }))
 
-      // DELETE FILE
-      setUploadedFiles(prev => {
+  removeFromDocumentCollection(
+    group.groupid,
+    selectedDocs[group.groupid]?.document_type
+  )
 
-        const updated = { ...prev }
+  saveScannedFilePath(group.groupid, "")
 
-        delete updated[group.groupid]
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
 
-        return updated
-      })
+  setScanSuccess(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
 
-      return
-    }
+  return
+}
 
     console.log("File selected:", file)
 
@@ -909,48 +1033,27 @@ if (
       }))
 
       if (
-        response.status === "success" &&
-        response.scan_status === "clean"
-      ) {
+  response.status === "success" &&
+  response.scan_status === "clean"
+) {
+  setUploadedFiles(prev => ({
+    ...prev,
+    [group.groupid]: file
+  }))
 
-        // Save file
-        setUploadedFiles(prev => ({
-          ...prev,
-          [group.groupid]: file
-        }))
-         // Clear error
+  handleScanSuccess(
+    group.groupid,
+    selectedDocs[group.groupid]?.document_type,
+    response,
+    true
+  )
+} else {
   setScanErrors(prev => ({
     ...prev,
-    [group.groupid]: ""
-  }))
-
-        // Show success message
-  setScanSuccess(prev => ({
-    ...prev,
     [group.groupid]:
-      "File scanned successfully"
+      "File failed security scan. Please upload a valid file."
   }))
-
-  // Auto hide after 2 sec
-  setTimeout(() => {
-
-    setScanSuccess(prev => ({
-      ...prev,
-      [group.groupid]: ""
-    }))
-
-  }, 2000)
-
-
-      } else {
-
-        setScanErrors(prev => ({
-          ...prev,
-          [group.groupid]:
-            "File failed security scan. Please upload a valid file."
-        }))
-
-      }
+}
 
     } catch (error) {
 
@@ -1023,11 +1126,9 @@ if (
 
 
 
-{/*-----------------------------------------*/}
+{/*---------------case 3--------------------------*/}
 
-
-
-            {group.members.length > 1 && group.max > 1 && (
+ {group.members.length > 1 && group.max > 1 && (
 
   <div className="flex flex-col gap-3">
 
@@ -1243,40 +1344,28 @@ if (
             [group.groupid]: false
           }))
 
-          if (
-            response.status === "success" &&
-            response.scan_status === "clean"
-          ) {
+         if (
+  response.status === "success" &&
+  response.scan_status === "clean"
+) {
+  setMultiFiles(prev => ({
+    ...prev,
+    [group.groupid]: file
+  }))
 
-            setMultiFiles(prev => ({
-              ...prev,
-              [group.groupid]: file
-            }))
-
-            setScanSuccess(prev => ({
-              ...prev,
-              [group.groupid]:
-                "File scanned successfully"
-            }))
-
-            setTimeout(() => {
-
-              setScanSuccess(prev => ({
-                ...prev,
-                [group.groupid]: ""
-              }))
-
-            }, 2000)
-
-          } else {
-
-            setScanErrors(prev => ({
-              ...prev,
-              [group.groupid]:
-                "File failed security scan. Please upload a valid file."
-            }))
-
-          }
+  handleScanSuccess(
+    group.groupid,
+    selectedDocs[group.groupid]?.document_type,
+    response,
+    false
+  )
+} else {
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]:
+      "File failed security scan. Please upload a valid file."
+  }))
+}
 
         } catch (error) {
 
@@ -1311,54 +1400,48 @@ if (
         >= group.max
     }
 
-    onClick={() => {
+  onClick={() => {
+  const selected = selectedDocs[group.groupid]
+  const file = multiFiles[group.groupid]
 
-      const selected =
-        selectedDocs[group.groupid]
+  if (!selected || !file) return
 
-      const file =
-        multiFiles[group.groupid]
+  const currentFilePath =
+    scannedFilePaths[group.groupid] || ""
 
-      if (!selected || !file) return
+  const newDoc = {
+    ...selected,
+    file,
+    file_path: currentFilePath,
+    identifierValue: selected.identifierValue || ""
+  }
 
-      const newDoc = {
+  setMultiDocs(prev => ({
+    ...prev,
+    [group.groupid]: [
+      ...(prev[group.groupid] || []),
+      newDoc
+    ]
+  }))
 
-        ...selected,
+  upsertDocumentCollection(
+    group.groupid,
+    selected.document_type,
+    currentFilePath
+  )
 
-        file,
+  setSelectedDocs(prev => ({
+    ...prev,
+    [group.groupid]: null
+  }))
 
-        identifierValue:
-          selected.identifierValue || ""
+  setMultiFiles(prev => ({
+    ...prev,
+    [group.groupid]: null
+  }))
 
-      }
-
-      setMultiDocs(prev => ({
-
-        ...prev,
-
-        [group.groupid]: [
-
-          ...(prev[group.groupid] || []),
-
-          newDoc
-
-        ]
-
-      }))
-
-      /* RESET */
-
-      setSelectedDocs(prev => ({
-        ...prev,
-        [group.groupid]: null
-      }))
-
-      setMultiFiles(prev => ({
-        ...prev,
-        [group.groupid]: null
-      }))
-
-    }}
+  saveScannedFilePath(group.groupid, "")
+}}
   >
 
     Add
@@ -1472,25 +1555,31 @@ if (
     transition
   "
 
-  onClick={() => {
+onClick={() => {
 
-    const updated =
-      multiDocs[group.groupid]
-        .filter(
-          (_: any, i: number) =>
-            i !== index
-        )
+  const docToRemove =
+    multiDocs[group.groupid][index]
 
-    setMultiDocs(prev => ({
+  const updated =
+    multiDocs[group.groupid]
+      .filter(
+        (_: any, i: number) =>
+          i !== index
+      )
 
-      ...prev,
+  setMultiDocs(prev => ({
+    ...prev,
+    [group.groupid]:
+      updated
+  }))
 
-      [group.groupid]:
-        updated
-
-    }))
-
-  }}
+  // remove from collection
+  removeFromDocumentCollection(
+    group.groupid,
+    docToRemove.document_type,
+    docToRemove.file_path
+  )
+}}
 >
 
   <X className="h-4 w-4" />

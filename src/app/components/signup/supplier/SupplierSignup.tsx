@@ -14,9 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { phoneNoService } from "@/services/phoneNoService";
 import { phoneNumberAvailService } from "@/services/phoneNumberAvailService";
+import { documentCreationService } from "@/services/documentCreationService";
 import { CountryCodeCombobox } from "../../login/CountryCodeCombobox";
 import { userCreationService } from "@/services/userCreationService";
 import { supplierProfileCreationService } from "@/services/supplierProfileCreationService";
+import { toast } from "sonner";
 
 import {
   validateEmail,
@@ -29,7 +31,7 @@ import {
 import {
   validateStep1,
   validateStep2,
-  validateStep3
+  
 } from "./supplierSignupValidation"
 import SupplierDocuments from "./SupplierDocuments"
 import ServiceTypeSelect from "./ServiceTypeSelect"
@@ -86,16 +88,7 @@ type FormData = {
     }
 
  const labelClass = "text-[12px] font-medium text-[#1A1A1A]"; 
-
-  
-const errorTextClass = "text-[11px] font-semibold text-red-600";
-const inputTextClass = "text-[12px] text-black";
-const placeholderClass = "placeholder:text-[12px] placeholder:text-gray-400";
-const inputClass = `h-[38px] w-full rounded border border-[#00AFEF] bg-white px-3 
-   ${inputTextClass} ${placeholderClass} focus:outline-none`;
-const dropdownInputClass =
-  `${inputClass} flex items-center justify-between cursor-pointer`
-
+ 
 /* ================= STEP INDICATOR ================= */
 function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
   return (
@@ -124,8 +117,6 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
     </div>
   )
 }
-
-
 
 function ErrorMessage({ message }: { message?: string }) {
   const ref = React.useRef<HTMLParagraphElement>(null)
@@ -273,6 +264,10 @@ export default function SupplierSignup() {
       const [phoneSuccess, setPhoneSuccess] = useState("");
       const [isPhoneChecked, setIsPhoneChecked] = useState(false);
       const [isPhoneAvailable, setIsPhoneAvailable] = useState(false);      
+      const savedCountryCode = localStorage.getItem("userCountryCode");
+      const savedPhone = localStorage.getItem("userPhoneNumber");
+      const savedEmail = localStorage.getItem("userEmail");
+
         const [multiDocs, setMultiDocs] = useState<{
     [groupId: number]: any[]
   }>({});
@@ -288,21 +283,7 @@ export default function SupplierSignup() {
   name: string;
 };
 const [countries, setCountries] = useState<Country[]>([]);
-const [phoneCodes, setPhoneCodes] = useState<any[]>([])
-
-type DocType = {
-  document_type: string;
-  description: string;
-  category: string;
-};
-
-const [docTypes, setDocTypes] = useState<DocType[]>([]);
-
-      useEffect(() => {
-        setShowPassword(false)
-      }, [hidePasswordEye])
-
-      const [step, setStep] = useState<1 | 2 | 3>(1)
+const [step, setStep] = useState<1 | 2 | 3>(1)
       const [error, setError] = useState('')
       const [passwordError, setPasswordError] = useState('')
      
@@ -321,30 +302,25 @@ const [docTypes, setDocTypes] = useState<DocType[]>([]);
       const [confirmPasswordError, setConfirmPasswordError] = useState('')
       const [taxIdError, setTaxIdError] = useState('')
       const [websiteError, setWebsiteError] = useState('')
-      const [tradeLicenseNumberError, setTradeLicenseNumberError] = useState('')
-      const [registrationCertNumberError, setRegistrationCertNumberError] =  useState('')   
       
-      type PhoneCountry  = {
-  code: string
-  name: string
-  dialCode: string
-  flag: string
-}
-
-// Your existing flag function (KEEP THIS)
+         
 const getFlagEmoji = (code: string) =>
   code.toUpperCase().replace(/./g, c =>
     String.fromCodePoint(127397 + c.charCodeAt(0))
   );
-
-
-//  State (make sure these exist)
 
 const [countryCodes, setCountryCodes] = useState<any[]>([]);
 
 const [selectedCountry, setSelectedCountry] =
   useState<any | undefined>(undefined);
 
+const [documentCollection, setDocumentCollection] = useState<
+  {
+    groupId: number;
+    document_type: string;
+    file_path: string;
+  }[]
+>([]);
 
 //  Fetch country codes
 
@@ -370,32 +346,22 @@ useEffect(() => {
       }));
 
       if (formatted.length > 0) {
-
         setCountryCodes(formatted);
-
         // Check localStorage first
-        const savedCountry =
-          localStorage.getItem("userCountryCode");
-
-        let selected;
-
-        if (savedCountry) {
-
+         let selected;
+        if (savedCountryCode) {
           selected = formatted.find(
             (c: any) =>
-              `${c.code}-${c.dialCode}` === savedCountry
+              `${c.code}-${c.dialCode}` === savedCountryCode
           );
-
         }
 
         //  If no saved country → select India
         if (!selected) {
-
           selected =
             formatted.find(
               (c: any) => c.code === "IN"
             ) || formatted[0];
-
         }
 
         //  Set selected country
@@ -407,34 +373,23 @@ useEffect(() => {
           countryCode:
             `${selected.code}-${selected.dialCode}`,
         }));
-
       }
 
     } catch (error) {
-
       console.error(
         "Country code fetch failed:",
         error
       );
-
     }
-
   };
 
   fetchCountryCodes();
-
 }, []);
 
 
 // Auto-fill Phone + Email from localStorage
 useEffect(() => {
-
-  const savedPhone =
-    localStorage.getItem("userPhoneNumber");
-
-  const savedEmail =
-    localStorage.getItem("userEmail");
-
+ 
   if (savedPhone || savedEmail) {
 
     setForm((prev: any) => ({
@@ -486,14 +441,21 @@ const checkPhoneNumber = async () => {
 
       setPhoneError("");
       setPhoneSuccess("Phone number is available");
+        toast.success("Phone number is available", {
+                position: "top-right",
+                duration: 3000,
+              });
        setIsPhoneChecked(true);
       setIsPhoneAvailable(true);
 
     } else {
       const msg =
-        "This phone number is already registered.";
-
+        "This phone number is already registered.Please use a different number.";
        setPhoneError(msg);
+       toast.error(msg, {
+                 position: "top-right",
+                 duration: 3000,
+               });
       setPhoneSuccess("");
       setIsPhoneChecked(true);
       setIsPhoneAvailable(false);
@@ -539,16 +501,22 @@ if (response?.available) {
 
   setUsernameError("");
   setUsernameSuccess("Username is available");
-
+    toast.success("Username is available!", {
+              position: "top-right",
+              duration: 2000,
+            });
   setIsUsernameChecked(true);
   setIsUsernameAvailable(true);
 
 } else {
 
   setUsernameError(
-    "This username is already taken. Please choose a different username."
+    "Username is not available. Please choose a different username."
   );
-
+   toast.error("Username is not available. Please choose a different username.", {
+                position: "top-right",
+                duration: 3000,
+              });
   setUsernameSuccess("");
 
   setIsUsernameChecked(true);
@@ -634,10 +602,6 @@ const fetchSupplierDocGroups = async () => {
 
           useEffect(() => {
   // Get values from localStorage
-  const savedEmail = localStorage.getItem("userEmail");
-  const savedPhone = localStorage.getItem("userPhoneNumber");
-  const savedCountryCode = localStorage.getItem("userCountryCode");
-
   setForm((prev) => ({
     ...prev,
     email: savedEmail || prev.email,
@@ -680,7 +644,7 @@ if (name === "countryCode") {
   setPhoneError(validatePhone(form.phone, value))
 }
 
-   if (name === "website") {
+   if (name === "websiteurl") {
   const error = validateWebsiteLive(value)
   setWebsiteError(error)
 }
@@ -756,36 +720,75 @@ if (name === "confirmPassword") {
       console.log("Created User ID:", userId);
       alert(`User ID: ${userId}`);
       // You can store it in state or localStorage
-      localStorage.setItem("userId", userId);
+      localStorage.setItem("userId", String(userId));
   
-    // 3. Call supplier profile API using received user_id
-    const supplierResponse =
-      await supplierProfileCreationService.createSupplierProfile({
+const payload = {
   user_id: userId,
   firstname: form.firstName?.trim() || "",
   middlename: form.middleName?.trim() || "",
   lastname: form.lastName?.trim() || "",
-  email: form.email || "",
-  countrycode: "+91" ,//form.countryCode?.trim() || "",
+  email: form.email || "",  
+  countrycode: savedCountryCode?.split("-")[1] || "+91",
   phonenumber: form.phone?.trim() || "",
   suppliername: form.supplierLegalName?.trim() || "",
   tradename: form.tradeName?.trim() || "",
-  servicetype: serviceTypeObject,
+  servicetype: form.serviceTypes || [], // must be string[]
   country: form.countryOfRegistration?.trim() || "",
   websiteurl: form.websiteUrl?.trim() || "",
-});
-
-    console.log("Supplier profile response:", supplierResponse);
-
-    // 4. Navigate only after both APIs succeed
-    router.push("/next-step"); // replace with actual route
-  } 
-}catch (err: any) {
-    console.error("Error in registration flow:", err);
-    setError(err?.message || "Failed to register. Please try again.");
-  }
 };
 
+console.log("Supplier payload:", payload);
+console.log("Supplier payload JSON:", JSON.stringify(payload, null, 2));
+
+try {
+ const supplierResponse =
+    await supplierProfileCreationService.createSupplierProfile(payload);
+console.log(
+    " Supplier profile response:", supplierResponse
+  );
+  // save documents only after supplier profile creation succeeds
+  console.log("Final Document Collection before save:", documentCollection);
+
+  for (const doc of documentCollection) {
+    const documentPayload = {
+      user_id: userId,
+      document_type: doc.document_type,
+      path: doc.file_path,
+    };
+
+    console.log("Saving document:", documentPayload);
+
+    await documentCreationService.createDocument(documentPayload);
+  }
+   toast.success("Supplier profile created successfully", {
+                position: "top-right",
+                duration: 3000,
+              });
+   
+} catch (error) {
+  console.error("Supplier API Error:", error);
+   toast.error("Supplier profile creation failed.Please try again.", {
+                 position: "top-right",
+                 duration: 3000,
+               });
+  setError("Failed to create supplier profile");
+ 
+}
+localStorage.removeItem("userPhoneNumber");
+localStorage.removeItem("userEmail");
+localStorage.removeItem("userCountryCode");
+//router.push("/")
+  } 
+}catch (err: any) {
+    console.error("User Id creation error:", err);
+     toast.error("Supplier profile creation failed.Please try again.", {
+                 position: "top-right",
+                 duration: 3000,
+               });
+    setError(err?.message || "userid creation error. Please try again.");
+
+  }
+};
    const getBorderClass = (
   stepSubmitted: boolean,
   isMandatory: boolean,
@@ -1254,9 +1257,11 @@ if (name === "confirmPassword") {
 
                 {step === 2 && (
                   <>
+                  
  <Label htmlFor="supplierLegalName" className="text-slate-700">
   Supplier Legal Name <span className="text-red-500">*</span>
 </Label>
+
 
 <ShadInput
   id="supplierLegalName"
@@ -1448,7 +1453,9 @@ if (name === "confirmPassword") {
     setMultiDocs={setMultiDocs}
 
     handleAddMultiDocument={handleAddMultiDocument}
-     submitted={submitted}    
+     submitted={submitted}   
+      documentCollection={documentCollection}
+  setDocumentCollection={setDocumentCollection} 
   />
 )}                
             </div>
@@ -1643,34 +1650,64 @@ if (!isPhoneAvailable) {
             Back
           </PremiumButton>
 
-          <PremiumButton
-                      type="button"
-                        variant="primary"
-                        size="lg"
-                        className='w-full'          
-            onClick={async () => {
-  setSubmitted(prev => ({ ...prev, step3: true }))
+<PremiumButton
+  type="button"
+  variant="primary"
+  size="lg"
+  className="w-full"
+  onClick={async () => {
+    setSubmitted(prev => ({ ...prev, step3: true }))
 
-  // const result = validateStep3(form, taxIdError)
+    const hasMissingRequiredDocs = docGroups.some((group: any) => {
+      // CASE 1: single member
+      if (group.members.length === 1) {
+        const identifier = tempDocs[group.groupid]?.identifierValue
+        const file = uploadedFiles[group.groupid]
 
-  // if (result === 'EMPTY') {
-  //   setError('Kindly fill-up all the mandatory fields.')
-  //   return
-  // }
+        if (group.min > 0 && (!identifier || !file)) {
+          return true
+        }
 
-  // if (result === 'INVALID') {
-  //   setError('Please fill the mandatory fields correctly')
-  //   return
-  // }
+        return false
+      }
 
-  setError('')
+      // CASE 2: multiple members, only one upload allowed
+      if (group.members.length > 1 && group.max === 1) {
+        const file = uploadedFiles[group.groupid]
 
-  await handleRegister()   //  CLEAN CALL HERE
-}}
-           
-          >
-            Register
-          </PremiumButton>
+        if (group.min > 0 && !file) {
+          return true
+        }
+
+        return false
+      }
+
+      // CASE 3: multiple members, multiple uploads allowed
+      if (group.members.length > 1 && group.max > 1) {
+        const docs = multiDocs[group.groupid] || []
+
+        if (group.min > 0 && docs.length < group.min) {
+          return true
+        }
+
+        return false
+      }
+
+      return false
+    })
+
+    if (hasMissingRequiredDocs) {
+      setError("Kindly fill-up all the mandatory fields.")
+      return
+    }
+
+    setError("")
+    console.log("Final Document Collection:", documentCollection)
+    await handleRegister()
+  }}
+>
+  Register
+</PremiumButton>
         </div>
        )}
       </div>

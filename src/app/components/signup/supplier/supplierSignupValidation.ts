@@ -353,31 +353,4 @@ export const validateStep2 = (
   return "OK"
 }
 
-/* STEP 3 */
-export const validateStep3 = (
-  form: FormData,
-  taxIdError: string
-): "EMPTY" | "INVALID" | "OK" => {
 
-  if (!form.tradeLicenseNumber.trim())
-    return "EMPTY"
-
-  if (!form.compRegistrationNumber.trim())
-    return "EMPTY"
-
-  if (
-    !form.tradeLicense ||
-    !form.registrationCert ||
-    !form.taxDocType ||
-    !form.panTaxId.trim() ||
-    !form.taxRegistrationDoc
-  ) {
-    return "EMPTY"
-  }
-
-  if (taxIdError) {
-    return "INVALID"
-  }
-
-  return "OK"
-}
