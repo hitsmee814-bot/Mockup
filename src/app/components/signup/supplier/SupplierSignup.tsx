@@ -718,7 +718,7 @@ if (name === "confirmPassword") {
     const userId = response?.user_id || response?.id;
     if (userId) {
       console.log("Created User ID:", userId);
-      alert(`User ID: ${userId}`);
+     // alert(`User ID: ${userId}`);
       // You can store it in state or localStorage
       localStorage.setItem("userId", String(userId));
   
@@ -777,7 +777,7 @@ console.log(
 localStorage.removeItem("userPhoneNumber");
 localStorage.removeItem("userEmail");
 localStorage.removeItem("userCountryCode");
-//router.push("/")
+router.push("/")
   } 
 }catch (err: any) {
     console.error("User Id creation error:", err);
