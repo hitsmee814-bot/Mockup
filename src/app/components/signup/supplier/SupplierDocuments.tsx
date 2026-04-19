@@ -1573,7 +1573,7 @@ onClick={() => {
       updated
   }))
 
-  // remove from collection
+  //  IMPORTANT: also remove from collection
   removeFromDocumentCollection(
     group.groupid,
     docToRemove.document_type,

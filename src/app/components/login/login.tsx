@@ -284,9 +284,13 @@ const validatePhone = (value: string, countryCode: string) => {
             toast.success("Welcome Back", { position: "top-right" });
             localStorage.setItem("access_token", response.access_token)
             localStorage.setItem("refresh_token", response.refresh_token)
-            selectedType ? 
-            localStorage.setItem("loggedInType", selectedType) : "";
-            router.push('/itinerary/packages');
+            selectedType ? localStorage.setItem("loggedInType", selectedType) : "";
+               const userType = localStorage.getItem("userType") || "";
+            if (userType === "supplier") {
+                router.push("/SupplierLanding");
+            } else if (userType === "customer") {
+                router.push("/itinerary/packages");
+}   
             setTimeout(() => {
                 login()
             }, 2000);
