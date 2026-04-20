@@ -285,8 +285,8 @@ const validatePhone = (value: string, countryCode: string) => {
             localStorage.setItem("access_token", response.access_token)
             localStorage.setItem("refresh_token", response.refresh_token)
             selectedType ? localStorage.setItem("loggedInType", selectedType) : "";
-               const userType = localStorage.getItem("userType") || "";
-            if (userType === "supplier") {
+               const userType = localStorage.getItem("loggedInType") || "";
+                if (userType === "supplier") {                
                 router.push("/SupplierLanding");
             } else if (userType === "customer") {
                 router.push("/itinerary/packages");
