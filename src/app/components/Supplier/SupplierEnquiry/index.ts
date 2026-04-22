@@ -1,3 +1,3 @@
-export { EnquiryStats } from "./EnquiryStats"
-export { EnquiryTable } from "./EnquiryTable"
-export { RaiseEnquiry } from "./RaiseEnquiry"
+export { EnquiryStats } from "./SupplierEnquiryStats"
+export { EnquiryTable } from "./SupplierEnquiryTable"
+export { RaiseEnquiry } from "./SupplierRaiseEnquiry"
