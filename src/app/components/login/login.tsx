@@ -284,10 +284,11 @@ const validatePhone = (value: string, countryCode: string) => {
             toast.success("Welcome Back", { position: "top-right" });
             localStorage.setItem("access_token", response.access_token)
             localStorage.setItem("refresh_token", response.refresh_token)
+            localStorage.setItem("isLoggedIn","true")
             selectedType ? localStorage.setItem("loggedInType", selectedType) : "";
                const userType = localStorage.getItem("loggedInType") || "";
                 if (userType === "supplier") {                
-                router.push("/SupplierLanding");
+                router.push("/Supplier/SupplierDashboard");
             } else if (userType === "customer") {
                 router.push("/itinerary/packages");
 }   
