@@ -290,7 +290,7 @@ const validatePhone = (value: string, countryCode: string) => {
                 router.push("/SupplierLanding");
             } else if (userType === "customer") {
                 router.push("/itinerary/packages");
-}   
+            }   
             setTimeout(() => {
                 login()
             }, 2000);
