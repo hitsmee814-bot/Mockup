@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = () => {
-    localStorage.setItem("isLoggedIn", "true")
+    localStorage.setItem("isLoggedIn", "true")      
     setIsLoggedIn(true)
   }
 
