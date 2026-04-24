@@ -1,5 +1,5 @@
-"use client"
+import SupplierServiceRates from "@/app/components/Supplier/SupplierServiceRates";
 
 export default function SupplierServiceRatesPage() {
-  return <div>Supplier Service Rates Page</div>
+  return <SupplierServiceRates />
 }
