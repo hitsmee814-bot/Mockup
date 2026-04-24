@@ -1,8 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { SupplierSummaryCards, SupplierUpcomingTrips,SupplierRecentActivity, SupplierPerformanceChart,SupplierCommissionBreakdown, SupplierQuickStats } from "@/app/components/Supplier/SupplierDashboard"
-
+import { SupplierSummaryCards, SupplierPerformanceChart } from "@/app/components/Supplier/SupplierDashboard"
+import { SupplierBidSuccessRate } from "@/app/components/Supplier/SupplierDashboard"
 export default function SupplierDashboardPage() {
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -18,15 +18,15 @@ export default function SupplierDashboardPage() {
       <SupplierSummaryCards />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="xl:col-span-2">
-          <SupplierPerformanceChart />
-        </div>
-        <SupplierRecentActivity />
-      </div>
+  <div className="xl:col-span-2">
+    <SupplierPerformanceChart />
+  </div>
 
-      <SupplierUpcomingTrips />
-      <SupplierCommissionBreakdown />
-      <SupplierQuickStats />
+  <SupplierBidSuccessRate />
+</div>
+
+      
+      
     </div>
   )
 }

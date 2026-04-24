@@ -1,5 +1,6 @@
-"use client"
+import SupplierDemandBidding from "@/app/components/Supplier/SupplierDemandBidding";
+
 
 export default function SupplierDemandBiddingPage() {
-  return <div>Supplier Demand / Bidding Page</div>
+  return <SupplierDemandBidding />
 }
