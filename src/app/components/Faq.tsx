@@ -68,9 +68,9 @@ export default function FaqSection() {
   }, [search])
 
   return (
-    <section className="py-28 bg-none" id="faq">
+    <section className="relative py-16 sm:py-24 px-4 overflow-hidden" id="faq">
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="relative max-w-6xl mx-auto">
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
