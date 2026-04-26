@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import HeaderNav from "./HeaderNav"
 import AuthRoleDialog from "./AuthDialog"
+import { PremiumHeader } from "./PremiumHeader"
 
 const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
 
@@ -83,6 +84,8 @@ export default function VideoMain() {
         // onAuthOpen={() => setAuthOpen(true)}
         onAuthOpen={() => router.push("/auth")}
       />
+
+    {/* <PremiumHeader/> */}
 
       <div
         id="hero"

@@ -12,24 +12,27 @@ import RoadmapTimeline from "./components/RoadMap/RoadMap"
 import CoverflowCarousel from "./components/package-carousel/CarouselCards"
 import TopPackages from "./components/TopPackages"
 import Testimonials from "./components/TestimonialsSection"
+import { AboutUs } from "./components/AboutUs"
 
 export default function HomePage() {
 
   return (
 <>
       <VideoMain />
-      <Hero />
+      {/* <Hero /> */}
       {/* <FloatingCardsSection /> */}
       {/* Keep below carousel cards */}
-        <CoverflowCarousel/>
+        {/* <CoverflowCarousel/> */}
+
+        <AboutUs/>
         <TopPackages/>
 
-      <VacationDestinations />
+      {/* <VacationDestinations /> */}
       {/* <CriticalServices /> */}
       {/* <VisionMissionSection /> */}
       {/* <TeamSectionNew /> */}
       <Testimonials />
-      <RoadmapTimeline/>
+      {/* <RoadmapTimeline/> */}
       {/* <PrivacyPolicy /> */}
       <FAQ />
       <Footer />
