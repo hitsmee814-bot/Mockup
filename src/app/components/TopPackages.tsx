@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import useEmblaCarousel from "embla-carousel-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Star, ArrowRight, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
+import { Star, ArrowRight, Clock, MapPin, ChevronLeft, ChevronRight, Sparkles, Plane } from "lucide-react"
 import Link from "next/link"
 
 interface Pkg {
@@ -122,11 +122,18 @@ export default function TopPackages() {
           transition={{ duration: 0.5 }}
           className="text-center mb-6 sm:mb-10"
         >
-          <p className="text-[10px] sm:text-xs font-medium tracking-[0.2em] uppercase text-primary mb-2">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-5"
+          >
+            <Plane className="h-3 w-3" />
             Popular Destinations
-          </p>
+          </motion.div>
           <h2 className="text-2xl sm:text-3xl md:text-[40px] font-bold tracking-tight leading-tight">
-            Top Packages
+            Top <span className="text-primary">Packages</span>
           </h2>
           <p className="text-muted-foreground text-xs sm:text-sm mt-2 max-w-md mx-auto">
             Handpicked trips loved by thousands of travelers

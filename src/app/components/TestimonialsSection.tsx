@@ -159,7 +159,7 @@
 import { useCallback, useEffect, useState } from "react"
 import useEmblaCarousel from "embla-carousel-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, MessageSquareQuote, Mic, Quote, Sparkles, Speaker, Star } from "lucide-react"
 
 const testimonials = [
   {
@@ -239,8 +239,16 @@ export default function Testimonials() {
           viewport={{ once: true }}
           className="text-center mb-12 sm:mb-16"
         >
-          <p className="text-primary font-semibold text-sm tracking-widest uppercase mb-2">Testimonials</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-5"
+          >
+            <MessageSquareQuote className="h-3 w-3" />
+            Testimonials
+          </motion.div>          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
             Loved by <span className="text-primary">thousands</span>
           </h2>
           <p className="text-muted-foreground mt-3 max-w-md mx-auto text-sm sm:text-base">

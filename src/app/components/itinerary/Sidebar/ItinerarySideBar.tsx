@@ -96,6 +96,12 @@ export function ItinerarySidebar() {
     }, [])
 
     useEffect(() => {
+        if (state !== "expanded") {
+            toggleSidebar()
+        }
+    }, [])
+
+    useEffect(() => {
         const activeGroup = navigation.find(group =>
             group.items.some(item => pathname.startsWith(item.href))
         )
@@ -229,7 +235,7 @@ export function ItinerarySidebar() {
                                                                     <button
                                                                         onClick={() => {
                                                                             router.push(item.href)
-                                                                            if (state === "expanded") toggleSidebar()
+                                                                            // if (state === "expanded") toggleSidebar()
                                                                         }}
                                                                         className={`
                                       flex items-center gap-3 p-2 rounded-md w-full

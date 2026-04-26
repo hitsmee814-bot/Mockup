@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react"
 import Image from "next/image"
-import { Search } from "lucide-react"
+import { CircleQuestionMark, Search, Sparkles } from "lucide-react"
 import FaqImage from "../assets/images/faq.png"
+import { motion, AnimatePresence } from "framer-motion"
 
 import {
   Accordion,
@@ -71,14 +72,30 @@ export default function FaqSection() {
 
       <div className="max-w-7xl mx-auto px-6">
 
-        <div className="text-center mb-16">
-          <h2 className="text-5xl text font-bold">
-            Frequently Asked Questions
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-6 sm:mb-15"
+        >
+           <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-5"
+          >
+            <CircleQuestionMark className="h-3 w-3" />
+            FAQ
+          </motion.div>
+          <h2 className="text-2xl sm:text-3xl md:text-[40px] font-bold tracking-tight leading-tight">
+            Need <span className="text-primary">Help?</span>
           </h2>
-          <p className="text mt-4">
+          <p className="text-muted-foreground text-xs sm:text-sm mt-2 max-w-md mx-auto">
             Everything you need to know about our services.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-16 items-stretch lg:min-h-[700px]">
           <div className="flex flex-col gap-8 h-full">
