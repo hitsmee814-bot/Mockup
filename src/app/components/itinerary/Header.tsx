@@ -17,7 +17,7 @@ export const Header = forwardRef<HTMLElement>((props, ref) => {
     return (
         <header
             ref={ref}
-            className="fixed top-0 left-0 right-0 h-20 bg-[#3FB8FF] backdrop-blur-md border-b border-slate-200 z-50 rounded-b-md"
+            className="fixed top-0 left-0 right-0 h-16 bg-[#3FB8FF] backdrop-blur-md border-b border-slate-200 z-50 rounded-b-md"
         >
 
             <button

@@ -120,7 +120,7 @@ export default function HeaderNav({
                     background: isScrolled ? "#3FB8FF" : "transparent",
                 }}
             >
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
                     <div
                         className="relative w-[160px] h-10 cursor-pointer"
