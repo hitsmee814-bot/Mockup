@@ -291,6 +291,9 @@ const validatePhone = (value: string, countryCode: string) => {
                 router.push("/Supplier/SupplierDashboard");
             } else if (userType === "customer") {
                 router.push("/itinerary/packages");
+            }
+            else if (userType === "agent") {
+                router.push("/Agent/dashboard");
             }   
             setTimeout(() => {
                 login()
