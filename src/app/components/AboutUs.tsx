@@ -27,7 +27,7 @@ const fadeUp = {
 }
 export function AboutUs() {
     return (
-        <section className="relative py-20 sm:py-28 overflow-hidden">
+        <section className="relative py-20 sm:py-28 overflow-hidden" id="aboutus">
             {/* Background accents */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/[0.06] rounded-full blur-3xl" />
@@ -43,7 +43,7 @@ export function AboutUs() {
                     transition={{ type: "spring", stiffness: 200, damping: 24 }}
                     className="text-center max-w-2xl mx-auto mb-16"
                 >
-                    <motion.div
+                    {/* <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
@@ -52,13 +52,13 @@ export function AboutUs() {
                     >
                         <Sparkles className="h-3 w-3" />
                         Who We Are
-                    </motion.div>
+                    </motion.div> */}
                     <h2 className="text-2xl sm:text-3xl md:text-[40px] font-bold tracking-tight leading-tight">
-                        Crafting Journeys <span className="text-primary">Creating Memories</span>
+                        We Plan <span className="text-primary">Differently</span>
                     </h2>
-                    <p className="text-muted-foreground text-xs sm:text-sm mt-2 max-w-md mx-auto">
+                    {/* <p className="text-muted-foreground text-xs sm:text-sm mt-2 max-w-md mx-auto">
                         We&apos;re a passionate team of travel enthusiasts who believe every trip should feel effortless. From curated itineraries to 24/7 support — we handle the details so you can live the experience.
-                    </p>
+                    </p> */}
                 </motion.div>
 
                 {/* Stats */}
@@ -114,7 +114,7 @@ export function AboutUs() {
                             <span className="text-primary">for travellers</span>
                         </h3>
                         <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-                            What started as a small team planning trips for friends has grown into a full-service travel platform trusted by thousands. We combine local expertise with cutting-edge technology to deliver seamless, personal travel experiences — every itinerary handcrafted, every hotel personally vetted.
+                            End-to-end journeys that are built entirely around you. Not templates. Not packages. Real, considered experiences that turn a good trip into an unforgettable one.
                         </p>
                     </div>
 

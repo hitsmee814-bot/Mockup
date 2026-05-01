@@ -24,10 +24,10 @@ type NavItem = {
     hot?: boolean
 }
 const navItems: NavItem[] = [
-    { label: "Getting Started", id: "hero-sub" },
-    { label: "Packages", id: "packages" },
-    { label: "Testimonials", id: "testimonials" },
-    { label: "Partner", id: "partner" },
+    { label: "Curated Trips", id: "toppackages" },
+    { label: "Our Offerings", id: "packages" },
+    { label: "The Bonhomiee Way", id: "aboutus" },
+    { label: "Contact Us", id: "faq" },
     { label: "AI", id: "ai", hot: true },
 
 ]
@@ -94,6 +94,10 @@ export default function HeaderNav({
     }, [enableScrollBg])
 
     const handleNavClick = (id: string) => {
+        console.log(id);
+        if(id==="packages"){
+            router.push("/itinerary/packages")
+        }
         const el = document.getElementById(id)
         if (!el) return
 
