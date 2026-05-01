@@ -35,7 +35,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           placeholder="Ask about your dream trip..."
           rows={1}
           disabled={disabled}
-          className="w-full min-w-0 flex-1 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:opacity-50"
+          className="w-full min-w-0 flex-1 resize-none rounded-xl border border-border px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:opacity-50"
           style={{ maxHeight: 80 }}
           onInput={e => {
             const el = e.target as HTMLTextAreaElement

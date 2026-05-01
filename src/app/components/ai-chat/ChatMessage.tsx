@@ -45,7 +45,6 @@ export function ChatMessage({ message }: ChatMessageProps) {
     )
   }
 
-  // User message
   return (
     <motion.div className="flex flex-col items-end" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <div className="max-w-[85%]">
