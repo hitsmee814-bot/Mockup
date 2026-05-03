@@ -5,8 +5,18 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChatMessage as ChatMessageType } from "./types"
 import { ChatMessage } from "./ChatMessage"
 import { ChatInput } from "./ChatInput"
-import { Sparkles, RotateCcw } from "lucide-react"
+import { Sparkles, RotateCcw, X } from "lucide-react"
 import { chatService } from "@/services/ChatService"
+import { PremiumButton } from "@/app/utils/PremiumButton"
+import { toast } from "sonner"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog"
+import { useLayoutEffect } from "react"
 
 const quickActions = [
     { label: "Beach Vacation", value: "beach vacation" },
@@ -24,7 +34,7 @@ export function ChatWindow() {
     const [messages, setMessages] = useState<ChatMessageType[]>([])
     const [isTyping, setIsTyping] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
-
+    const [showClearDialog, setShowClearDialog] = useState(false)
     const scrollToBottom = useCallback(() => {
         requestAnimationFrame(() => {
             scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
@@ -32,6 +42,11 @@ export function ChatWindow() {
     }, [])
 
     useEffect(() => { scrollToBottom() }, [messages, isTyping, scrollToBottom])
+
+    useLayoutEffect(() => {
+        if (!scrollRef.current) return
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }, [messages, isTyping])
 
     async function getBotResponse(input: string): Promise<string[]> {
         try {
@@ -82,6 +97,42 @@ export function ChatWindow() {
         setIsTyping(false)
     }
 
+    function handleClear() {
+        setMessages([])
+        setIsTyping(false)
+    }
+
+    async function confirmClear() {
+        try {
+            const senderId =
+                localStorage.getItem("username") || `guest_${Date.now()}`
+
+            const res = await fetch(
+                `http://150.241.244.100:8000/chatbot/reset?sender_id=${senderId}`,
+                {
+                    method: "POST",
+                    headers: { accept: "application/json" },
+                }
+            )
+
+            const data = await res.json()
+
+            // clear UI
+            setMessages([])
+            setIsTyping(false)
+
+            toast.success(
+                data?.message || "Conversation cleared successfully",
+                { position: "top-right" }
+            )
+        } catch (err) {
+            console.error(err)
+            toast.error("Failed to clear chat", { position: "top-right" })
+        } finally {
+            setShowClearDialog(false)
+        }
+    }
+
     return (
         <motion.div
             className="flex w-full h-full overflow-hidden"
@@ -129,7 +180,7 @@ export function ChatWindow() {
                             </div>
                         </motion.div>
                     </div>
-                    <motion.button
+                    {/* <motion.button
                         onClick={handleReset}
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -140,13 +191,29 @@ export function ChatWindow() {
                     >
                         <RotateCcw className="size-3" />
                         <span className="hidden sm:inline">New</span>
-                    </motion.button>
+                    </motion.button> */}
+                    <div className="gap-2 flex">
+                        <PremiumButton
+                            size="sm"
+                            onClick={() => setShowClearDialog(true)}
+                            variant="destructive"
+                        >
+                            <X className="size-3" />
+                            Clear
+                        </PremiumButton>
+                        <PremiumButton
+                            size="sm"
+                            onClick={handleReset}
+                        ><RotateCcw className="size-3" />
+                            New
+                        </PremiumButton>
+                    </div>
                 </motion.div>
 
                 {/* Messages area */}
                 <motion.div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto px-3 py-4 space-y-4 custom-scrollbar"
+                    className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-4 custom-scrollbar"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.35, duration: 0.5 }}
@@ -249,6 +316,33 @@ export function ChatWindow() {
                     <ChatInput onSend={handleSend} disabled={isTyping} />
                 </motion.div>
             </div>
+            <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+                <DialogContent className="sm:max-w-[400px]">
+                    <DialogHeader>
+                        <DialogTitle>Clear Chat?</DialogTitle>
+                    </DialogHeader>
+
+                    <p className="text-sm text-muted-foreground">
+                        Do you want to clear your chat context? This action cannot be undone.
+                    </p>
+
+                    <DialogFooter className="mt-4">
+                        <PremiumButton
+                            variant="ghost"
+                            onClick={() => setShowClearDialog(false)}
+                        >
+                            Cancel
+                        </PremiumButton>
+
+                        <PremiumButton
+                            variant="destructive"
+                            onClick={confirmClear}
+                        >
+                            Yes, Clear
+                        </PremiumButton>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </motion.div>
     )
 }
