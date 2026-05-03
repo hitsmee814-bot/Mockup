@@ -126,7 +126,7 @@ export function ChatWindow() {
 
     return (
         <motion.div
-            className="flex w-full h-full overflow-hidden"
+            className="flex w-full h-full overflow-hidden pt-5"
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}

@@ -7,40 +7,39 @@ import { useRef, useState, useEffect } from "react"
 import { Header } from "./Header"
 
 export default function ItenaryBuilder({
-  children,
+    children,
 }: {
-  children: React.ReactNode
+    children: React.ReactNode
 }) {
 
-  const headerRef = useRef<HTMLElement | null>(null)
-  const [headerHeight, setHeaderHeight] = useState(0)
+    //   const headerRef = useRef<HTMLElement | null>(null)
+    //   const [headerHeight, setHeaderHeight] = useState(0)
 
-  useEffect(() => {
-    if (headerRef.current) {
-      setHeaderHeight(headerRef.current.offsetHeight)
-    }
-  }, [])
+    //   useEffect(() => {
+    //     if (headerRef.current) {
+    //       setHeaderHeight(headerRef.current.offsetHeight)
+    //     }
+    //   }, [])
 
-  return (
-    <SidebarProvider defaultOpen={false}>
-      <div className="flex flex-col h-screen w-full">
+    return (
+        <SidebarProvider defaultOpen={false}>
+            <div className="flex flex-col h-screen w-full">
 
-        <Header ref={headerRef} />
+                {/* HEADER */}
+                <Header />
 
-        <div
-          className="flex flex-1 overflow-hidden"
-          style={{ marginTop: headerHeight }}
-        >
-          <ItinerarySidebar />
+                {/* BODY */}
+                <div className="flex flex-1 overflow-hidden">
+                    <ItinerarySidebar />
 
-          <SidebarInset className="flex flex-col flex-1">
-            <main className="flex-1 overflow-y-auto bg-gray-50 p-[2rem]">
-              {children}
-            </main>
-          </SidebarInset>
+                    <SidebarInset className="flex flex-col flex-1">
+                        <main className="flex-1 overflow-y-auto bg-gray-50 p-[2rem]">
+                            {children}
+                        </main>
+                    </SidebarInset>
 
-        </div>
-      </div>
-    </SidebarProvider>
-  )
+                </div>
+            </div>
+        </SidebarProvider>
+    )
 }
