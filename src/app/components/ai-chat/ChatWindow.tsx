@@ -328,13 +328,15 @@ export function ChatWindow() {
 
                     <DialogFooter className="mt-4">
                         <PremiumButton
-                            variant="ghost"
+                            variant="destructive"
+                            size="sm"
                             onClick={() => setShowClearDialog(false)}
                         >
                             Cancel
                         </PremiumButton>
 
                         <PremiumButton
+                        size="sm"
                             variant="destructive"
                             onClick={confirmClear}
                         >
