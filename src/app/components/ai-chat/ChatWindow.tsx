@@ -101,23 +101,14 @@ export function ChatWindow() {
         setMessages([])
         setIsTyping(false)
     }
-
+    
     async function confirmClear() {
         try {
             const senderId =
                 localStorage.getItem("username") || `guest_${Date.now()}`
 
-            const res = await fetch(
-                `http://150.241.244.100:8000/chatbot/reset?sender_id=${senderId}`,
-                {
-                    method: "POST",
-                    headers: { accept: "application/json" },
-                }
-            )
+            const data = await chatService.resetChat(senderId)
 
-            const data = await res.json()
-
-            // clear UI
             setMessages([])
             setIsTyping(false)
 
@@ -336,8 +327,8 @@ export function ChatWindow() {
                         </PremiumButton>
 
                         <PremiumButton
-                        size="sm"
-                            variant="destructive"
+                            size="sm"
+                            variant="primary"
                             onClick={confirmClear}
                         >
                             Yes, Clear
