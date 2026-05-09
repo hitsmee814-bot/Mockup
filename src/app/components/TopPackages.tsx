@@ -49,7 +49,7 @@ const tabs = ["domestic", "international"] as const
 
 function PackageCard({ pkg }: { pkg: Pkg }) {
   return (
-    <Link href={`/packages/${pkg.id}`} className="group block">
+    <Link href={`/itinerary/packages/${pkg.id}`} className="group block">
       <div className="relative h-[300px] w-[220px] sm:h-[340px] sm:w-[260px] md:h-[360px] md:w-[280px] rounded-2xl overflow-hidden">
         <img
           src={pkg.image}
