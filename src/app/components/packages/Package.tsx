@@ -48,6 +48,7 @@ export function Package() {
         tourService.getAll()
             .then((data) => setTours(data.length ? data : []))
             .finally(() => setLoading(false));
+            console.log(tours)
     }, []);
 
     // Derive unique destinations for quick filter pills

@@ -38,20 +38,16 @@ export const tourService = {
         }
     },
 
-    // Fetch image blob via POST with image_url and return object URL
     getImageBlob: async (filename: string): Promise<string> => {
         try {
-            const response = await fetch(`/files/download?filename=${encodeURIComponent(filename)}`,
+            const blob = await apiClient<Blob>(
+                `/files/download?filename=${encodeURIComponent(filename)}`,
                 {
-                    method: "POST",
+                    method: "GET",
+                    responseType: "blob",
                 }
             );
 
-            if (!response.ok) {
-                throw new Error("Image fetch failed");
-            }
-
-            const blob = await response.blob();
             return URL.createObjectURL(blob);
         } catch {
             return "";
