@@ -5,7 +5,9 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{
+    id: string;
+  }>;
 }
 
 // Required when next.config.js has: output: "export"
@@ -22,7 +24,8 @@ async function getPackage(id: string) {
 }
 
 export default async function BookingPage({ params }: Props) {
-  const pkg = await getPackage(params.id);
+  const { id } = await params;
+  const pkg = await getPackage(id);
 
   if (!pkg) notFound();
 
