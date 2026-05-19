@@ -23,9 +23,7 @@ export default function SupplierDashboardPage() {
   </div>
 
   <SupplierBidSuccessRate />
-</div>
-
-      
+</div>      
       
     </div>
   )

@@ -285,6 +285,7 @@ const validatePhone = (value: string, countryCode: string) => {
             localStorage.setItem("access_token", response.access_token)
             localStorage.setItem("refresh_token", response.refresh_token)
             localStorage.setItem("isLoggedIn","true")
+            localStorage.setItem("username", username)
             selectedType ? localStorage.setItem("loggedInType", selectedType) : "";
                const userType = localStorage.getItem("loggedInType") || "";
                 if (userType === "supplier") {                

@@ -86,18 +86,12 @@ export default function SupplierDocuments({
   React.useState<{
     [key: number]: string
   }>({})
-  const [scanLoading, setScanLoading] =
-React.useState<{ [key: number]: boolean }>({})
-
-const [scanErrors, setScanErrors] =
-React.useState<{ [key: number]: string }>({})
-
-const [scannedFilePaths, setScannedFilePaths] = React.useState<{
-  [key: number]: string
+const [scanLoading, setScanLoading] =React.useState<{ [key: number]: boolean }>({})
+const [scanErrors, setScanErrors] =React.useState<{ [key: number]: string }>({})
+const [scannedFilePaths, setScannedFilePaths] = React.useState<{[key: number]: string
 }>({})
 
-const [scanSuccess, setScanSuccess] =
-React.useState<{ [key: number]: string }>({})
+const [scanSuccess, setScanSuccess] =React.useState<{ [key: number]: string }>({})
 
 // for documrnt collection
 const saveScannedFilePath = (
@@ -266,22 +260,7 @@ const getPanelBorderClass = (group: any) => {
   return "border-[#00AFEF]";
 };
 
-// const callScanAPI = async (file: File, mobile: string, documentType: string) => {
-//   const formData = new FormData();
-//   formData.append("file", file);
-//   formData.append("mobile_no", mobile);
-//   formData.append("document_type", documentType);
 
-//   const response = await fetch(
-//     "https://ascendus.bonhomiee.com/files/scan-upload",
-//     {
-//       method: "POST",
-//       body: formData,
-//     }
-//   );
-
-//   return await response.json();
-// };
 
 const callScanAPI = async (
   file: File,
@@ -448,15 +427,9 @@ if (
               </Label>
 
    <ShadInput
-  type="text"   
-
-  placeholder={`Enter ${member.identifier || ""}`}
-                    
-  value={
-    tempDocs[group.groupid]
-      ?.identifierValue || ""
-  }
-onChange={(e) => {
+  type="text"  placeholder={`Enter ${member.identifier || ""}`}                    
+  value={tempDocs[group.groupid] ?.identifierValue || ""  }
+  onChange={(e) => {
 
   // Convert to uppercase automatically
   const value =
@@ -640,6 +613,11 @@ if (
 
   return;
 }
+  // REMOVE OLD ENTRY BEFORE NEW SCAN
+removeFromDocumentCollection(
+  group.groupid,
+  member.document_type
+)
   try {
     console.log("Calling scan API...")
 
@@ -782,36 +760,86 @@ console.log(documentType)
                       selectedDocs[group.groupid]
                         ?.document_type || ""
                     }
-
                     onValueChange={(value) => {
 
-                      const selectedMember =
-                        group.members.find(
-                          (m: any) =>
-                            m.document_type === value
-                        )
+  const previousDocumentType =
+    selectedDocs[group.groupid]?.document_type
 
-                                        setSelectedDocs(prev => ({
-                      ...prev,
-                      [group.groupid]: {
-                        ...selectedMember,
-                        identifierValue: ""
-                      }
-                    }))
+  if (previousDocumentType) {
+    removeFromDocumentCollection(
+      group.groupid,
+      previousDocumentType
+    )
+  }
 
-                    // clear file
-                    setUploadedFiles(prev => ({
-                      ...prev,
-                      [group.groupid]: null
-                    }))
+  saveScannedFilePath(group.groupid, "")
 
-                    // clear identifier error
-                    setIdentifierErrors(prev => ({
-                      ...prev,
-                      [group.groupid]: ""
-                    }))
+  setScanErrors(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
 
-                    }}
+  setScanSuccess(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
+
+  const selectedMember =
+    group.members.find(
+      (m: any) =>
+        m.document_type === value
+    )
+
+  setSelectedDocs(prev => ({
+    ...prev,
+    [group.groupid]: {
+      ...selectedMember,
+      identifierValue: ""
+    }
+  }))
+
+  setUploadedFiles(prev => ({
+    ...prev,
+    [group.groupid]: null
+  }))
+
+  setIdentifierErrors(prev => ({
+    ...prev,
+    [group.groupid]: ""
+  }))
+
+}}
+                  //   onValueChange={(value) => {
+
+                  //     const selectedMember =
+                  //       group.members.find(
+                  //         (m: any) =>
+                  //           m.document_type === value
+                  //       )
+
+                  //      setSelectedDocs(prev => ({
+                  //     ...prev,
+                  //     [group.groupid]: {
+                  //       ...selectedMember,
+                  //       identifierValue: ""
+                  //     }
+                  //   }))
+
+                  //   // clear file
+                  //   setUploadedFiles(prev => ({
+                  //     ...prev,
+                  //     [group.groupid]: null
+                  //   }))
+
+                  //   // clear identifier error
+                  //   setIdentifierErrors(prev => ({
+                  //     ...prev,
+                  //     [group.groupid]: ""
+                  //   }))
+
+                  //   }
+                  
+                  // }
                   >
 
                     <SelectTrigger
@@ -987,6 +1015,10 @@ if (
 
   return;
 }
+removeFromDocumentCollection(
+  group.groupid,
+  selectedDocs[group.groupid]?.document_type
+)
     try {
 
       console.log("Calling scan API...")

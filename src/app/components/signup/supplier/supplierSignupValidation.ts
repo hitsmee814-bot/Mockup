@@ -22,6 +22,40 @@ export const containsPersonalName = (
     .some(name => pwd.includes(name.toLowerCase()))
 }
 
+export const validateBusinessName = (
+  value: string,
+  fieldName: string
+): string => {
+  const trimmed = value.trim()
+
+  // Required
+  if (!trimmed) {
+    return `Required`
+  }
+
+  // Length check
+  if (trimmed.length < 2) {
+    return `${fieldName} must be at least 2 characters`
+  }
+
+  if (trimmed.length > 100) {
+    return `${fieldName} must be less than 100 characters`
+  }
+
+  // Only numbers not allowed
+  if (/^\d+$/.test(trimmed)) {
+    return `${fieldName} cannot contain only numbers`
+  }
+
+  // Allowed characters
+  const regex = /^[a-zA-Z0-9\s&.,'()-]+$/
+
+  if (!regex.test(trimmed)) {
+    return `${fieldName} can contain only letters, numbers, spaces and & . , - ' ( ) are allowed`
+  }
+
+  return ""
+}
 /* Validate password */
 export const validatePassword = (
   password: string,
@@ -101,6 +135,48 @@ export const validateWebsiteLive = (value: string) => {
     return ''
   }
 }
+
+//* ================= NAME VALIDATION ================= */
+
+const NAME_REGEX = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/
+
+export const validateName = (
+  value: string,
+  fieldName: "First name" | "Middle name" | "Last name",
+  isOptional: boolean = false
+): string => {
+
+  const trimmed = value.trim()
+
+  // Optional field (middle name)
+  if (isOptional && !trimmed) return ""
+
+  // Required check
+  if (!trimmed) {
+    return `Required`
+  }
+
+  // Length check
+  //  Middle name (optional) → allow 1 to 50
+  //  Others → 2 to 50
+  if (
+    (isOptional && trimmed.length > 50) ||
+    (!isOptional && (trimmed.length < 2 || trimmed.length > 50))
+  ) {
+    return isOptional
+      ? `${fieldName} must be at most 50 characters`
+      : `${fieldName} must be between 2 and 50 characters`
+  }
+
+  // Format check
+  if (!NAME_REGEX.test(trimmed)) {
+    return `${fieldName} can contain only letters, spaces, hyphens (-), or apostrophes (')`
+  }
+
+  return ""
+}
+
+
 
 export const validateUsername = (value: string) => {
   if (!value) return ""
@@ -282,15 +358,36 @@ const hasEmptyFields = (
   })
 }
 
+type SupplierSignupFormData = {
+  firstName: string
+  middleName: string
+  lastName: string
+  email: string
+  countryCode: string
+  phone: string
+  username: string
+  password: string
+  confirmPassword: string
+  supplierLegalName: string
+  tradeName: string
+  serviceTypes: string[]
+  countryOfRegistration: string
+  panTaxId: string
+  websiteUrl: string
+}
 /* STEP 1 */
+
 export const validateStep1 = (
-  form: FormData,
+  form: SupplierSignupFormData,
   errors: {
     emailError: string
     phoneError: string
     usernameError: string
     passwordError: string
     confirmPasswordError: string
+     firstNameError: string
+    middleNameError: string
+    lastNameError: string
   }
 ): "EMPTY" | "INVALID" | "OK" => {
 
@@ -313,7 +410,10 @@ export const validateStep1 = (
     errors.phoneError ||
     errors.usernameError ||
     errors.passwordError ||
-    errors.confirmPasswordError
+    errors.confirmPasswordError||
+    errors.firstNameError ||
+    errors.lastNameError ||
+     errors.middleNameError
   ) {
     return "INVALID"
   }
@@ -327,7 +427,7 @@ export const validateStep1 = (
 
 /* STEP 2 */
 export const validateStep2 = (
-  form: FormData,
+  form: SupplierSignupFormData,
   websiteError: string
 ): "EMPTY" | "INVALID" | "OK" => {
 

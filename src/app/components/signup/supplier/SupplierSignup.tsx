@@ -26,32 +26,31 @@ import {
   validateUsername,
   validatePassword,
   validateConfirmPassword,
-  validateWebsiteLive
+  validateWebsiteLive,
+  validateName   
 } from "./supplierSignupValidation"
+
 import {
   validateStep1,
   validateStep2,
-  
+  validateBusinessName,
 } from "./supplierSignupValidation"
+
+import {
+  FormErrorBanner,
+  PasswordStrengthMeter,   
+} from "./SupplierUtils"
+
 import SupplierDocuments from "./SupplierDocuments"
 import ServiceTypeSelect from "./ServiceTypeSelect"
 import { countryListService } from "@/services/countryListService";
 import { docTypelookupService } from "@/services/docTypes";
 import { userNameService } from "@/services/userNameService";
-
+import { ErrorMessage } from "./SupplierUtils"
+import { TooltipIcon } from "./SupplierUtils"
 /* ================= TYPES ================= */
-type NamedDocument = {
-  file: File
-  name: string
-  identifier?: string   
-}
 
-type TooltipIconProps = {
-  id: string
-  content: string
-}
-
-type FormData = {
+type SupplierFormData = {
   firstName: string
   middleName: string
   lastName: string
@@ -67,27 +66,17 @@ type FormData = {
   countryOfRegistration: string
   panTaxId: string
   websiteUrl: string
-  tradeLicense: File | null
-  registrationCert: File | null
-  taxDocType: string
-  taxRegistrationDoc: File | null
-  otherDocs: NamedDocument[]
-  tradeLicenseNumber: string
-  compRegistrationNumber: string 
-
 }
-
 /* ================= CONSTANTS ================= */    
   
   const blockClipboard = (e: React.ClipboardEvent<HTMLInputElement>) => {
   e.preventDefault()
     }
-
     const blockContextMenu = (e: React.MouseEvent<HTMLInputElement>) => {
      e.preventDefault()
     }
 
- const labelClass = "text-[12px] font-medium text-[#1A1A1A]"; 
+  const labelClass = "text-[12px] font-medium text-[#1A1A1A]"; 
  
 /* ================= STEP INDICATOR ================= */
 function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
@@ -118,135 +107,6 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
   )
 }
 
-function ErrorMessage({ message }: { message?: string }) {
-  const ref = React.useRef<HTMLParagraphElement>(null)
-  const fieldRef = React.useRef<HTMLElement | null>(null)
-
-  React.useEffect(() => {
-    if (!ref.current) return
-
-    // Locate related field
-    const container = ref.current.previousElementSibling
-    const field =
-      container?.querySelector?.('input, select, textarea') ||
-      (container as HTMLElement)
-
-    if (!(field instanceof HTMLElement)) return
-
-    fieldRef.current = field
-
-    if (message) {
-      // Apply error style
-      field.classList.add('border-red-500')
-      field.classList.remove('border-[#00AFEF]')
-    } else {
-      // Restore normal style
-      field.classList.remove('border-red-500')
-      field.classList.add('border-[#00AFEF]')
-    }
-  }, [message])
-
-  return (
-    <p
-      ref={ref}
-      className={`mt-1 flex items-center gap-1 text-[11px] font-semibold
-        ${message ? 'text-red-600' : 'hidden'}`}
-    >
-      <AlertCircle size={12} className="shrink-0" />
-      <span>{message}</span>
-    </p>
-  )
-}
-
-const FormErrorBanner = ({ message }: { message?: string }) => {
-  if (!message) return null
-
-  return (
-    <div className="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg mb-6 border border-red-100 flex items-center gap-2">
-      <AlertCircle size={16} className="shrink-0" />
-      <span>{message}</span>
-    </div>
-  )
-}
-
-function PasswordStrengthMeter({
-  strength,
-}: {
-  strength: { id: number; value: string } | null
-}) {
-  if (!strength) return null
-
-  const config = [
-    {
-      width: 'w-1/4',
-      bar: 'bg-red-400',
-      text: 'text-red-600',
-      message: 'Password too weak',
-    },
-    {
-      width: 'w-1/2',
-      bar: 'bg-orange-400',
-      text: 'text-orange-600',
-      message: 'Password stength weak',
-    },
-    {
-      width: 'w-3/4',
-      bar: 'bg-yellow-400',
-      text: 'text-yellow-600',
-      message: 'Password stength medium',
-    },
-    {
-      width: 'w-full',
-      bar: 'bg-green-400',
-      text: 'text-green-600',
-      message: 'Password stength strong',
-    },
-  ]
-
-  const level = config[strength.id] ?? config[0]
-
-  return (
-    <div className="mt-2">
-      {/* STRENGTH BAR */}
-      <div className="h-2 w-full rounded bg-gray-200 overflow-hidden">
-        <div
-          className={`h-full ${level.width} ${level.bar} transition-all duration-500 ease-out`}
-        />
-      </div>
-
-      {/* MESSAGE BELOW BAR */}
-      <p className={`mt-1 text-[11px] font-bold ${level.text}`}>
-        {level.message}
-      </p>
-    </div>
-  )
-}
-
-export function TooltipIcon({ id, content }: TooltipIconProps) {
-  return (
-    <>
-      <span
-        data-tooltip-id={id}
-        data-tooltip-content={content}
-        className="text-[#00AFEF] text-[11px]  cursor-pointer"
-      >
-        ⓘ
-      </span>
-
-      <Tooltip
-        id={id}
-        place="top"
-        style={{
-          fontSize: '11px',
-          padding: '6px 10px',
-          borderRadius: '6px',
-          backgroundColor: '#0f172a',
-        }}
-      />
-    </>
-  )
-}
-
 /* ================= MAIN ================= */
 export default function SupplierSignup() {
 
@@ -267,8 +127,12 @@ export default function SupplierSignup() {
       const savedCountryCode = localStorage.getItem("userCountryCode");
       const savedPhone = localStorage.getItem("userPhoneNumber");
       const savedEmail = localStorage.getItem("userEmail");
-
-        const [multiDocs, setMultiDocs] = useState<{
+      const [firstNameError, setFirstNameError] = useState("")
+      const [middleNameError, setMiddleNameError] = useState("")
+      const [lastNameError, setLastNameError] = useState("")
+      const [supplierNameError, setSupplierNameError] = useState("")
+      const [tradeNameError, setTradeNameError] = useState("")
+       const [multiDocs, setMultiDocs] = useState<{
     [groupId: number]: any[]
   }>({});
 
@@ -297,12 +161,10 @@ const [step, setStep] = useState<1 | 2 | 3>(1)
               id: number
               value: string
             } | null>(null)
-   
+               
       const [emailError, setEmailError] = useState('')
       const [confirmPasswordError, setConfirmPasswordError] = useState('')
-      const [taxIdError, setTaxIdError] = useState('')
-      const [websiteError, setWebsiteError] = useState('')
-      
+      const [websiteError, setWebsiteError] = useState('')   
          
 const getFlagEmoji = (code: string) =>
   code.toUpperCase().replace(/./g, c =>
@@ -310,10 +172,8 @@ const getFlagEmoji = (code: string) =>
   );
 
 const [countryCodes, setCountryCodes] = useState<any[]>([]);
-
 const [selectedCountry, setSelectedCountry] =
   useState<any | undefined>(undefined);
-
 const [documentCollection, setDocumentCollection] = useState<
   {
     groupId: number;
@@ -323,20 +183,13 @@ const [documentCollection, setDocumentCollection] = useState<
 >([]);
 
 //  Fetch country codes
-
 useEffect(() => {
-
   const fetchCountryCodes = async () => {
-
     try {
-
       const response =
         await phoneNoService.getPhoneCodes();
-
       console.log("Country Codes:", response);
-
       const codes = response || [];
-
       // Format API response
       const formatted = codes.map((c: any) => ({
         code: c.iso2,
@@ -344,18 +197,16 @@ useEffect(() => {
         dialCode: c.phone_code,
         flag: getFlagEmoji(c.iso2),
       }));
-
       if (formatted.length > 0) {
         setCountryCodes(formatted);
         // Check localStorage first
-         let selected;
+        let selected;
         if (savedCountryCode) {
           selected = formatted.find(
             (c: any) =>
               `${c.code}-${c.dialCode}` === savedCountryCode
           );
         }
-
         //  If no saved country → select India
         if (!selected) {
           selected =
@@ -363,10 +214,8 @@ useEffect(() => {
               (c: any) => c.code === "IN"
             ) || formatted[0];
         }
-
         //  Set selected country
         setSelectedCountry(selected);
-
         // Update form
         setForm((prev: any) => ({
           ...prev,
@@ -374,7 +223,6 @@ useEffect(() => {
             `${selected.code}-${selected.dialCode}`,
         }));
       }
-
     } catch (error) {
       console.error(
         "Country code fetch failed:",
@@ -382,24 +230,19 @@ useEffect(() => {
       );
     }
   };
-
   fetchCountryCodes();
 }, []);
 
 
 // Auto-fill Phone + Email from localStorage
-useEffect(() => {
- 
+useEffect(() => { 
   if (savedPhone || savedEmail) {
-
     setForm((prev: any) => ({
       ...prev,
       phone: savedPhone || prev.phone,
       email: savedEmail || prev.email,
     }));
-
   }
-
 }, []);
 
       useEffect(() => {
@@ -409,36 +252,26 @@ useEffect(() => {
           console.log("API Response:", res);
       console.log("API Data:", res?.data);
        setCountries(res || []);
-
     } catch (error) {
       console.error("Error fetching countries:", error);
     }
   };
-
   fetchCountries();
 }, []);
 
 const checkPhoneNumber = async () => {
-
   const mobile = form.phone?.trim();
-
   if (!mobile) {
-
     setPhoneError("Required");
     setPhoneSuccess("");
     return;
-
   }
 
   try {
-
     const response =
       await phoneNumberAvailService.checkAvailability(mobile);
-
     console.log("Phone API Response:", response);
-
     if (response?.available) {
-
       setPhoneError("");
       setPhoneSuccess("Phone number is available");
         toast.success("Phone number is available", {
@@ -459,46 +292,28 @@ const checkPhoneNumber = async () => {
       setPhoneSuccess("");
       setIsPhoneChecked(true);
       setIsPhoneAvailable(false);
-
     }
-
   } catch (error) {
-
     console.error("Phone check failed:", error);
-
     setPhoneError("Unable to check phone number");
     setPhoneSuccess("");
     setIsPhoneChecked(false);
     setIsPhoneAvailable(false);
-
   }
-
 };
 
-
-
-
-
-
 const checkUsername = async () => {
-
   const username = form.username?.trim();
-
   if (!username) {
     setUsernameError("Required");
     setUsernameSuccess("");
     return;
   }
-
   try {
-
     const response =
       await userNameService.checkAvailability(username);
-
     console.log("Username API Response:", response);
-
-if (response?.available) {
-
+    if (response?.available) {
   setUsernameError("");
   setUsernameSuccess("Username is available");
     toast.success("Username is available!", {
@@ -507,9 +322,7 @@ if (response?.available) {
             });
   setIsUsernameChecked(true);
   setIsUsernameAvailable(true);
-
 } else {
-
   setUsernameError(
     "Username is not available. Please choose a different username."
   );
@@ -518,15 +331,11 @@ if (response?.available) {
                 duration: 3000,
               });
   setUsernameSuccess("");
-
   setIsUsernameChecked(true);
   setIsUsernameAvailable(false);
 }
-
   } catch (error) {
-
     console.error("Username check failed:", error);
-
     setUsernameError("Unable to check username");
     setUsernameSuccess("");
 
@@ -534,9 +343,7 @@ if (response?.available) {
 };
 
 const fetchSupplierDocGroups = async () => {
-
   try {
-
     console.log(
       "Calling Supplier Document API..."
     );
@@ -545,7 +352,6 @@ const fetchSupplierDocGroups = async () => {
       await docTypelookupService.getDocTypes(
         "SUPPLIER"
       );
-
     console.log(
       "Raw Response:",
       res
@@ -560,21 +366,15 @@ const fetchSupplierDocGroups = async () => {
       "Parsed Groups:",
       groups
     );
-
     setDocGroups(groups);
-
   } catch (error) {
-
     console.error(
       "Error fetching supplier docs:",
       error
     );
-
   }
-
 };
-
-      const [form, setForm] = useState<FormData>({
+      const [form, setForm] = useState<SupplierFormData>({
           firstName: '',
           middleName: '',
           lastName: '',
@@ -589,16 +389,8 @@ const fetchSupplierDocGroups = async () => {
           serviceTypes: [],
           countryOfRegistration: '',
           panTaxId: '',
-          websiteUrl: '',
-          tradeLicense: null,
-           tradeLicenseNumber: '',
-           registrationCert: null,
-           compRegistrationNumber: '',  
-          taxDocType: '',
-          taxRegistrationDoc: null,
-          otherDocs: [],
+          websiteUrl: '',         
           })
-
 
           useEffect(() => {
   // Get values from localStorage
@@ -619,36 +411,52 @@ const fetchSupplierDocGroups = async () => {
      if (submitted.step1 || submitted.step2 || submitted.step3) {
         setError('')
         }
+        //firstname, middlename,lastname validation
+        if (name === "firstName") {
+          const error = validateName(value, "First name")
+          setFirstNameError(error)
+        }
+      if (name === "middleName") {
+        const error = validateName(value, "Middle name", true)
+        setMiddleNameError(error)
+      }
+
+      if (name === "lastName") {
+        const error = validateName(value, "Last name")
+        setLastNameError(error)
+      }
+
     // USERNAME VALIDATION
 if (name === "username") {
-
   setUsernameSuccess("");
-
   setIsUsernameChecked(false);
   setIsUsernameAvailable(false);
-
   const error = validateUsername(value);
   setUsernameError(error);
 }
-
      if (name === "email") {
   setEmailError(validateEmail(value))
 }
-
       if (name === "phone") {
         setPhoneSuccess("");
   setPhoneError(validatePhone(value, form.countryCode))
 }
-
 if (name === "countryCode") {
   setPhoneError(validatePhone(form.phone, value))
 }
-
-   if (name === "websiteurl") {
+   if (name === "websiteUrl") {
   const error = validateWebsiteLive(value)
   setWebsiteError(error)
 }
+if (name === "supplierLegalName") {
+  const error = validateBusinessName(value, "Supplier Legal Name")
+  setSupplierNameError(error)
+}
 
+if (name === "tradeName") {
+  const error = validateBusinessName(value, "Trade Name")
+  setTradeNameError(error)
+}
 if (name === "password") {
   setConfirmPasswordError("")
   setPasswordStrengthInfo(null)
@@ -682,11 +490,9 @@ if (name === "confirmPassword") {
     form.password,
     value
   )
-
   setConfirmPasswordError(confirmError)
 }
   }
-
 
   const handleRegister = async () => {
     const serviceTypeObject: Record<string, {}> = {};
@@ -755,16 +561,13 @@ console.log(
       document_type: doc.document_type,
       path: doc.file_path,
     };
-
     console.log("Saving document:", documentPayload);
-
     await documentCreationService.createDocument(documentPayload);
   }
    toast.success("Supplier profile created successfully", {
                 position: "top-right",
                 duration: 3000,
-              });
-   
+              });   
 } catch (error) {
   console.error("Supplier API Error:", error);
    toast.error("Supplier profile creation failed.Please try again.", {
@@ -805,21 +608,15 @@ router.push("/")
   if (stepSubmitted && isMandatory && (isEmpty || hasError)) {
     return "border-red-500"
   }
-
   if (hasError) {
     return "border-red-500"
   }
-
   return "border-slate-300"
 }
-
   const handleAddMultiDocument = (group: any) => {
-
   const groupId = group.groupid;
-
   const selected =
     tempDocs[groupId];
-
   const file =
     multiFiles[groupId];
 
@@ -965,13 +762,14 @@ router.push("/")
                     className={`h-12 bg-white  border border-slate-300 text-slate-900
                     placeholder:text-slate-400
                     focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
-                    ${getBorderClass(submitted.step1, true, form.firstName)}`}
+                    ${getBorderClass(submitted.step1, true, form.firstName, !!firstNameError)}`}
                     />
-                    <ErrorMessage
+                  <ErrorMessage
                       message={
-                        submitted.step1 && !form.firstName.trim()
+                        firstNameError ||
+                        (submitted.step1 && !form.firstName.trim()
                           ? 'Required'
-                          : undefined
+                          : undefined)
                       }
                     />
                     <Label htmlFor="middleName" className="text-slate-700">
@@ -982,7 +780,7 @@ router.push("/")
                     placeholder:text-slate-400
                     focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
                      />
-                    
+                    <ErrorMessage message={middleNameError} />
                   <Label htmlFor="lastName" className="text-slate-700">
                     Last Name <span className="text-red-500">*</span>
                   </Label>
@@ -997,17 +795,18 @@ router.push("/")
                     className={` h-12 bg-white  border border-slate-300 text-slate-900
                   placeholder:text-slate-400
                   focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
-                  ${getBorderClass(submitted.step1, true, form.lastName)}`}/>   
+                 ${getBorderClass(submitted.step1, true, form.lastName, !!lastNameError)}`}/>   
                  
                    <ErrorMessage
-                      message={
-                        submitted.step1 && !form.lastName.trim()
-                          ? 'Required'
-                          : undefined
-                      }
-                    />
+                    message={
+                      lastNameError ||
+                      (submitted.step1 && !form.lastName.trim()
+                        ? 'Required'
+                        : undefined)
+                    }
+                  />
 
-                    <Label htmlFor="email" className="text-slate-700">
+                    <Label htmlFor="email" className="text-slate-700 flex items-center gap-1">
                     Email <span className="text-red-500">*</span>
 
                     <TooltipIcon
@@ -1041,7 +840,7 @@ router.push("/")
                       {/* PHONE */}
                       <div >
 
-                        <Label htmlFor="phone" className="text-slate-700">
+                        <Label htmlFor="phone" className="text-slate-700 flex items-center gap-1">
   Phone Number <span className="text-red-500">*</span>
   <TooltipIcon
     id="tooltip-phone"
@@ -1104,7 +903,7 @@ router.push("/")
                       </div> 
 )}
                       </div>
-<Label htmlFor="username" className="text-slate-700">
+<Label htmlFor="username" className="text-slate-700 flex items-center gap-1">
   Username <span className="text-red-500">*</span>
   <TooltipIcon
     id="tooltip-username"
@@ -1161,7 +960,7 @@ router.push("/")
                       </div> 
 )}                                               
 
-    <Label htmlFor="password" className="text-slate-700">
+    <Label htmlFor="password" className="text-slate-700 flex items-center gap-1">
   Password <span className="text-red-500">*</span>
   <TooltipIcon
     id="tooltip-password"
@@ -1198,7 +997,8 @@ router.push("/")
     onClick={() => setShowPassword(prev => !prev)}
     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF]"
   >
-    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    {/* {showPassword ? <EyeOff size={16} /> : <Eye size={16} />} */}
+    {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
   </button>
 </div>
   <ErrorMessage
@@ -1215,7 +1015,7 @@ router.push("/")
 )}
                
 
-<Label htmlFor="confirmPassword" className="text-slate-700">
+<Label htmlFor="confirmPassword" className="text-slate-700 flex items-center gap-1">
   Re-Type Password <span className="text-red-500">*</span>
   <TooltipIcon
     id="tooltip-confirm-password"
@@ -1236,7 +1036,10 @@ router.push("/")
   onCut={blockClipboard}
   onPaste={blockClipboard}
   onContextMenu={blockContextMenu}
-  onFocusCapture={() => setHidePasswordEye(v => v + 1)}
+   onFocus={() => {
+    setShowPassword(false)
+    setHidePasswordEye(v => v + 1)
+  }}
   onInput={() => setHidePasswordEye(v => v + 1)}
   className={`h-12 bg-white border border-slate-300 text-slate-900
   placeholder:text-slate-400
@@ -1261,8 +1064,6 @@ router.push("/")
  <Label htmlFor="supplierLegalName" className="text-slate-700">
   Supplier Legal Name <span className="text-red-500">*</span>
 </Label>
-
-
 <ShadInput
   id="supplierLegalName"
   name="supplierLegalName"
@@ -1279,9 +1080,10 @@ router.push("/")
 
 <ErrorMessage
   message={
-    submitted.step2 && !form.supplierLegalName.trim()
+    supplierNameError ||
+    (submitted.step2 && !form.supplierLegalName.trim()
       ? "Required"
-      : undefined
+      : undefined)
   }
 />
 <Label htmlFor="tradeName" className="text-slate-700">
@@ -1301,12 +1103,12 @@ router.push("/")
   focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
   ${getBorderClass(submitted.step2, true, form.tradeName)}`}
 />
-
 <ErrorMessage
   message={
-    submitted.step2 && !form.tradeName.trim()
+    tradeNameError ||
+    (submitted.step2 && !form.tradeName.trim()
       ? "Required"
-      : undefined
+      : undefined)
   }
 />
 
@@ -1396,7 +1198,7 @@ router.push("/")
                     }
                   />   
 
-  <Label htmlFor="websiteUrl" className="text-slate-700">
+  <Label htmlFor="websiteUrl" className="text-slate-700 flex items-center gap-1">
   Website URL <span className="text-red-500">*</span>
   <TooltipIcon
     id="tooltip-websiteUrl"
@@ -1483,13 +1285,16 @@ router.push("/")
 
                 //Mandatory fields validation
 
-                    const result = validateStep1(form, {
-                              emailError,
-                              phoneError,
-                              usernameError,
-                              passwordError,
-                              confirmPasswordError
-                            })
+                  const result = validateStep1(form, {
+                      emailError,
+                      phoneError,
+                      usernameError,
+                      passwordError,
+                      confirmPasswordError,
+                      firstNameError,
+                      middleNameError,
+                      lastNameError,
+                    })
                         if (result === 'EMPTY') {
                           setError('Kindly fill-up all the mandatory fields.')
                           return
@@ -1617,7 +1422,10 @@ if (!isPhoneAvailable) {
                         )
                         return
                       }                      
-
+                      if (supplierNameError || tradeNameError) {
+                      setError('Please fill the mandatory fields correctly')
+                      return
+                        }
                       //  CALL SERVICE HERE
                       try {
                       await fetchSupplierDocGroups()
@@ -1747,7 +1555,7 @@ if (!isPhoneAvailable) {
     <div className="flex flex-col gap-1">
 
       <label className={`${labelClass} flex items-center gap-1`}>
-        {label} {required && <span className="text-red-500">*</span>}
+        {label} {required && <span className="text-red-500 flex items-center gap-1">*</span>}
 
         {tooltip && (
           <TooltipIcon
@@ -1773,7 +1581,7 @@ if (!isPhoneAvailable) {
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#00AFEF] transition"
             aria-label={show ? "Hide password" : "Show password"}
           >
-            {show ? <EyeOff size={16} /> : <Eye size={16} />}
+            {show ? <Eye size={16} /> : <EyeOff size={16} />}
           </button>
         )}
 

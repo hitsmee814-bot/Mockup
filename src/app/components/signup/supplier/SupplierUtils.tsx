@@ -23,45 +23,144 @@ type TooltipIconProps = {
   id: string
   content: string
 }
-export function ErrorMessage({ message }: { message?: string }) {
+
+export function ErrorMessage({
+  message,
+  disableFieldStyle = false
+}: {
+  message?: string
+  disableFieldStyle?: boolean
+}) {
   const ref = React.useRef<HTMLParagraphElement>(null)
-  const fieldRef = React.useRef<HTMLElement | null>(null)
 
   React.useEffect(() => {
-    if (!ref.current) return
+    if (disableFieldStyle) return   // 👈 IMPORTANT LINE
 
-    // Locate related field
-    const container = ref.current.previousElementSibling
+    const container = ref.current?.previousElementSibling as HTMLElement | null
     const field =
-      container?.querySelector?.('input, select, textarea') ||
-      (container as HTMLElement)
+      container?.querySelector('input, select, textarea') || container
 
     if (!(field instanceof HTMLElement)) return
 
-    fieldRef.current = field
+    field.classList.toggle('border-red-500', !!message)
+    field.classList.toggle('border-[#00AFEF]', !message)
 
-    if (message) {
-      // Apply error style
-      field.classList.add('border-red-500')
-      field.classList.remove('border-[#00AFEF]')
-    } else {
-      // Restore normal style
-      field.classList.remove('border-red-500')
-      field.classList.add('border-[#00AFEF]')
-    }
-  }, [message])
+  }, [message, disableFieldStyle])
+
+  if (!message) return null
 
   return (
-    <p
-      ref={ref}
-      className={`mt-1 flex items-center gap-1 text-[11px] font-semibold
-        ${message ? 'text-red-600' : 'hidden'}`}
-    >
-      <AlertCircle size={12} className="shrink-0" />
-      <span>{message}</span>
+    <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-red-600">
+      <AlertCircle size={12} />
+      {message}
     </p>
   )
 }
+
+export const FormErrorBanner = ({ message }: { message?: string }) => {
+  if (!message) return null
+
+  return (
+    <div className="bg-red-50 text-red-700 text-sm font-medium px-4 py-3 rounded-lg mb-6 border border-red-100 flex items-center gap-2">
+      <AlertCircle size={16} className="shrink-0" />
+      <span>{message}</span>
+    </div>
+  )
+}
+
+export function PasswordStrengthMeter({
+  strength,
+}: {
+  strength: { id: number; value: string } | null
+}) {
+  if (!strength) return null
+
+  const config = [
+    {
+      width: 'w-1/4',
+      bar: 'bg-red-400',
+      text: 'text-red-600',
+      message: 'Password too weak',
+    },
+    {
+      width: 'w-1/2',
+      bar: 'bg-orange-400',
+      text: 'text-orange-600',
+      message: 'Password stength weak',
+    },
+    {
+      width: 'w-3/4',
+      bar: 'bg-yellow-400',
+      text: 'text-yellow-600',
+      message: 'Password stength medium',
+    },
+    {
+      width: 'w-full',
+      bar: 'bg-green-400',
+      text: 'text-green-600',
+      message: 'Password stength strong',
+    },
+  ]
+
+  const level = config[strength.id] ?? config[0]
+
+  return (
+    <div className="mt-2">
+      <div className="h-2 w-full rounded bg-gray-200 overflow-hidden">
+        <div
+          className={`h-full ${level.width} ${level.bar} transition-all duration-500 ease-out`}
+        />
+      </div>
+
+      <p className={`mt-1 text-[11px] font-bold ${level.text}`}>
+        {level.message}
+      </p>
+    </div>
+  )
+}
+
+
+
+
+// export function ErrorMessage({ message }: { message?: string }) {
+//   const ref = React.useRef<HTMLParagraphElement>(null)
+//   const fieldRef = React.useRef<HTMLElement | null>(null)
+
+//   React.useEffect(() => {
+//     if (!ref.current) return
+
+//     // Locate related field
+//     const container = ref.current.previousElementSibling
+//     const field =
+//       container?.querySelector?.('input, select, textarea') ||
+//       (container as HTMLElement)
+
+//     if (!(field instanceof HTMLElement)) return
+
+//     fieldRef.current = field
+
+//     if (message) {
+//       // Apply error style
+//       field.classList.add('border-red-500')
+//       field.classList.remove('border-[#00AFEF]')
+//     } else {
+//       // Restore normal style
+//       field.classList.remove('border-red-500')
+//       field.classList.add('border-[#00AFEF]')
+//     }
+//   }, [message])
+
+//   return (
+//     <p
+//       ref={ref}
+//       className={`mt-1 flex items-center gap-1 text-[11px] font-semibold
+//         ${message ? 'text-red-600' : 'hidden'}`}
+//     >
+//       <AlertCircle size={12} className="shrink-0" />
+//       <span>{message}</span>
+//     </p>
+//   )
+// }
 export function numberToWord(num: number): string {
   const numberWords: { [key: number]: string } = {
     0: "zero",

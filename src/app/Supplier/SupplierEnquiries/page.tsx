@@ -1,9 +1,11 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { EnquiryStats, EnquiryTable, RaiseEnquiry } from "@/app/components/enquiry"
+import { EnquiryStats, EnquiryTable, RaiseEnquiry } from "@/app/components/Supplier/SupplierEnquiry"
 
 export default function EnquiriesPage() {
+
+  
   return (
     <div className="space-y-5 sm:space-y-6">
       <motion.div
