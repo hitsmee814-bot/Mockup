@@ -1,64 +1,32 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import Image from "next/image"
-import { ChevronDown } from "lucide-react"
+import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { ChevronDown, User, Briefcase, Building2, Truck, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-
-import {
-    User,
-    Briefcase,
-    Building2,
-    Truck,
-} from "lucide-react"
 import HeaderNav from "./HeaderNav"
 import AuthRoleDialog from "./AuthDialog"
-import { PremiumHeader } from "./PremiumHeader"
 
 const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
 
 const wordVariant = {
-    hidden: { opacity: 0, y: 32 },
+    hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
 }
-
-const roles = [
-    {
-        label: "Customer",
-        icon: User,
-        route: "/signup/customer",
-        description: "Book and manage trips",
-    },
-    {
-        label: "Agent",
-        icon: Briefcase,
-        route: "/signup/agent",
-        description: "Create and sell itineraries",
-    },
-    {
-        label: "Supplier",
-        icon: Truck,
-        route: "/signup/supplier",
-        description: "Hotels, transport & services",
-    },
-    {
-        label: "Corporate",
-        icon: Building2,
-        route: "/signup/corporate",
-        description: "Business travel solutions",
-    },
-]
 
 export default function VideoMain() {
     const router = useRouter()
     const [authOpen, setAuthOpen] = useState(false)
+    const [index, setIndex] = useState(0)
+    const words = ["Knows", "Understands", "Remembers"]
+
+    // Handle cycling through words every 3 seconds
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setIndex((prev) => (prev + 1) % words.length)
+        }, 3000)
+        return () => clearInterval(timer)
+    }, [words.length])
 
     const scrollToSection = () => {
         window.scrollTo({
@@ -66,11 +34,13 @@ export default function VideoMain() {
             behavior: "smooth",
         })
     }
-    const goToPackages = () => {
-        router.push("/itinerary/packages")
+
+    const goToItinerary = () => {
+        router.push("/itinerary/packages") // Adjust this route as needed
     }
+
     return (
-        <section className="relative w-full min-h-[100svh]">
+        <section className="relative w-full min-h-[100svh] overflow-hidden">
             <video
                 className="absolute top-0 left-0 w-screen h-full object-cover -z-10"
                 src={`${repoPath}/video/Video.mp4`}
@@ -83,100 +53,113 @@ export default function VideoMain() {
             <HeaderNav
                 enableScrollBg
                 position="fixed"
-                // onAuthOpen={() => setAuthOpen(true)}
                 onAuthOpen={() => router.push("/auth")}
             />
 
-            {/* <PremiumHeader/> */}
-
             <div
                 id="hero"
-                className="relative z-10 flex flex-col items-center justify-center
-        min-h-[100svh] text-center px-4"
+                className="relative z-10 flex flex-col items-center justify-center min-h-[100svh] text-center px-4"
             >
-                <motion.h1
+                <motion.div
                     initial="hidden"
                     animate="visible"
                     variants={{
-                        visible: { transition: { staggerChildren: 0.25 } },
+                        visible: { transition: { staggerChildren: 0.15 } },
                     }}
-                    className="text-4xl sm:text-5xl md:text-7xl font-bold text-white
-          flex flex-wrap items-center justify-center gap-1"
+                    className="flex flex-col items-center text-white"
                 >
-                    <motion.span variants={wordVariant}>Plan.</motion.span>
-                    <motion.span variants={wordVariant}>Tap.</motion.span>
-                    <motion.span variants={wordVariant}>
-                        <motion.button
-                            onClick={goToPackages}
-                            whileTap={{ scale: 0.97 }}
-                            className="relative inline-flex items-center px-5 py-2 rounded-full
-              font-semibold text-white bg-[#3FB8FF] overflow-hidden"
-                        >
-                            <motion.span
-                                aria-hidden
-                                className="pointer-events-none absolute inset-0
-                bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                                animate={{ x: ["-150%", "150%"] }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: "linear",
-                                }}
-                            />
-                            <motion.span
-                                aria-hidden
-                                className="pointer-events-none absolute inset-0
-                bg-gradient-to-r from-transparent via-white/50 to-transparent"
-                                initial={{ opacity: 0 }}
-                                whileHover={{ opacity: 1 }}
-                                animate={{ x: ["-150%", "150%"] }}
-                                transition={{
-                                    duration: 1.4,
-                                    repeat: Infinity,
-                                    ease: "linear",
-                                }}
-                            />
-                            <span className="relative z-10">Go</span>
-                        </motion.button>
-                    </motion.span>
-                </motion.h1>
+                    <motion.h1
+                        variants={wordVariant}
+                        className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight"
+                    >
+                        Travel That
+                    </motion.h1>
 
-                <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="mt-6 text-base sm:text-lg md:text-xl
-          max-w-xl text-white"
-                >
-                    Thoughtfully crafted stays and travel experiences — powered by Bonhomiee.
-                </motion.p>
+                    <div className="relative h-[60px] sm:h-[80px] md:h-[110px] w-full flex items-center justify-center overflow-hidden my-2">
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={words[index]}
+                                initial={{ y: 50, opacity: 0, filter: "blur(10px)" }}
+                                animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                                exit={{ y: -50, opacity: 0, filter: "blur(10px)" }}
+                                transition={{
+                                    duration: 0.8,
+                                    ease: [0.16, 1, 0.3, 1],
+                                }}
+                                className="absolute text-4xl sm:text-5xl md:text-7xl font-bold text-[#3FB8FF]"
+                            >
+                                {words[index]}
+                            </motion.span>
+                        </AnimatePresence>
+                    </div>
+
+                    <motion.h1
+                        variants={wordVariant}
+                        className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight"
+                    >
+                        You
+                    </motion.h1>
+
+                    <motion.p
+                        variants={wordVariant}
+                        className="mt-8 text-base sm:text-lg md:text-xl max-w-xl text-white/80 font-light"
+                    >
+                        Because the best trips start with knowing the traveler.
+                    </motion.p>
+                    <motion.div
+                        variants={wordVariant}
+                        className="mt-10"
+                    >
+                        <button
+                            onClick={goToItinerary}
+                            className="
+        inline-flex items-center gap-3
+        px-8 py-4
+        rounded-full
+        bg-[#3FB8FF] text-white
+        font-semibold
+        shadow-lg
+        transition-all duration-300
+        hover:bg-[#3FB8FF]
+        hover:shadow-xl
+        hover:-translate-y-0.5
+        active:translate-y-0 active:shadow-md
+        "
+                        >
+                            <span>Plan My Journey</span>
+                            <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                        </button>
+                    </motion.div>
+                </motion.div>
             </div>
 
+            {/* Scroll Indicator */}
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
                 <motion.div
                     onClick={scrollToSection}
                     className="flex flex-col items-center gap-2 text-white cursor-pointer group"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.5 }}
                 >
-                    <span className="text-sm tracking-wide opacity-80 group-hover:opacity-100 transition">
+                    <span className="text-xs uppercase tracking-[0.2em] opacity-60 group-hover:opacity-100 transition-opacity">
                         Explore More
                     </span>
 
                     <motion.div
                         animate={{ y: [0, 8, 0] }}
                         transition={{
-                            duration: 1.6,
+                            duration: 2,
                             repeat: Infinity,
                             ease: "easeInOut",
                         }}
-                        className="group-hover:scale-110 transition"
+                        className="group-hover:text-[#3FB8FF] transition-colors"
                     >
-                        <ChevronDown size={28} />
+                        <ChevronDown size={28} strokeWidth={1.5} />
                     </motion.div>
                 </motion.div>
             </div>
+
             <AuthRoleDialog open={authOpen} onOpenChange={setAuthOpen} />
         </section>
     )

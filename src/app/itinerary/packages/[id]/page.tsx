@@ -1,22 +1,32 @@
-import { travelPackages } from "@/app/components/packages/data"
-import { PackageDetailPage } from "@/app/components/packages/PackageDetailPage"
-import { Spinner } from "@/components/ui/spinner"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
-
-export function generateStaticParams() {
-  return travelPackages.map(pkg => ({ id: pkg.id }))
-}
+import { PackageDetailPage } from "@/app/components/packages/PackageDetailPage";
+import { Spinner } from "@/components/ui/spinner";
+import { tourService } from "@/services/ItineraryService";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 interface Props {
-  params: Promise<{ id: string }>
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export async function generateStaticParams() {
+  const data = await tourService.getAll();
+
+  return data.map((pkg: any) => ({
+    id: pkg.tour.id.toString(),
+  }));
+}
+
+async function getPackage(id: string) {
+  return await tourService.getById(id);
 }
 
 export default async function PackagePage({ params }: Props) {
-  const { id } = await params
-  const pkg = travelPackages.find(p => p.id === id)
+  const { id } = await params;
+  const pkg = await getPackage(id);
 
-  if (!pkg) notFound()
+  if (!pkg) notFound();
 
   return (
     <Suspense
@@ -28,5 +38,5 @@ export default async function PackagePage({ params }: Props) {
     >
       <PackageDetailPage pkg={pkg} />
     </Suspense>
-  )
+  );
 }

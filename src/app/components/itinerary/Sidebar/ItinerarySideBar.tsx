@@ -141,7 +141,7 @@ export function ItinerarySidebar() {
 
             <Sidebar
                 collapsible="icon"
-                className="bg-white border-r flex flex-col h-full mt-[5rem]"
+                className="bg-white border-r flex flex-col h-full mt-[4rem]"
             >
                 <SidebarContent className="flex-1 overflow-x-hidden">
 

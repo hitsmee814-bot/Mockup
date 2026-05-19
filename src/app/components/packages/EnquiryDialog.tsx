@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { User, Mail, Phone, MessageSquare, Send, CheckCircle2, Sparkles, AlertCircle, Calendar, Users } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { PremiumButton } from "@/app/utils/PremiumButton"
 
 interface EnquiryDialogProps {
   open: boolean
@@ -107,7 +106,7 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
               </p>
               <motion.button
                 onClick={handleClose}
-                className="mt-6 px-6 py-2.5 rounded-md bg-primary text-white text-sm font-semibold cursor-pointer"
+                className="mt-6 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold cursor-pointer"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
@@ -116,7 +115,7 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
             </motion.div>
           ) : (
             <>
-              <div className="px-6 pt-6 pb-4 border-b border-border /30">
+              <div className="px-6 pt-6 pb-4 border-b border-border bg-muted/30">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-base">
                     <Sparkles className="size-5 text-primary" /> Enquire Now
@@ -150,7 +149,7 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                             value={form[f.key]}
                             onChange={e => update(f.key, e.target.value)}
                             placeholder={f.placeholder}
-                            className={`w-full pl-9 ${errors[f.key] ? "pr-9" : "pr-3"} py-2.5 rounded-md border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 transition-all ${
+                            className={`w-full pl-9 ${errors[f.key] ? "pr-9" : "pr-3"} py-2.5 rounded-xl border text-xs text-foreground placeholder:text-muted-foreground bg-muted focus:outline-none focus:ring-1 transition-all ${
                               errors[f.key] ? "border-red-400 focus:ring-red-400 focus:border-red-400" : "border-border focus:ring-primary focus:border-primary"
                             }`}
                           />
@@ -158,7 +157,11 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                             <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-red-400" />
                           )}
                         </div>
-                        <ErrorMessage message={errors[f.key]} />
+                        {errors[f.key] && (
+                          <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1">
+                            <AlertCircle className="size-2.5 shrink-0" /> {errors[f.key]}
+                          </p>
+                        )}
                       </motion.div>
                     )
                   })}
@@ -176,9 +179,9 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                       <PopoverTrigger asChild>
                         <button
                           type="button"
-                          className={`w-full flex items-center gap-2 pl-3 pr-3 py-2.5 rounded-md border text-xs text-left cursor-pointer transition-all ${
+                          className={`w-full flex items-center gap-2 pl-3 pr-3 py-2.5 rounded-xl border text-xs text-left cursor-pointer transition-all ${
                             calendarOpen ? "border-primary ring-1 ring-primary" : "border-border"
-                          } `}
+                          } bg-muted`}
                         >
                           <Calendar className="size-3.5 text-muted-foreground shrink-0" />
                           <span className={travelDate ? "text-foreground" : "text-muted-foreground"}>
@@ -214,7 +217,7 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                       onChange={e => update("message", e.target.value)}
                       placeholder="I'd like to know more about..."
                       rows={3}
-                      className={`w-full pl-9 pr-3 py-2.5 rounded-md border text-xs text-foreground placeholder:text-muted-foreground  focus:outline-none focus:ring-1 transition-all resize-none ${
+                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs text-foreground placeholder:text-muted-foreground bg-muted focus:outline-none focus:ring-1 transition-all resize-none ${
                         errors.message ? "border-red-400 focus:ring-red-400 focus:border-red-400" : "border-border focus:ring-primary focus:border-primary"
                       }`}
                     />
@@ -226,13 +229,14 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                   )}
                 </motion.div>
 
-                <PremiumButton
+                <motion.button
                   type="submit"
-                  variant="primary"
-                  className="w-100"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-white font-bold py-3 rounded-xl text-sm cursor-pointer"
+                  whileHover={{ scale: 1.02, boxShadow: "0 6px 24px 0 rgba(63,184,255,0.3)" }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <Send className="size-4" /> Submit Enquiry
-                </PremiumButton>
+                </motion.button>
 
                 <p className="text-[10px] text-muted-foreground text-center">
                   We respect your privacy. Your details will not be shared.
@@ -245,13 +249,3 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
     </>
   )
 }
-
-const ErrorMessage: React.FC<{ message?: string }> = ({ message }) => {
-  if (!message) return null;
-  return (
-    <p className="text-red-600 text-xs font-semibold mt-1.5 flex items-center gap-1 animate-in fade-in slide-in-from-left-1 duration-300">
-      <AlertCircle size={12} className="shrink-0" />
-      {message}
-    </p>
-  );
-};
