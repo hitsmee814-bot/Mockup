@@ -54,17 +54,25 @@ interface Props {
   }>;
 }
 
-// Required when output: "export"
+// Required for output: "export"
 export async function generateStaticParams() {
   try {
     const data = await tourService.getAll();
+
+    // If API returns empty, provide at least one path
+    // so Next.js static export does not fail
+    if (!data || data.length === 0) {
+      return [{ id: "placeholder" }];
+    }
 
     return data.map((pkg: any) => ({
       id: String(pkg.tour.id),
     }));
   } catch (error) {
     console.error("generateStaticParams error:", error);
-    return [];
+
+    // Fallback for build safety
+    return [{ id: "placeholder" }];
   }
 }
 
@@ -75,9 +83,16 @@ async function getPackage(id: string) {
 export default async function BookingPage({ params }: Props) {
   const { id } = await params;
 
+  // Prevent rendering fake placeholder route
+  if (id === "placeholder") {
+    notFound();
+  }
+
   const pkg = await getPackage(id);
 
-  if (!pkg) notFound();
+  if (!pkg) {
+    notFound();
+  }
 
   return (
     <Suspense
