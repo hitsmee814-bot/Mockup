@@ -292,7 +292,7 @@ export function ItinerarySidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild tooltip="Priority Matcher">
                                 <a
-                                    href="/hitsmee814-bot/assets/pages/Test2.html"
+                                    href="/Mockup/assets/pages/Test2.html"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-3 p-2 text-[#3FB8FF] hover:bg-[#3FB8FF15] rounded-md"
