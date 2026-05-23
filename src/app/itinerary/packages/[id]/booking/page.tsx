@@ -49,12 +49,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-// Required for output: "export"
+// Required when output: "export"
 export async function generateStaticParams() {
   try {
     const data = await tourService.getAll();
@@ -73,7 +73,9 @@ async function getPackage(id: string) {
 }
 
 export default async function BookingPage({ params }: Props) {
-  const pkg = await getPackage(params.id);
+  const { id } = await params;
+
+  const pkg = await getPackage(id);
 
   if (!pkg) notFound();
 
