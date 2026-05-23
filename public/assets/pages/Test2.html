@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonhomiee | Destination Priority Matcher</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #0284c7;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-radius: 12px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .widget-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 35px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-size: 0.95rem;
+        }
+
+        .top-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .top-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid #e2e8f0;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .slider-value {
+            background: var(--accent-color);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        .description {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .chart-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Radio Selection Area */
+        .selection-area {
+            border-top: 2px solid #e2e8f0;
+            padding-top: 25px;
+            margin-bottom: 20px;
+        }
+
+        .selection-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            background: #f8fafc;
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .radio-label:hover {
+            background: #e0f2fe;
+            border-color: var(--accent-color);
+        }
+
+        input[type="radio"] {
+            accent-color: var(--accent-color);
+        }
+
+        /* Tooltip CSS */
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background-color: #94a3b8;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: #334155;
+            color: #fff;
+            text-align: left;
+            padding: 10px 15px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            font-weight: normal;
+            opacity: 0;
+            transition: opacity 0.3s;
+            line-height: 1.4;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #334155 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Dynamic Details Panel */
+        .details-panel {
+            background: #f0f9ff;
+            border-left: 5px solid var(--accent-color);
+            padding: 25px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            transition: all 0.3s ease;
+            display: none; /* Hidden until a radio is clicked */
+        }
+
+        .rec-title {
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 1.4rem;
+        }
+
+        .rec-subtitle {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #bae6fd;
+            padding-bottom: 10px;
+        }
+
+        .rec-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .rec-item strong {
+            display: block;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .rec-item p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        <div class="header">
+            <h2>Bonhomiee Priority Matcher</h2>
+            <div class="subtitle">Interactive planning for multi-generational travel in December</div>
+        </div>
+        
+        <div class="top-section">
+            <div class="controls-section">
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label for="acc-slider">Senior Accessibility (Ages 80-90+)</label>
+                        <span class="slider-value" id="acc-val">10</span>
+                    </div>
+                    <input type="range" id="acc-slider" min="1" max="10" value="10">
+                    <p class="description">Priority on flat terrain, buggy services, and avoiding internal flights.</p>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label for="adv-slider">Active Adventures (For Sons)</label>
+                        <span class="slider-value" id="adv-val">7</span>
+                    </div>
+                    <input type="range" id="adv-slider" min="1" max="10" value="7">
+                    <p class="description">Priority on high-energy sports, trails, and water activities.</p>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label for="rel-slider">Resort & Beach Relaxation</label>
+                        <span class="slider-value" id="rel-val">6</span>
+                    </div>
+                    <input type="range" id="rel-slider" min="1" max="10" value="6">
+                    <p class="description">Priority on stunning pools, ocean views, and scenic downtime.</p>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <canvas id="matchChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Manual Selection Area -->
+        <div class="selection-area">
+            <div class="selection-title">Select a destination to explore Bonhomiee's strategy:</div>
+            <div class="radio-group" id="radio-container">
+                <!-- Radio buttons populated by JS -->
+            </div>
+        </div>
+
+        <!-- Dynamic Details Panel (Driven by Radio Buttons) -->
+        <div class="details-panel" id="details-panel">
+            <h3 class="rec-title" id="rec-name">Destination</h3>
+            <p class="rec-subtitle" id="rec-tagline">Tagline</p>
+            <div class="rec-grid">
+                <div class="rec-item">
+                    <strong>Strategy For Parents</strong>
+                    <p id="rec-seniors"></p>
+                </div>
+                <div class="rec-item">
+                    <strong>Strategy For Sons</strong>
+                    <p id="rec-sons"></p>
+                </div>
+                <div class="rec-item">
+                    <strong>Ideal Properties</strong>
+                    <p id="rec-properties"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Destination Intelligence Database
+        const destinations = {
+            "Hua Hin (Thailand)": { 
+                accessibility: 9, adventure: 6, relaxation: 8,
+                tagline: "The Royal Thai Retreat",
+                decisionFactor: "Zero internal flights needed. Fly direct CCU-BKK, then take a smooth 2.5 hr luxury van ride straight to the resort.",
+                seniors: "Extremely flat, dry, and peaceful. Since it requires no internal flights or ferries, it preserves senior energy entirely. Top-tier medical facilities are minutes away.",
+                sons: "Vana Nava Water Jungle, kite surfing, and exploring vibrant night markets.",
+                properties: "Centara Grand Beach Resort & Villas, Hua Hin Marriott Resort & Spa"
+            },
+            "Langkawi (Malaysia)": { 
+                accessibility: 8, adventure: 8, relaxation: 9,
+                tagline: "The Perfect West Coast Escape",
+                decisionFactor: "Shielded from the December monsoon. Much quieter and less chaotic than Phuket, perfect for senior relaxation.",
+                seniors: "Direct flight to KL + short hop. Quiet, sprawling resorts with exceptional buggy service and very low crowds.",
+                sons: "World's steepest cable car (SkyCab), jet ski island-hopping tours, and thrilling mangrove kayaking.",
+                properties: "The Danna Langkawi, Four Seasons Resort, The St. Regis"
+            },
+            "Muscat (Oman)": { 
+                accessibility: 9, adventure: 8, relaxation: 7,
+                tagline: "The Majestic Middle Eastern Alternative",
+                decisionFactor: "The 'Anti-Dubai'. Perfect infrastructure but swaps skyscraper chaos for calm mountains and ocean breezes.",
+                seniors: "Flawless infrastructure and palatial luxury. Smooth roads, highly respectful culture, and perfect December weather (22°C-25°C).",
+                sons: "Wadi-swimming (Wadi Shab), dune bashing in Wahiba Sands, and deep-sea fishing in the Gulf of Oman.",
+                properties: "Al Bustan Palace (Ritz-Carlton), The Chedi Muscat, Shangri-La Barr Al Jissah"
+            },
+            "Singapore (Sentosa)": { 
+                accessibility: 10, adventure: 7, relaxation: 7,
+                tagline: "The Seamless Urban Resort",
+                decisionFactor: "Spotlessly clean, world-class medical access, and zero language barriers. Utterly stress-free.",
+                seniors: "Unparalleled medical access and highly wheelchair friendly. Sentosa offers a tropical vibe with zero urban stress.",
+                sons: "Indoor skydiving (iFly), Universal Studios, Skyline Luge, and Night Safari.",
+                properties: "Shangri-La Rasa Sentosa, Capella Singapore"
+            },
+            "Phuket (Thailand)": { 
+                accessibility: 6, adventure: 9, relaxation: 9,
+                tagline: "The Premium Beach Basecamp",
+                decisionFactor: "December is peak dry season. Keep parents in flat enclaves like Laguna to avoid ferry/island-hopping exhaustion.",
+                seniors: "By sticking to flat enclaves like Laguna Phuket, parents enjoy interconnected paths and beach views without dealing with multi-city transfers.",
+                sons: "Speedboat tours to Similan Islands, ATV jungle trails, and world-class scuba diving.",
+                properties: "Laguna Phuket Complex, Katathani Phuket Beach Resort, The Surin"
+            }
+        };
+
+        const destNames = Object.keys(destinations);
+
+        // DOM Elements
+        const sliders = {
+            acc: document.getElementById('acc-slider'),
+            adv: document.getElementById('adv-slider'),
+            rel: document.getElementById('rel-slider')
+        };
+        const displays = {
+            acc: document.getElementById('acc-val'),
+            adv: document.getElementById('adv-val'),
+            rel: document.getElementById('rel-val')
+        };
+        
+        const radioContainer = document.getElementById('radio-container');
+        const detailsPanel = document.getElementById('details-panel');
+        const panel = {
+            name: document.getElementById('rec-name'),
+            tagline: document.getElementById('rec-tagline'),
+            seniors: document.getElementById('rec-seniors'),
+            sons: document.getElementById('rec-sons'),
+            properties: document.getElementById('rec-properties')
+        };
+
+        // 1. Generate Radio Buttons with Tooltips
+        destNames.forEach((name, index) => {
+            const safeId = "radio-" + index;
+            const factor = destinations[name].decisionFactor;
+            
+            const html = `
+                <label class="radio-label" for="${safeId}">
+                    <input type="radio" name="destChoice" id="${safeId}" value="${name}">
+                    ${name}
+                    <div class="tooltip">i
+                        <span class="tooltiptext"><strong>Why it works:</strong><br>${factor}</span>
+                    </div>
+                </label>
+            `;
+            radioContainer.insertAdjacentHTML('beforeend', html);
+        });
+
+        // 2. Initialize Chart
+        const ctx = document.getElementById('matchChart').getContext('2d');
+        let matchChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: destNames,
+                datasets: [{
+                    data: [0, 0, 0, 0, 0],
+                    backgroundColor: 'rgba(2, 132, 199, 0.7)',
+                    borderColor: 'rgb(2, 132, 199)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Compatibility Score %' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) { return context.parsed.x + '% Match'; }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Update Chart Scores on Slider Move
+        function updateScores() {
+            const wAcc = parseInt(sliders.acc.value);
+            const wAdv = parseInt(sliders.adv.value);
+            const wRel = parseInt(sliders.rel.value);
+            
+            displays.acc.textContent = wAcc;
+            displays.adv.textContent = wAdv;
+            displays.rel.textContent = wRel;
+
+            const maxPossibleScore = (10 * wAcc) + (10 * wAdv) + (10 * wRel);
+            const newScores = [];
+
+            destNames.forEach(name => {
+                const metrics = destinations[name];
+                const rawScore = (metrics.accessibility * wAcc) + 
+                                 (metrics.adventure * wAdv) + 
+                                 (metrics.relaxation * wRel);
+                
+                const percentage = Math.round((rawScore / maxPossibleScore) * 100);
+                newScores.push(percentage);
+            });
+
+            matchChart.data.datasets[0].data = newScores;
+            matchChart.update();
+        }
+
+        // 4. Handle Radio Button Selection
+        document.querySelectorAll('input[name="destChoice"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const destName = e.target.value;
+                const data = destinations[destName];
+                
+                panel.name.textContent = destName;
+                panel.tagline.textContent = data.tagline;
+                panel.seniors.textContent = data.seniors;
+                panel.sons.textContent = data.sons;
+                panel.properties.textContent = data.properties;
+                
+                detailsPanel.style.display = 'block'; // Show panel
+            });
+        });
+
+        // Listeners for sliders
+        Object.values(sliders).forEach(slider => {
+            slider.addEventListener('input', updateScores);
+        });
+
+        // Init chart on load
+        updateScores();
+    </script>
+</body>
+</html>

@@ -32,6 +32,7 @@ import {
     LogOut,
     ChevronDown,
     User,
+    ExternalLink,
 } from "lucide-react"
 
 import { useAuth } from "@/app/context/AuthContext"
@@ -155,6 +156,7 @@ export function ItinerarySidebar() {
                                 {/* COLLAPSED MODE */}
                                 <div className="hidden group-data-[collapsible=icon]:block">
                                     <SidebarMenu>
+
                                         <SidebarMenuItem>
                                             <Popover>
                                                 <PopoverTrigger asChild>
@@ -287,7 +289,22 @@ export function ItinerarySidebar() {
                                 </button>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Priority Matcher">
+                                <a
+                                    href="/assets/pages/Test2.html"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 p-2 text-[#3FB8FF] hover:bg-[#3FB8FF15] rounded-md"
+                                >
+                                    <ExternalLink className="h-5 w-5" />
 
+                                    <span className="group-data-[collapsible=icon]:hidden">
+                                        Priority Matcher
+                                    </span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild tooltip="Logout">
                                 <button
