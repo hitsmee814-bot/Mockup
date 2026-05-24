@@ -292,7 +292,7 @@ export function ItinerarySidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild tooltip="Priority Matcher">
                                 <a
-                                    href="/Mockup/assets/pages/Test2.html"
+                                    href="/Mockup/assets/pages/Family vacation choice.html"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-3 p-2 text-[#3FB8FF] hover:bg-[#3FB8FF15] rounded-md"
@@ -301,6 +301,22 @@ export function ItinerarySidebar() {
 
                                     <span className="group-data-[collapsible=icon]:hidden">
                                         Priority Matcher
+                                    </span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip="Priority Matcher">
+                                <a
+                                    href="/Mockup/assets/pages/Leaderion LT Offsite.html"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-3 p-2 text-[#3FB8FF] hover:bg-[#3FB8FF15] rounded-md"
+                                >
+                                    <ExternalLink className="h-5 w-5" />
+
+                                    <span className="group-data-[collapsible=icon]:hidden">
+                                        LT Offsite
                                     </span>
                                 </a>
                             </SidebarMenuButton>

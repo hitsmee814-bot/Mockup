@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonhomiee | Destination Priority Matcher</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #0284c7;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-radius: 12px;
+        }
+        
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; padding: 40px 20px; margin: 0; line-height: 1.6; }
+        .widget-container { background: var(--card-bg); border-radius: var(--border-radius); box-shadow: 0 10px 30px rgba(0,0,0,0.08); padding: 35px; max-width: 900px; width: 100%; }
+        .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+        h2 { margin: 0; color: var(--primary-color); font-size: 1.8rem; }
+        .subtitle { color: var(--text-muted); margin-top: 5px; font-size: 0.95rem; }
+        .top-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        @media (max-width: 768px) { .top-section { grid-template-columns: 1fr; } }
+        .controls-section { display: flex; flex-direction: column; gap: 25px; background: #f8fafc; padding: 20px; border-radius: var(--border-radius); border: 1px solid #e2e8f0; }
+        .slider-group { display: flex; flex-direction: column; gap: 8px; }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.95rem; }
+        .slider-value { background: var(--accent-color); color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; }
+        input[type="range"] { width: 100%; accent-color: var(--accent-color); cursor: pointer; }
+        .description { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+        .chart-section { display: flex; align-items: center; justify-content: center; }
+        .selection-area { border-top: 2px solid #e2e8f0; padding-top: 25px; margin-bottom: 20px; }
+        .selection-title { font-weight: 600; color: var(--primary-color); margin-bottom: 15px; font-size: 1.1rem; }
+        .radio-group { display: flex; flex-wrap: wrap; gap: 15px; }
+        .radio-label { display: flex; align-items: center; gap: 5px; cursor: pointer; background: #f8fafc; padding: 8px 15px; border-radius: 20px; border: 1px solid #cbd5e1; transition: all 0.2s; font-size: 0.95rem; }
+        .radio-label:hover { background: #e0f2fe; border-color: var(--accent-color); }
+        input[type="radio"] { accent-color: var(--accent-color); }
+        .tooltip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background-color: #94a3b8; color: white; border-radius: 50%; font-size: 12px; font-weight: bold; cursor: help; flex-shrink: 0; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #334155; color: #fff; text-align: left; padding: 10px 15px; border-radius: 6px; position: absolute; z-index: 10; bottom: 125%; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: normal; opacity: 0; transition: opacity 0.3s; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #334155 transparent transparent transparent; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        .details-panel { background: #f0f9ff; border-left: 5px solid var(--accent-color); padding: 25px; border-radius: 0 var(--border-radius) var(--border-radius) 0; transition: all 0.3s ease; display: none; }
+        .rec-title { color: var(--accent-color); margin-top: 0; margin-bottom: 5px; font-size: 1.4rem; }
+        .rec-subtitle { font-weight: 600; color: var(--primary-color); margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #bae6fd; padding-bottom: 10px; }
+        .rec-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }
+        .rec-item strong { display: block; color: var(--primary-color); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .rec-item p { margin: 0; font-size: 0.95rem; color: #334155; }
+        
+        .submit-btn { background: var(--accent-color); color: white; border: none; padding: 12px 24px; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .submit-btn:hover { background: #0369a1; }
+        .success-state { display: none; text-align: center; padding: 40px 20px; background: #ecfdf5; border: 1px solid #10b981; border-radius: var(--border-radius); margin-top: 20px; }
+        .success-state h3 { color: #047857; margin-top: 0; font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        <div class="header">
+            <h2>Bonhomiee Priority Matcher</h2>
+            <div class="subtitle">Interactive planning for multi-generational travel in December</div>
+        </div>
+        
+        <div class="top-section">
+            <div class="controls-section">
+                <div class="slider-group">
+                    <div class="slider-header"><label>Senior Accessibility</label><span class="slider-value" id="acc-val">10</span></div>
+                    <input type="range" id="acc-slider" min="1" max="10" value="10">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><label>Active Adventures</label><span class="slider-value" id="adv-val">7</span></div>
+                    <input type="range" id="adv-slider" min="1" max="10" value="7">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><label>Resort Relaxation</label><span class="slider-value" id="rel-val">6</span></div>
+                    <input type="range" id="rel-slider" min="1" max="10" value="6">
+                </div>
+            </div>
+            <div class="chart-section"><canvas id="matchChart"></canvas></div>
+        </div>
+
+        <div class="selection-area" id="selection-area">
+            <div class="selection-title">Select your preferred destination to finalize:</div>
+            <div class="radio-group" id="radio-container"></div>
+        </div>
+
+        <div class="details-panel" id="details-panel">
+            <h3 class="rec-title" id="rec-name">Destination</h3>
+            <p class="rec-subtitle" id="rec-tagline">Tagline</p>
+            <div class="rec-grid">
+                <div class="rec-item"><strong>For Parents</strong><p id="rec-seniors"></p></div>
+                <div class="rec-item"><strong>For Sons</strong><p id="rec-sons"></p></div>
+                <div class="rec-item"><strong>Ideal Properties</strong><p id="rec-properties"></p></div>
+            </div>
+            <button class="submit-btn" onclick="submitChoice()">Lock in Choice & Notify Bonhomiee</button>
+        </div>
+
+        <div class="success-state" id="success-state">
+            <h3>✅ Preference Captured!</h3>
+            <p>Your choice for <strong><span id="chosen-dest"></span></strong> has been noted. Sudip and the Bonhomiee team will reach out shortly to discuss exact dates and properties!</p>
+        </div>
+    </div>
+
+    <script>
+        const destinations = {
+            "Hua Hin (Thailand)": { accessibility: 9, adventure: 6, relaxation: 8, tagline: "The Royal Thai Retreat", decisionFactor: "Zero internal flights needed. Fly direct CCU-BKK, then take a luxury van.", seniors: "Extremely flat, dry, and peaceful. Preserves senior energy entirely.", sons: "Vana Nava Water Jungle, kite surfing, and night markets.", properties: "Centara Grand, Hua Hin Marriott" },
+            "Langkawi (Malaysia)": { accessibility: 8, adventure: 8, relaxation: 9, tagline: "The Perfect West Coast Escape", decisionFactor: "Shielded from the December monsoon. Much quieter than Phuket.", seniors: "Quiet, sprawling resorts with exceptional buggy service.", sons: "World's steepest cable car, jet ski island-hopping.", properties: "The Danna, Four Seasons" },
+            "Muscat (Oman)": { accessibility: 9, adventure: 8, relaxation: 7, tagline: "The Majestic Middle Eastern Alternative", decisionFactor: "The 'Anti-Dubai'. Perfect infrastructure but calm mountains.", seniors: "Flawless infrastructure and palatial luxury.", sons: "Wadi-swimming, dune bashing in Wahiba Sands.", properties: "Al Bustan Palace, The Chedi" },
+            "Singapore (Sentosa)": { accessibility: 10, adventure: 7, relaxation: 7, tagline: "The Seamless Urban Resort", decisionFactor: "Spotlessly clean, world-class medical access, zero language barriers.", seniors: "Unparalleled medical access and highly wheelchair friendly.", sons: "Indoor skydiving, Universal Studios, Night Safari.", properties: "Shangri-La Rasa Sentosa, Capella" },
+            "Phuket (Thailand)": { accessibility: 6, adventure: 9, relaxation: 9, tagline: "The Premium Beach Basecamp", decisionFactor: "Peak dry season. Keep parents in flat enclaves like Laguna.", seniors: "Interconnected paths and beach views without multi-city transfers.", sons: "Speedboat tours to Similan Islands, ATV trails.", properties: "Laguna Phuket, Katathani" }
+        };
+
+        const destNames = Object.keys(destinations);
+        const radioContainer = document.getElementById('radio-container');
+        
+        destNames.forEach((name, index) => {
+            const safeId = "radio-" + index;
+            radioContainer.insertAdjacentHTML('beforeend', `<label class="radio-label" for="${safeId}"><input type="radio" name="destChoice" id="${safeId}" value="${name}"> ${name} <div class="tooltip">i<span class="tooltiptext"><strong>Why it works:</strong><br>${destinations[name].decisionFactor}</span></div></label>`);
+        });
+
+        const ctx = document.getElementById('matchChart').getContext('2d');
+        let matchChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: destNames, datasets: [{ data: [0,0,0,0,0], backgroundColor: 'rgba(2, 132, 199, 0.7)', borderColor: 'rgb(2, 132, 199)', borderWidth: 1 }] },
+            options: { indexAxis: 'y', scales: { x: { max: 100 } }, plugins: { legend: { display: false } } }
+        });
+
+        function updateScores() {
+            const wAcc = parseInt(document.getElementById('acc-slider').value);
+            const wAdv = parseInt(document.getElementById('adv-slider').value);
+            const wRel = parseInt(document.getElementById('rel-slider').value);
+            document.getElementById('acc-val').textContent = wAcc; document.getElementById('adv-val').textContent = wAdv; document.getElementById('rel-val').textContent = wRel;
+            const newScores = destNames.map(name => {
+                const metrics = destinations[name];
+                return Math.round((((metrics.accessibility * wAcc) + (metrics.adventure * wAdv) + (metrics.relaxation * wRel)) / ((10*wAcc)+(10*wAdv)+(10*wRel))) * 100);
+            });
+            matchChart.data.datasets[0].data = newScores; matchChart.update();
+        }
+
+        document.querySelectorAll('input[name="destChoice"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const data = destinations[e.target.value];
+                document.getElementById('rec-name').textContent = e.target.value;
+                document.getElementById('rec-tagline').textContent = data.tagline;
+                document.getElementById('rec-seniors').textContent = data.seniors;
+                document.getElementById('rec-sons').textContent = data.sons;
+                document.getElementById('rec-properties').textContent = data.properties;
+                document.getElementById('details-panel').style.display = 'block';
+            });
+        });
+
+        ['acc-slider', 'adv-slider', 'rel-slider'].forEach(id => document.getElementById(id).addEventListener('input', updateScores));
+        updateScores();
+
+        function submitChoice() {
+            const selected = document.querySelector('input[name="destChoice"]:checked').value;
+            document.getElementById('chosen-dest').textContent = selected;
+            document.getElementById('selection-area').style.display = 'none';
+            document.getElementById('details-panel').style.display = 'none';
+            document.getElementById('success-state').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

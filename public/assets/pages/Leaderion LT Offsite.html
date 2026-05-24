@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonhomiee | Executive Venue Shortlist</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* McKinsey/Corporate Theme Variables */
+        :root {
+            --bg-page: #f3f4f6;
+            --brand-navy: #002855;
+            --brand-blue: #0056b3;
+            --brand-light: #ffffff;
+            --text-dark: #111827;
+            --text-gray: #4b5563;
+            --border-color: #d1d5db;
+        }
+        
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-page); color: var(--text-dark); display: flex; justify-content: center; padding: 40px 20px; margin: 0; line-height: 1.5; }
+        
+        /* Sharp corners, stark borders */
+        .widget-container { background: var(--brand-light); border: 1px solid var(--border-color); box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 40px; max-width: 950px; width: 100%; }
+        
+        .header { text-align: left; border-bottom: 2px solid var(--brand-navy); padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { margin: 0; color: var(--brand-navy); font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+        .subtitle { color: var(--text-gray); margin-top: 5px; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .top-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+        @media (max-width: 768px) { .top-section { grid-template-columns: 1fr; } }
+
+        .controls-section { display: flex; flex-direction: column; gap: 20px; }
+        .slider-group { border-left: 3px solid var(--brand-blue); padding-left: 15px; }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.95rem; color: var(--brand-navy); }
+        .slider-value { color: var(--brand-blue); font-size: 1.1rem; font-weight: bold; }
+        input[type="range"] { width: 100%; accent-color: var(--brand-navy); cursor: pointer; margin-top: 10px; }
+        .description { font-size: 0.8rem; color: var(--text-gray); margin-top: 5px; }
+
+        .chart-section { display: flex; align-items: center; justify-content: center; background: #f9fafb; padding: 20px; border: 1px solid var(--border-color); }
+
+        .selection-area { border-top: 1px solid var(--border-color); padding-top: 25px; margin-bottom: 20px; }
+        .selection-title { font-weight: 600; color: var(--brand-navy); margin-bottom: 15px; font-size: 1.1rem; }
+        
+        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; background: var(--brand-light); padding: 12px 15px; border: 1px solid var(--border-color); transition: all 0.2s; font-size: 0.95rem; font-weight: 500; }
+        .checkbox-label:hover { border-color: var(--brand-blue); }
+        input[type="checkbox"] { accent-color: var(--brand-navy); transform: scale(1.2); }
+
+        /* Fixed Tooltip - no stretching */
+        .tooltip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background-color: var(--text-gray); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: help; margin-left: auto; flex-shrink: 0; }
+        .tooltip .tooltiptext { visibility: hidden; width: 240px; background-color: var(--brand-navy); color: #fff; text-align: left; padding: 12px 15px; position: absolute; z-index: 10; bottom: 130%; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: normal; opacity: 0; transition: opacity 0.3s; line-height: 1.5; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: var(--brand-navy) transparent transparent transparent; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+        /* Dynamic Panel for Multiple Selections */
+        #details-wrapper { display: none; margin-top: 20px; border-top: 2px solid var(--brand-navy); padding-top: 20px;}
+        .property-card { background: #f9fafb; border: 1px solid var(--border-color); padding: 20px; margin-bottom: 15px; border-left: 4px solid var(--brand-blue); }
+        .rec-title { color: var(--brand-navy); margin-top: 0; margin-bottom: 5px; font-size: 1.3rem; }
+        .rec-subtitle { color: var(--text-gray); margin-top: 0; margin-bottom: 15px; font-style: italic; font-size: 0.9rem; }
+        .rec-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .rec-item strong { display: block; color: var(--brand-navy); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 2px; }
+        .rec-item p { margin: 0; font-size: 0.9rem; color: var(--text-dark); }
+        .highlight { color: var(--brand-blue); font-weight: bold; }
+
+        .submit-btn { background: var(--brand-navy); color: white; border: none; padding: 15px 30px; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; transition: background 0.2s; text-transform: uppercase; letter-spacing: 1px;}
+        .submit-btn:hover { background: var(--brand-blue); }
+        
+        .success-state { display: none; text-align: center; padding: 50px 20px; background: #f9fafb; border: 1px solid var(--border-color); margin-top: 20px; border-top: 4px solid #10b981; }
+        .success-state h3 { color: var(--brand-navy); margin-top: 0; font-size: 1.8rem; }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        <div class="header">
+            <h2>Executive Venue Matcher</h2>
+            <div class="subtitle">Leaderion Offsite • November Target</div>
+        </div>
+        
+        <div class="top-section">
+            <div class="controls-section">
+                <div class="slider-group">
+                    <div class="slider-header"><label>Team Isolation & Focus</label><span class="slider-value" id="iso-val">8</span></div>
+                    <input type="range" id="iso-slider" min="1" max="10" value="8">
+                    <p class="description">Priority on keeping the group together away from tourist centers.</p>
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><label>Corporate Meeting Infrastructure</label><span class="slider-value" id="meet-val">8</span></div>
+                    <input type="range" id="meet-slider" min="1" max="10" value="8">
+                    <p class="description">Priority on 5-star level amenities and formal event spaces.</p>
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><label>Sandy Beach Footprint</label><span class="slider-value" id="beach-val">5</span></div>
+                    <input type="range" id="beach-slider" min="1" max="10" value="5">
+                    <p class="description">Priority on stepping out directly onto the sand.</p>
+                </div>
+            </div>
+
+            <div class="chart-section"><canvas id="matchChart"></canvas></div>
+        </div>
+
+        <div class="selection-area" id="selection-area">
+            <div class="selection-title">Select properties to build your shortlist:</div>
+            <div class="checkbox-group" id="checkbox-container"></div>
+        </div>
+
+        <div id="details-wrapper">
+            <div id="selected-properties-list"></div>
+            <button class="submit-btn" onclick="submitShortlist()">Submit Shortlist to Bonhomiee</button>
+        </div>
+
+        <div class="success-state" id="success-state">
+            <h3>Shortlist Captured</h3>
+            <p>Your property selections have been logged. The Bonhomiee team will finalize availability and precise November corporate rates for this shortlist.</p>
+        </div>
+    </div>
+
+    <script>
+        const destinations = {
+            "Bheemli Resort (Vizag)": { isolation: 10, meeting: 9, beach: 6, price: "₹10.5K - ₹12K", tagline: "The Smart Corporate Wildcard (Accor 5-Star)", decisionFactor: "Deliver 5-star global luxury on a Goa budget.", budget: "<span class='highlight'>Highly Efficient.</span> Fits perfectly. Leverages corporate network for Accor rates.", vibe: "Located 30km from main Vizag for total team isolation. Excellent Nov weather.", logistics: "Flawless Accor meeting spaces. Quiet beach road separation, excellent for focus." },
+            "Bay15 (Dona Paula)": { isolation: 9, meeting: 8, beach: 4, price: "₹11K - ₹12.5K", tagline: "The Executive Seaside Retreat", decisionFactor: "Massive manicured lawns on the ocean cliff.", budget: "<span class='highlight'>Excellent Fit.</span> Fits the ₹16.5K bracket perfectly.", vibe: "Luxury chalets with elevated sea views. Highly premium, uninterrupted corporate atmosphere.", logistics: "Lawns allow private ice-breakers and dinners without bumping into tourists." },
+            "Bambolim Beach Resort": { isolation: 8, meeting: 6, beach: 8, price: "₹9.5K - ₹11K", tagline: "The Private Team Bubble", decisionFactor: "Tucked away on a quiet stretch of sand.", budget: "<span class='highlight'>Comfortable Fit.</span> Executes MAP and sightseeing comfortably under budget.", vibe: "Very serene. Lacks 5-star polish, but fantastic 'private beach' feel for bonding.", logistics: "Good open spaces for evening snacks right near the water." },
+            "Bogmallo Beach Resort": { isolation: 7, meeting: 9, beach: 10, price: "₹15K - ₹17K", tagline: "The Nostalgic Splurge", decisionFactor: "You already love it, but Nov rates push past budget.", budget: "<span class='highlight'>Stretch Required.</span> Pushes total budget to ₹19K - ₹20K per pax.", vibe: "Classic Goa premium experience on the water.", logistics: "Turnkey execution. Dedicated conference rooms ready to go." }
+        };
+
+        const destNames = Object.keys(destinations);
+        const checkboxContainer = document.getElementById('checkbox-container');
+
+        destNames.forEach((name, index) => {
+            const safeId = "chk-" + index;
+            checkboxContainer.insertAdjacentHTML('beforeend', `
+                <label class="checkbox-label" for="${safeId}">
+                    <input type="checkbox" name="destChoice" id="${safeId}" value="${name}">
+                    ${name}
+                    <div class="tooltip">i<span class="tooltiptext"><strong>Strategic Note:</strong><br>${destinations[name].decisionFactor}</span></div>
+                </label>
+            `);
+        });
+
+        Chart.defaults.font.family = "'Helvetica Neue', Arial, sans-serif";
+        const ctx = document.getElementById('matchChart').getContext('2d');
+        let matchChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: destNames, datasets: [{ data: [0,0,0,0], backgroundColor: '#002855', borderWidth: 0 }] },
+            options: { indexAxis: 'y', scales: { x: { max: 100 } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ['Match: ' + context.parsed.x + '%', 'Est. Rate: ' + destinations[context.chart.data.labels[context.dataIndex]].price]; } } } } }
+        });
+
+        function updateScores() {
+            const wIso = parseInt(document.getElementById('iso-slider').value);
+            const wMeet = parseInt(document.getElementById('meet-slider').value);
+            const wBeach = parseInt(document.getElementById('beach-slider').value);
+            document.getElementById('iso-val').textContent = wIso; document.getElementById('meet-val').textContent = wMeet; document.getElementById('beach-val').textContent = wBeach;
+            matchChart.data.datasets[0].data = destNames.map(name => {
+                const m = destinations[name];
+                return Math.round((((m.isolation * wIso) + (m.meeting * wMeet) + (m.beach * wBeach)) / ((10*wIso)+(10*wMeet)+(10*wBeach))) * 100);
+            });
+            matchChart.update();
+        }
+
+        // Handle Checkbox Selection
+        document.querySelectorAll('input[name="destChoice"]').forEach(chk => {
+            chk.addEventListener('change', () => {
+                const checked = document.querySelectorAll('input[name="destChoice"]:checked');
+                const listContainer = document.getElementById('selected-properties-list');
+                listContainer.innerHTML = ''; // clear current
+
+                if(checked.length > 0) {
+                    document.getElementById('details-wrapper').style.display = 'block';
+                    checked.forEach(box => {
+                        const data = destinations[box.value];
+                        listContainer.insertAdjacentHTML('beforeend', `
+                            <div class="property-card">
+                                <h3 class="rec-title">${box.value}</h3>
+                                <p class="rec-subtitle">${data.tagline}</p>
+                                <div class="rec-grid">
+                                    <div class="rec-item"><strong>Budget Alignment</strong><p>${data.budget}</p></div>
+                                    <div class="rec-item"><strong>Strategic Value</strong><p>${data.vibe}</p></div>
+                                    <div class="rec-item"><strong>Logistics</strong><p>${data.logistics}</p></div>
+                                </div>
+                            </div>
+                        `);
+                    });
+                } else {
+                    document.getElementById('details-wrapper').style.display = 'none';
+                }
+            });
+        });
+
+        ['iso-slider', 'meet-slider', 'beach-slider'].forEach(id => document.getElementById(id).addEventListener('input', updateScores));
+        updateScores();
+
+        function submitShortlist() {
+            document.getElementById('selection-area').style.display = 'none';
+            document.getElementById('details-wrapper').style.display = 'none';
+            document.getElementById('success-state').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
