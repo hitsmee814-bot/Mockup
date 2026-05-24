@@ -28,18 +28,18 @@ export default function AgentDashboardPage() {
       <AgentSummaryCards />
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="xl:col-span-2">
+      <div className="grid grid-cols-1 xl:grid-cols-3  gap-4 ">
+        <div className="xl:col-span-2 ">
           <AgentUpcomingTravel />
         </div>
-        <div>
+        <div className="xl:row-span-2 [&>*]:h-full">
           <AgentWalletBalance />
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         
-        <div>
+        <div className="xl:col-span-3">
           <AgentRecentActivity />
         </div>
       </div>
