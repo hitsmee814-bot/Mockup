@@ -56,11 +56,6 @@ const isGSTINField = (documentType: string): boolean => {
   return documentType === "GST_CERT";
 };
 
-// Helper to check if identifier is optional (all identifiers except GSTIN)
-const isIdentifierOptional = (documentType: string): boolean => {
-  return !isGSTINField(documentType);
-};
-
 // Simple Tooltip Component using Portal
 const InfoTooltip = ({ text }: { text: string }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -265,6 +260,13 @@ export const DocumentUploadSection = forwardRef<any, DocumentUploadSectionProps>
   const handleMultiFileUpload = async () => {
     if (!tempMember || !tempFile) return;
     
+    // FIXED: Check max limit before uploading
+    if (uploadedDocs.length >= group.max) {
+      setMaxLimitError(`Maximum ${group.max} document(s) allowed for ${group.group_name}`);
+      setTimeout(() => setMaxLimitError(""), 5000);
+      return;
+    }
+    
     const filePath = await performScanUpload(tempFile, tempMember.document_type);
     if (filePath) {
       setUploadedDocs([
@@ -337,7 +339,8 @@ export const DocumentUploadSection = forwardRef<any, DocumentUploadSectionProps>
       onValidationChange(group.groupid, isValid);
       return isValid;
     }
- 
+    
+    // For multi-document with min = 0 (optional), always valid
     onValidationChange(group.groupid, true);
     return true;
   };
@@ -682,6 +685,7 @@ export const DocumentUploadSection = forwardRef<any, DocumentUploadSectionProps>
           )}
         </div>
  
+        {/* Max Limit Error Message */}
         {maxLimitError && (
           <p className="text-red-600 text-sm mt-3 flex items-center gap-1">
             <AlertCircle size={14} />

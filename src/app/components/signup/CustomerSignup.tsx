@@ -288,7 +288,25 @@ export default function CustomerSignup(): JSX.Element {
     return commonSequences.some(seq => lowerP.includes(seq));
   };
 
-  const passwordValidCriteria = (p: string) => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(p);
+  // Updated password validation function - ONLY allowed special characters: @ & : | . ^ ~ # $ ! ) ?
+  const passwordValidCriteria = (p: string) => {
+    // Check length between 8-15 characters
+    if (p.length < 8 || p.length > 15) return false;
+    // Check for at least 1 uppercase letter
+    if (!/[A-Z]/.test(p)) return false;
+    // Check for at least 1 lowercase letter
+    if (!/[a-z]/.test(p)) return false;
+    // Check for at least 1 number
+    if (!/[0-9]/.test(p)) return false;
+    // Check for at least 1 special character from allowed list ONLY: @ & : | . ^ ~ # $ ! ) ?
+    const allowedSpecialChars = /[@&:|.^~#$!)?]/;
+    if (!allowedSpecialChars.test(p)) return false;
+    // Check for NO other special characters (only allowed ones)
+    const allowedCharsRegex = /^[A-Za-z0-9@&:|.^~#$!)?]*$/;
+    if (!allowedCharsRegex.test(p)) return false;
+    return true;
+  };
+
   const isCriteriaMet = passwordValidCriteria(form.password);
 
   useEffect(() => {
@@ -462,8 +480,24 @@ export default function CustomerSignup(): JSX.Element {
     }
 
     if (name === "password") {
-      if (value && !passwordValidCriteria(value)) fieldError = "Password criteria not fulfilled yet";
-      else if (value && containsNamePart(value)) fieldError = "First name or Middle name or Last name cannot be used in password setting";
+      if (value && !passwordValidCriteria(value)) {
+        // Provide specific error message based on what's missing
+        if (value.length < 8 || value.length > 15) {
+          fieldError = "Password must be between 8-15 characters";
+        } else if (!/[A-Z]/.test(value)) {
+          fieldError = "Password must have at least 1 capital letter";
+        } else if (!/[a-z]/.test(value)) {
+          fieldError = "Password must have at least 1 small letter";
+        } else if (!/[0-9]/.test(value)) {
+          fieldError = "Password must have at least 1 number";
+        } else if (!/[@&:|.^~#$!)?]/.test(value)) {
+          fieldError = "Password must have at least 1 special character from: @ & : | . ^ ~ # $ ! ) ?";
+        } else {
+          fieldError = "Password contains invalid special characters. Only @ & : | . ^ ~ # $ ! ) ? are allowed.";
+        }
+      } else if (value && containsNamePart(value)) {
+        fieldError = "First name or Middle name or Last name cannot be used in password setting";
+      }
       
       if (form.confirmPassword && value !== form.confirmPassword && value !== "") {
         setErrors(prev => ({ ...prev, confirmPassword: "Passwords do not match" }));
@@ -664,7 +698,7 @@ export default function CustomerSignup(): JSX.Element {
   // Get tooltip text for phone number based on disabled state
   const getPhoneTooltipText = () => {
     if (isPhoneFromStorage) {
-      return "Enter exactly 10 digits.Phone number has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
+      return "Enter exactly 10 digits. Phone number has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
     }
     return "Enter exactly 10 digits.";
   };
@@ -675,6 +709,11 @@ export default function CustomerSignup(): JSX.Element {
       return "Enter a valid email address like name@example.com. Email has been OTP verified and cannot be edited. To change, please click Cancel and start over.";
     }
     return "Enter a valid email address like name@example.com";
+  };
+
+  // Updated tooltip text for password
+  const getPasswordTooltipText = () => {
+    return "Password must be between 8-15 characters, contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character from: @ & : | . ^ ~ # $ ! ) ?. No other special characters are allowed.";
   };
 
   return (
@@ -839,7 +878,7 @@ export default function CustomerSignup(): JSX.Element {
               <div className="mb-4">
                 <ShadLabel className="text-slate-700 flex items-center">
                   Password<span className="text-red-500 ml-1">*</span>
-                  <Tooltip text="Minimum 8 characters including at least one uppercase, lowercase, number and special character." />
+                  <Tooltip text={getPasswordTooltipText()} />
                 </ShadLabel>
                 <div className="relative mt-2">
                   <ShadInput
