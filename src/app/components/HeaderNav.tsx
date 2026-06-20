@@ -121,7 +121,7 @@ export default function HeaderNav({
     ${isScrolled ? "backdrop-blur-xl" : ""}
   `}
                 style={{
-                    background: isScrolled ? "#3FB8FF" : "transparent",
+                    background: isScrolled ? "#0E40C7" : "transparent",
                 }}
             >
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -229,7 +229,7 @@ export default function HeaderNav({
                                                     <div className="
                   w-56
                   bg-[#FFFFFF]
-                  border border-[#3FB8FF]/20
+                  border border-[#0E40C7]/20
                   shadow-[0_10px_30px_rgba(27,18,11,0.08)]
                   rounded-xl
                   p-3
@@ -246,7 +246,7 @@ export default function HeaderNav({
                         text-sm
                         text-[#1B120B]
                         transition-all duration-200
-                        hover:bg-[#3FB8FF]/10
+                        hover:bg-[#0E40C7]/10
                       "
                                                             >
                                                                 {subItem.label}
@@ -313,7 +313,7 @@ export default function HeaderNav({
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
                         className="fixed top-[70px]  z-40 md:hidden" style={{ width: "100%" }}
                     >
-                        <div className="bg-[#3FB8FF] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.25)] p-4">
+                        <div className="bg-[#0E40C7] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.25)] p-4">
 
                             {/* CLOSE */}
                             <div className="flex justify-end mb-2">

@@ -31,7 +31,7 @@ const baseStyles =
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "bg-[#3FB8FF] text-white hover:shadow-lg hover:-translate-y-[1px] hover:shadow-[#3FB8FF]/30 focus:ring-[#3FB8FF]/40",
+    "bg-[#0E40C7] text-white hover:shadow-lg hover:-translate-y-[1px] hover:shadow-[#0E40C7]/30 focus:ring-[#0E40C7]/40",
   secondary:
     "bg-[#FBAB18] text-white hover:shadow-lg hover:-translate-y-[1px] hover:shadow-[#FBAB18]/30 focus:ring-[#FBAB18]/40",
   destructive:

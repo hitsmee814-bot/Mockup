@@ -39,9 +39,9 @@ export default function PremiumFooter() {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null)
 
   return (
-    <footer className="relative bg-gradient-to-br from-[#071A2F] via-[#0A2540] to-[#0E2F56] text-white overflow-hidden border-t border-[#3FB8FF]/20">
+    <footer className="relative bg-gradient-to-br from-[#071A2F] via-[#0A2540] to-[#0E2F56] text-white overflow-hidden border-t border-[#479EA8]/20">
 
-      <div className="absolute inset-0 opacity-20 bg-gradient-to-tr from-[#1DA1F2] via-[#3FB8FF]/30 to-[#00C6FF] blur-3xl"></div>
+      <div className="absolute inset-0 opacity-20 bg-gradient-to-tr from-[#1DA1F2] via-[#479EA8]/30 to-[#00C6FF] blur-3xl"></div>
 
       <motion.div
         variants={container}
@@ -72,11 +72,11 @@ export default function PremiumFooter() {
                 key={i}
                 whileHover={{ scale: 1.15, y: -3 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="group p-2 bg-[#0E2F56] rounded-full border border-[#3FB8FF]/40 hover:border-[#FBAB18] hover:shadow-[0_0_20px_#FBAB18] transition-all duration-300"
+                className="group p-2 bg-[#0E2F56] rounded-full border border-[#479EA8]/40 hover:border-[#FBAB18] hover:shadow-[0_0_20px_#FBAB18] transition-all duration-300"
               >
                 <Icon
                   size={18}
-                  className="text-[#3FB8FF] group-hover:text-[#FBAB18] transition-colors duration-300"
+                  className="text-[#479EA8] group-hover:text-[#FBAB18] transition-colors duration-300"
                 />
               </motion.div>
             ))}
@@ -167,21 +167,21 @@ export default function PremiumFooter() {
 
           <div className="space-y-4 text-white/70 text-sm">
             <div className="flex items-center gap-3 group">
-              <MapPin size={16} className="text-[#3FB8FF] group-hover:text-[#FBAB18] transition-colors duration-300" />
+              <MapPin size={16} className="text-[#479EA8] group-hover:text-[#FBAB18] transition-colors duration-300" />
               <span className="group-hover:text-white transition-colors duration-300">
                 Kolkata, India
               </span>
             </div>
 
             <div className="flex items-center gap-3 group">
-              <Phone size={16} className="text-[#3FB8FF] group-hover:text-[#FBAB18] transition-colors duration-300" />
+              <Phone size={16} className="text-[#479EA8] group-hover:text-[#FBAB18] transition-colors duration-300" />
               <span className="group-hover:text-white transition-colors duration-300">
                 +91 9330868500
               </span>
             </div>
 
             <div className="flex items-center gap-3 group">
-              <Mail size={16} className="text-[#3FB8FF] group-hover:text-[#FBAB18] transition-colors duration-300" />
+              <Mail size={16} className="text-[#479EA8] group-hover:text-[#FBAB18] transition-colors duration-300" />
               <span className="group-hover:text-white transition-colors duration-300">
                 bookings@bonhomiee.com
               </span>
@@ -190,7 +190,7 @@ export default function PremiumFooter() {
         </motion.div>
       </motion.div>
 
-      <div className="relative border-t border-[#3FB8FF]/40 shadow-[0_-5px_30px_rgba(63,184,255,0.2)] text-center py-6 text-sm text-white/50">
+      <div className="relative border-t border-[#479EA8]/40 shadow-[0_-5px_30px_rgba(63,184,255,0.2)] text-center py-6 text-sm text-white/50">
         © {new Date().getFullYear()} Bonhomiee Travels. All rights reserved.
       </div>
     </footer>

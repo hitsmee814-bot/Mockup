@@ -86,7 +86,7 @@ export default function VideoMain() {
                                     duration: 0.8,
                                     ease: [0.16, 1, 0.3, 1],
                                 }}
-                                className="absolute text-4xl sm:text-5xl md:text-7xl font-bold text-[#3FB8FF]"
+                                className="absolute text-4xl sm:text-5xl md:text-7xl font-bold text-[#479EA8]"
                             >
                                 {words[index]}
                             </motion.span>
@@ -116,11 +116,11 @@ export default function VideoMain() {
         inline-flex items-center gap-3
         px-8 py-4
         rounded-full
-        bg-[#3FB8FF] text-white
+        bg-[#0E40C7] text-white
         font-semibold
         shadow-lg
         transition-all duration-300
-        hover:bg-[#3FB8FF]
+        hover:bg-[#0E40C7]
         hover:shadow-xl
         hover:-translate-y-0.5
         active:translate-y-0 active:shadow-md
@@ -153,7 +153,7 @@ export default function VideoMain() {
                             repeat: Infinity,
                             ease: "easeInOut",
                         }}
-                        className="group-hover:text-[#3FB8FF] transition-colors"
+                        className="group-hover:text-[#0E40C7] transition-colors"
                     >
                         <ChevronDown size={28} strokeWidth={1.5} />
                     </motion.div>
