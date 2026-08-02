@@ -35,7 +35,7 @@
     ".next/types/**/*.ts",
     "src/app/signup/agent/page.tsx",
     "src/app/components/signup/AgentSignup.tsx"
-  ],
+, "src/app/components/Supplier/SupplierDashboard"  ],
   "exclude": [
     "node_modules"
   ]
