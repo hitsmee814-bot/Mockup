@@ -63,9 +63,9 @@ export function SupplierBidSuccessRate() {
           return
         }
 
-        const formattedData: ChartData[] = res.data.map((item: any) => ({
+      const formattedData: ChartData[] = res.data.map((item: any) => ({
         label: item.label,
-        value: Number(item.round ?? 0),
+        value: Number(item.value ?? 0),
       }))
 
       setData(formattedData)

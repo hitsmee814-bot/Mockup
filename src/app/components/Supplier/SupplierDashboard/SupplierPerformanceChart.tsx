@@ -186,14 +186,13 @@ export function SupplierPerformanceChart() {
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(value, name) => {
-                    if (name === "revenue") {
-                      const num = Number(value ?? 0)
-                      return [`₹${(num / 1000).toFixed(0)}k`, "Revenue"]
-                    }
+                 formatter={(value, name, item) => {
+                  if (item.dataKey === "revenue") {
+                    return [`₹${Number(value).toLocaleString("en-IN")}`, "Revenue"];
+                  }
 
-                    return [value ?? 0, "Orders"]
-                  }}
+                  return [value, "Orders"];
+                }}
                 />
                 <Legend />
 

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ErrorMessage } from "../../signup/supplier/SupplierUtils"
 import {
   Dialog,
   DialogContent,
@@ -32,8 +33,7 @@ const inputClass =
   "h-12 bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
 
 const textareaClass =
-  "bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] resize-none"
-
+  "min-h-[220px] max-h-[220px] overflow-y-auto bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] resize-none"
   
 export function RaiseEnquiry() {
    const router = useRouter()
@@ -44,19 +44,46 @@ export function RaiseEnquiry() {
   const [loading, setLoading] = useState(false)
   const [serviceTypes, setServiceTypes] = useState<any[]>([])
 const [serviceTypeLoading, setServiceTypeLoading] = useState(false)
+const [showSuccessAlert, setShowSuccessAlert] = useState(false)
+const [submittedEnquiryNo, setSubmittedEnquiryNo] = useState("")
+const [subjectError, setSubjectError] = useState("")
+const [serviceTypeError, setServiceTypeError] = useState("")
+const [detailsError, setDetailsError] = useState("")
+useEffect(() => {
+  if (open) {
+    setSubject("")
+    setServiceType("")
+    setDetails("")
+  }
+}, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
 
   if (loading) return
 
-  if (!subject.trim() || !serviceType || !details.trim()) {
-    toast.error("Please fill all required fields", {
-     position: "top-right",
-     duration: 3000,
-})
-    return
-  }
+let hasError = false
+
+setSubjectError("")
+setServiceTypeError("")
+setDetailsError("")
+
+if (!subject.trim()) {
+  setSubjectError("Subject is required")
+  hasError = true
+}
+
+if (!serviceType) {
+  setServiceTypeError("Service type is required")
+  hasError = true
+}
+
+if (!details.trim()) {
+  setDetailsError("Message is required")
+  hasError = true
+}
+
+if (hasError) return
 
   try {
     setLoading(true)
@@ -92,18 +119,14 @@ const supplierId = Number(localStorage.getItem("userId"));
       token,
       payload
     )
-
+    setSubmittedEnquiryNo(response?.enquiry_no || "")
     console.log("Create enquiry response:", response)
-
-   toast.success("Enquiry raised successfully!", {
-  position: "top-right",
-  duration: 3000,
-})
+     setShowSuccessAlert(true)
 
     setSubject("")
     setServiceType("")
     setDetails("")
-    setOpen(false)
+    
   } catch (error: any) {
     console.error("Failed to create enquiry:", error)
     toast.error(
@@ -119,12 +142,8 @@ const supplierId = Number(localStorage.getItem("userId"));
 }
 
   const handleCancel = () => {
-    setSubject("")
-    setServiceType("")
-    setDetails("")
-    setOpen(false)
-  }
-
+  setOpen(false)
+}
   useEffect(() => {
   fetchServiceTypes()
 }, [])
@@ -187,6 +206,36 @@ const fetchServiceTypes = async () => {
           onSubmit={handleSubmit}
           className="h-full min-h-0 flex flex-col"
         >
+          {showSuccessAlert && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-[90%] max-w-sm rounded-lg bg-white p-6 shadow-xl">
+              <h3 className="text-lg font-semibold text-center text-green-600">
+                Success
+              </h3>
+
+              <p className="mt-3 text-sm text-center text-slate-600">
+              Enquiry submitted successfully
+            </p>
+
+            {submittedEnquiryNo && (
+              <p className="mt-2 text-sm font-semibold text-center text-[#00AFEF]">
+                Enquiry No: {submittedEnquiryNo}
+              </p>
+            )}
+
+              <Button
+                type="button"
+                className="mt-5 w-full bg-[#00AFEF] hover:bg-[#0098d6]"
+                onClick={() => {
+                  setShowSuccessAlert(false)
+                  setOpen(false)
+                }}
+              >
+                OK
+              </Button>
+            </div>
+          </div>
+        )}
           <div className="shrink-0 bg-white px-5 pt-5 pb-3 border-b border-slate-200">
             <DialogHeader>
               <DialogTitle className="text-base font-semibold text-center text-[#00AFEF]">
@@ -215,16 +264,24 @@ const fetchServiceTypes = async () => {
                     <Input
                       id="subject"
                       value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
+                     onChange={(e) => {
+                        setSubject(e.target.value)
+                        setSubjectError("")
+                      }}
                       placeholder="Enter subject"
                       className={inputClass}
-                      required
+                      
                     />
+                 <ErrorMessage message={subjectError} />
                   </div>
 
                   <div className="flex flex-col gap-1">
                     <Label className={labelClass}>Service Type</Label>
-                    <Select value={serviceType} onValueChange={setServiceType}>
+                    <Select value={serviceType} 
+                    onValueChange={(value) => {
+                      setServiceType(value)
+                      setServiceTypeError("")
+                    }}>
                       <SelectTrigger className={inputClass}>
                         <SelectValue placeholder="Select service type" />
                       </SelectTrigger>
@@ -253,6 +310,7 @@ const fetchServiceTypes = async () => {
                       )}
                     </SelectContent>
                     </Select>
+               <ErrorMessage message={serviceTypeError} />
                   </div>
 
                   <div className="flex flex-col gap-1">
@@ -262,12 +320,16 @@ const fetchServiceTypes = async () => {
                     <Textarea
                       id="details"
                       value={details}
-                      onChange={(e) => setDetails(e.target.value)}
+                      onChange={(e) => {
+                        setDetails(e.target.value)
+                        setDetailsError("")
+                      }}
                       placeholder="Enter enquiry details..."
-                      rows={6}
+                      rows={10}
                       className={textareaClass}
-                      required
+                      
                     />
+                    <ErrorMessage message={detailsError} />
                   </div>
                 </div>
               </div>
