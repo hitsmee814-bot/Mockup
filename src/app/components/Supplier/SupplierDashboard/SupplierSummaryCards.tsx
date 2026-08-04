@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { useRouter } from 'next/navigation'
 import { toast } from "sonner"
@@ -185,83 +184,68 @@ export function SupplierSummaryCards() {
         </div>
       )}
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4"
-      >
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 items-stretch">
         {cards.map((c) => (
-          <motion.div
-            key={c.title}
-            variants={item}
-            whileHover={{
-              y: -4,
-              transition: { type: "spring", stiffness: 400, damping: 15 },
-            }}
+        <div key={c.title} className="h-full">
+           <Card
+            className={`relative h-full overflow-hidden py-4 gap-3 border-0 shadow-sm bg-gradient-to-br ${c.gradient}`}
           >
-            <Card
-              className={`relative overflow-hidden py-4 gap-3 border-0 shadow-sm hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br ${c.gradient}`}
-            >
               <div className="absolute inset-0 border rounded-xl border-border/50" />
-
-              <CardContent className="relative flex items-start justify-between">
-                <div className="space-y-1.5">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
-                    {c.title}
-                  </p>
-
-                  <motion.p
-                    className="text-2xl sm:text-3xl font-bold tracking-tight"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                      delay: 0.3,
-                    }}
-                  >
-                    {c.value}
-                  </motion.p>
-
-                  <div className="flex items-center gap-1 text-xs">
-                    {c.changeType === "up" && (
-                      <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                    )}
-                    {c.changeType === "down" && (
-                      <ArrowDownRight className="h-3 w-3 text-red-500" />
-                    )}
-                    {c.changeType === "neutral" && (
-                      <Minus className="h-3 w-3 text-muted-foreground" />
-                    )}
-
-                    <span
-                      className={
-                        c.changeType === "up"
-                          ? "text-emerald-500 font-semibold"
-                          : c.changeType === "down"
-                          ? "text-red-500 font-semibold"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      {c.change}
-                    </span>
-                  </div>
-                </div>
-
-                <motion.div
-                  className={`${c.bg} ${c.color} p-2.5 sm:p-3 rounded-xl`}
-                  whileHover={{ rotate: 12, scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+               <div
+                   className={`absolute top-4 right-4 ${c.bg} ${c.color} p-1.5 rounded-xl`}
                 >
-                  <c.icon className="h-5 w-5" />
-                </motion.div>
+                <c.icon className="h-4 w-4" />
+              </div>
+             <CardContent className="relative">
+                <div className="flex flex-col h-full pr-12">
+  {/* Title */}
+  <div className="min-h-[40px]">
+    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium leading-6">
+      {c.title}
+    </p>
+  </div>
+
+  {/* Value */}
+  <div className="min-h-[48px] flex items-center">
+    <p className="text-2xl sm:text-3xl font-bold tracking-tight">
+      {c.value}
+    </p>
+  </div>
+
+  {/* Footer */}
+  <div className="mt-auto flex items-center gap-1 text-xs">
+    {c.changeType === "up" && (
+      <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+    )}
+
+    {c.changeType === "down" && (
+      <ArrowDownRight className="h-3 w-3 text-red-500" />
+    )}
+
+    {c.changeType === "neutral" && (
+      <Minus className="h-3 w-3 text-muted-foreground" />
+    )}
+
+    <span
+      className={`${
+        c.changeType === "up"
+          ? "text-emerald-500 font-semibold"
+          : c.changeType === "down"
+          ? "text-red-500 font-semibold"
+          : "text-muted-foreground"
+      } whitespace-nowrap`}
+    >
+      {c.change}
+    </span>
+  </div>
+</div>
+
+               
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </div>
   )
 }

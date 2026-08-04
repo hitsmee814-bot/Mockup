@@ -5,18 +5,13 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarGroup,
-    SidebarGroupLabel,
     SidebarGroupContent,
     SidebarMenu,
     SidebarMenuItem,
     SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
-import {
-    Popover,
-    PopoverTrigger,
-    PopoverContent,
-} from "@/components/ui/popover"
+
 
 import { useSidebar } from "@/components/ui/sidebar"
 import { useRouter, usePathname } from "next/navigation"
@@ -30,13 +25,12 @@ import {
     Car,
     Sparkles,
     LogOut,
-    ChevronDown,
     User,
     BriefcaseBusiness,
     Gavel,
     FileText,
-    CreditCard,
-    Compass
+    CreditCard
+    
 } from "lucide-react"
 
 import { useAuth } from "@/app/context/AuthContext"
@@ -54,11 +48,10 @@ import {
     AlertDialogAction,
 } from "@/components/ui/alert-dialog"
 
-import { motion, AnimatePresence } from "framer-motion"
+
 const navigation = [
     {
         label: "",
-        icon: Compass,
         requiresSupplier: true,
         items: [
             { title: "Dashboard", href: "/Supplier/SupplierDashboard", icon: LayoutDashboard },
@@ -82,7 +75,7 @@ export function SupplierSidebar() {
     const [openDialog, setOpenDialog] = useState(false)
     const [isSupplier, setIsSupplier] = useState(false)
 
-    const [openGroups, setOpenGroups] = useState<string[]>([])
+   
 
     useEffect(() => {
         const loggedInType = localStorage.getItem("loggedInType")
@@ -94,23 +87,8 @@ export function SupplierSidebar() {
         }
     }, [])
 
-    useEffect(() => {
-        const activeGroup = navigation.find(group =>
-            group.items.some(item => pathname.startsWith(item.href))
-        )
 
-        if (activeGroup && !openGroups.includes(activeGroup.label)) {
-            setOpenGroups(prev => [...prev, activeGroup.label])
-        }
-    }, [pathname])
-
-    const toggleGroup = (label: string) => {
-        setOpenGroups(prev =>
-            prev.includes(label)
-                ? prev.filter(l => l !== label)
-                : [...prev, label]
-        )
-    }
+   
 
     const isProfileActive = pathname.startsWith("/itinerary/profile")
 
@@ -139,84 +117,19 @@ export function SupplierSidebar() {
                 <SidebarContent className="flex-1 overflow-x-hidden">
 
                     {filteredNavigation.map((group) => {
-                        const GroupIcon = group.icon
-                        const isOpen = openGroups.includes(group.label)
+                        
+                        
 
                         return (
                             <SidebarGroup key={group.label}>
 
-                                {/* COLLAPSED MODE */}
-                                <div className="hidden group-data-[collapsible=icon]:block">
-                                    <SidebarMenu>
-                                        <SidebarMenuItem>
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <button className="flex justify-center p-2 w-full">
-                                                        <GroupIcon className="h-5 w-5 text-[#3FB8FF]" />
-                                                    </button>
-                                                </PopoverTrigger>
+                      
 
-                                                <PopoverContent side="right" align="start" className="w-48 p-2">
-                                                    <div className="space-y-1">
-                                                        {group.items.map((item) => {
-                                                            const Icon = item.icon
-                                                            const isActive = pathname.startsWith(item.href)
-
-                                                            return (
-                                                                <button
-                                                                    key={item.title}
-                                                                    onClick={() => router.push(item.href)}
-                                                                    className={`
-                                    flex items-center gap-2 w-full p-2 rounded-md text-sm
-                                    ${isActive
-                                                                            ? "text-[#FBAB18]"
-                                                                            : "hover:bg-[#3FB8FF15]"
-                                                                        }
-                                  `}
-                                                                >
-                                                                    <Icon className="h-4 w-4" />
-                                                                    {item.title}
-                                                                </button>
-                                                            )
-                                                        })}
-                                                    </div>
-                                                </PopoverContent>
-                                            </Popover>
-                                        </SidebarMenuItem>
-                                    </SidebarMenu>
-                                </div>
-
-                                {/* EXPANDED HEADER */}
-                                <div className="group-data-[collapsible=icon]:hidden">
-                                    <SidebarGroupLabel
-                                        onClick={() => toggleGroup(group.label)}
-                                        className="flex items-center justify-between cursor-pointer px-2 py-2"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <GroupIcon className="h-5 w-5 text-[#3FB8FF]" />
-                                            <span className="text-sm font-medium text-[#3FB8FF]">
-                                                {group.label}
-                                            </span>
-                                        </div>
-
-                                        <ChevronDown
-                                            className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""
-                                                }`}
-                                        />
-                                    </SidebarGroupLabel>
-                                </div>
-
+                                
                                 {/* SUBMENU (FULL WIDTH KEPT) */}
-                                <AnimatePresence initial={false}>
-                                    {isOpen && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: "auto", opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.25 }}
-                                        >
+                               
                                             <SidebarGroupContent>
-                                                <SidebarMenu className="pl-6 ml-3 border-l border-[#3FB8FF20]">
+                                                <SidebarMenu className="px-2 space-y-1">
 
                                                     {group.items.map((item) => {
                                                         const Icon = item.icon
@@ -228,7 +141,7 @@ export function SupplierSidebar() {
                                                                     <button
                                                                         onClick={() => {
                                                                             router.push(item.href)
-                                                                            if (state === "expanded") toggleSidebar()
+                                                                           
                                                                         }}
                                                                         className={`
                                       flex items-center gap-3 p-2 rounded-md w-full
@@ -251,10 +164,7 @@ export function SupplierSidebar() {
 
                                                 </SidebarMenu>
                                             </SidebarGroupContent>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-
+                                      
                             </SidebarGroup>
                         )
                     })}

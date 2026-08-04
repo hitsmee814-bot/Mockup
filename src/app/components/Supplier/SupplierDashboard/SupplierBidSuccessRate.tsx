@@ -93,17 +93,14 @@ export function SupplierBidSuccessRate() {
       viewport={{ once: true, margin: "-50px" }}
       transition={{ type: "spring", stiffness: 200, damping: 24 }}
     >
-      <Card className="h-full">
-        <CardHeader className="flex-row items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/10">
-            <Target className="h-4 w-4 text-primary" />
-          </div>
-          <CardTitle className="text-base sm:text-lg">
-            Bid Success Rate
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent>
+      <Card className="h-full overflow-hidden">
+        <CardHeader className="flex items-center gap-3 px-6 pt-3 pb-4 border-b -mt-3">
+        <Target className="h-5 w-5 text-primary" />
+        <CardTitle className="text-2xl font-bold">
+          Bid Success Rate
+        </CardTitle>
+      </CardHeader>
+        <CardContent className="pt-2">
           {loading && (
             <p className="text-sm text-muted-foreground">
               Loading bid success rate...
