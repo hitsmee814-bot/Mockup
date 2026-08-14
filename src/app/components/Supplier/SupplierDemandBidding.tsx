@@ -1,6 +1,4 @@
 "use client"
-
-import { useState } from "react"
 import { motion } from "framer-motion"
 import {
   MapPin,
@@ -10,12 +8,13 @@ import {
   Hash,
   Gavel,
 } from "lucide-react"
-
+import DemandDetailsDialog from "./DemandDetailsDialog";
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { CalendarDays, Clock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,72 +23,44 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useEffect, useState } from "react";
+import {
+  supplierServiceRequestService,
+  type ServiceRequestListItem,
+} from "@/services/SupplierPortalServices/SupplierServiceRequestService";
 
-type DemandStatus = "Active" | "Won" | "Outbid"
+type DemandStatus =
+  | "OPEN"
+  | "IN_BIDDING"
+  | "AWARDED"
+  | "CANCELLED"
+  | "CLOSED"
 
-type DemandRequest = {
-  id: string
-  destination: string
-  travelDates: string
-  pax: number
-  services: string[]
-  lowestBid: number
-  totalBidders: number
-  myBid?: number
-  myRank?: number
-  status: DemandStatus
-}
 
-const mockDemands: DemandRequest[] = [
-  {
-    id: "D-001",
-    destination: "Bali, Indonesia",
-    travelDates: "May 15 – May 21, 2025",
-    pax: 4,
-    services: ["Package", "Transfer"],
-    lowestBid: 820,
-    totalBidders: 7,
-    myBid: 850,
-    myRank: 2,
-    status: "Active",
-  },
-  {
-    id: "D-002",
-    destination: "Dubai, UAE",
-    travelDates: "Jun 1 – Jun 5, 2025",
-    pax: 2,
-    services: ["Sightseeing", "Transfer", "Visa"],
-    lowestBid: 340,
-    totalBidders: 12,
-    status: "Active",
-  },
-  {
-  id: "D-003",
-  destination: "Bangkok, Thailand",
-  travelDates: "Jul 10 – Jul 16, 2025",
-  pax: 6,
-  services: ["Package", "Insurance"],
-  lowestBid: 1050,
-  totalBidders: 5,
-  myBid: 1050,
-  myRank: 1,
-  status: "Won",
-},
-  {
-    id: "D-004",
-    destination: "Singapore",
-    travelDates: "Aug 5 – Aug 9, 2025",
-    pax: 3,
-    services: ["Transfer", "Sightseeing"],
-    lowestBid: 280,
-    totalBidders: 9,
-    myBid: 310,
-    myRank: 4,
-    status: "Outbid",
-  },
-]
+type BidStatus =
+  | "ACTIVE"
+  | "OUTBID"
+  | "WON"
+  | "LOST"
+  | "WITHDRAWN"
 
-/* 🎨 Service badge colors (same as your service page) */
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+const formatDateTime = (date: string) =>
+  new Date(date).toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+/* Service badge colors (same as your service page) */
 const serviceStyles: Record<string, string> = {
   Package: "bg-emerald-100 text-emerald-700",
   Transfer: "bg-violet-100 text-violet-700",
@@ -98,41 +69,52 @@ const serviceStyles: Record<string, string> = {
   Insurance: "bg-pink-100 text-pink-700",
 }
 
-/* 🎨 Status badge colors */
+/* Status badge colors */
 const statusStyles: Record<DemandStatus, string> = {
-  Active: "bg-blue-100 text-blue-700",
-  Won: "bg-emerald-100 text-emerald-700",
-  Outbid: "bg-red-100 text-red-700",
+  OPEN: "bg-blue-100 text-blue-700",
+  IN_BIDDING: "bg-amber-100 text-amber-700",
+  AWARDED: "bg-emerald-100 text-emerald-700",
+  CLOSED: "bg-gray-100 text-gray-700",
+  CANCELLED: "bg-red-100 text-red-700",
 }
 
 export default function SupplierDemandBidding() {
-  const [demands, setDemands] = useState(mockDemands)
-  const [activeTab, setActiveTab] = useState("all")
-  const [dialogId, setDialogId] = useState<string | null>(null)
 
-  const filtered =
-    activeTab === "all"
-      ? demands
-      : demands.filter((d) => d.status.toLowerCase() === activeTab)
+const [demands, setDemands] = useState<ServiceRequestListItem[]>([]);
+const [loading, setLoading] = useState(false);
 
-  const handleBid = (id: string, amount: number) => {
-  setDemands((prev) =>
-    prev.map((d) => {
-      if (d.id !== id) return d
+  const [selectedDemand, setSelectedDemand] =
+  useState<ServiceRequestListItem | null>(null);
 
-      const isWinningBid = amount <= d.lowestBid
+const [detailsOpen, setDetailsOpen] =
+  useState(false);
 
-      return {
-        ...d,
-        myBid: amount,
-        lowestBid: isWinningBid ? amount : d.lowestBid,
-        myRank: isWinningBid ? 1 : 2,
-        status: isWinningBid ? "Won" : "Outbid",
-      }
-    })
-  )
-  setDialogId(null)
-}
+ const [dialogId, setDialogId] =
+    useState<number | null>(null);
+
+ useEffect(() => {
+  loadDemands();
+}, []);
+
+const loadDemands = async () => {
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("access_token") || "";
+    const response =
+      await supplierServiceRequestService.getAssignedServiceRequests({
+        token,
+        page: 1,
+        size: 20,
+      });
+
+    setDemands(response);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="space-y-6">
@@ -147,19 +129,22 @@ export default function SupplierDemandBidding() {
         </p>
       </motion.div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-muted/60 p-1 rounded-xl">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="won">Won</TabsTrigger>
-          <TabsTrigger value="outbid">Outbid</TabsTrigger>
-        </TabsList>
-      </Tabs>
+     {loading && (
+      <div className="text-center py-8 text-muted-foreground">
+        Loading demand requests...
+      </div>
+    )}
+      
 
       {/* Demand Cards */}
       <div className="grid gap-4">
-        {filtered.map((d, i) => (
+        {demands
+        .filter(
+          d =>
+            d.status === "OPEN" ||
+            d.status === "IN_BIDDING"
+        )
+        .map((d, i) => (
           <motion.div
             key={d.id}
             initial={{ opacity: 0, y: 20 }}
@@ -172,74 +157,99 @@ export default function SupplierDemandBidding() {
                 <div className="space-y-3 flex-1">
                   <div className="flex gap-2 items-center">
                     <span className="text-xs text-muted-foreground">
-                      {d.id}
+                      {d.demand_request_no}
                     </span>
 
-                    <Badge
-                      className={`text-xs px-2 py-0.5 ${statusStyles[d.status]}`}
-                    >
-                      {d.status}
-                    </Badge>
+                   <Badge
+                  className={`text-xs px-2 py-0.5 ${
+                    statusStyles[d.status as keyof typeof statusStyles]
+                  }`}
+                >
+                  {d.status
+                    .replaceAll("_", " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, c => c.toUpperCase())}
+                </Badge>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary" />
                     <span className="font-semibold">{d.destination}</span>
+                    
                   </div>
 
-                  <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {d.travelDates}
-                    </span>
+                    <div className="space-y-1 text-sm text-gray-600">
+
+          <span className="flex items-center gap-2">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>
+              <span className="font-medium text-gray-700">Travel Date:</span>{" "}
+              {formatDate(d.travel_date)}
+            </span>
+          </span>
+
+            <span className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5" />
+              <span>
+                <span className="font-medium text-gray-700">Bid Closes On:</span>{" "}
+                {formatDateTime(d.bid_close_at)}
+              </span>
+            </span>
+
+              <span className="flex items-center gap-2">
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span>
+                  <span className="font-medium text-gray-700">Assigned On:</span>{" "}
+                  {formatDateTime(d.assigned_at)}
+                </span>
+              </span>
+
+
                     <span className="flex items-center gap-1">
                       <Users className="h-3.5 w-3.5" />
                       {d.pax} pax
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Hash className="h-3.5 w-3.5" />
-                      {d.totalBidders} bidders
-                    </span>
+                    
                   </div>
 
                   {/* Service badges */}
-                  <div className="flex flex-wrap gap-2">
-                    {d.services.map((s) => (
-                      <Badge
-                        key={s}
-                        className={`text-xs px-2 py-0.5 ${
-                          serviceStyles[s] || "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {s}
-                      </Badge>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-2">
+           <div className="flex items-center gap-3 mt-3">
+              <Badge
+                className={`text-xs px-2 py-0.5 ${
+                  serviceStyles[d.service_type] ??
+                  "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {d.service_type
+                  .replaceAll("_", " ")
+                  .toLowerCase()
+                  .replace(/\b\w/g, c => c.toUpperCase())}
+              </Badge>
+
+              <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-[#00AFEF]"
+              onClick={() => {
+                setSelectedDemand(d);
+                setDetailsOpen(true);
+              }}
+            >
+              View Details
+            </Button>
+            </div>
+              </div>
                 </div>
 
                 {/* Right */}
                 <div className="flex flex-col items-end gap-2 min-w-[180px]">
                   <div>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 justify-end">
-                      <TrendingDown className="h-3 w-3" />
-                      Lowest bid
-                    </p>
-                    <p className="text-lg font-bold">${d.lowestBid}</p>
+                  
+                    
                   </div>
 
-                  {d.myBid && (
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">
-                        Your bid
-                      </p>
-                      <p className="font-semibold">
-                        ${d.myBid}{" "}
-                        <span className="text-xs text-muted-foreground">
-                          (Rank #{d.myRank})
-                        </span>
-                      </p>
-                    </div>
-                  )}
+               
 
                   {/* Dialog */}
                   <Dialog
@@ -251,7 +261,7 @@ export default function SupplierDemandBidding() {
                     <DialogTrigger asChild>
                       <Button size="sm">
                         <Gavel className="h-4 w-4 mr-1" />
-                        {d.myBid ? "Update Bid" : "Place Bid"}
+                        Place Bid
                       </Button>
                     </DialogTrigger>
 
@@ -266,7 +276,7 @@ export default function SupplierDemandBidding() {
                         onSubmit={(e) => {
                           e.preventDefault()
                           const fd = new FormData(e.currentTarget)
-                          handleBid(d.id, Number(fd.get("amount")))
+                         
                         }}
                         className="space-y-4"
                       >
@@ -275,12 +285,10 @@ export default function SupplierDemandBidding() {
                           <Input
                             name="amount"
                             type="number"
-                            defaultValue={d.myBid || ""}
+                            defaultValue=""
                             required
                           />
-                          <p className="text-xs text-muted-foreground">
-                            Current lowest: ${d.lowestBid}
-                          </p>
+                          
                         </div>
 
                         <div className="flex justify-end">
@@ -295,6 +303,11 @@ export default function SupplierDemandBidding() {
           </motion.div>
         ))}
       </div>
+      <DemandDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        demand={selectedDemand}
+      />
     </div>
   )
 }

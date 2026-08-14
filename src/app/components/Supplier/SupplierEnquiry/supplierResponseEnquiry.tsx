@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { supplierAddFollowupService } from "@/services/SupplierPortalServices/SupplierAddFollowup"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input"
 import { useRouter } from 'next/navigation'
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ErrorMessage } from "../../signup/supplier/SupplierUtils"
+import {
+  SupplierEnquiryFollowups,
+  type SupplierEnquiryFollowupItem,
+} from "@/services/SupplierPortalServices/SupplierEnquiryFollowups"
 import {
   Dialog,
   DialogContent,
@@ -37,22 +42,20 @@ export function SupplierResponseEnquiry({
   apiStatusToUiStatus,
   
 }: SupplierResponseEnquiryProps) {
-  if (!enquiry) return null
+  
 
-  const details = (() => {
-    try {
-      return JSON.parse(enquiry.details || "{}")
-    } catch {
-      return {}
-    }
-  })()
+ 
     const [message, setMessage] = useState("")
+    const [messageError, setMessageError] = useState("")
+     const [nextFollowupDate, setNextFollowupDate] = useState("")
+      const [loading, setLoading] = useState(false)
+      const [followups, setFollowups] = useState<SupplierEnquiryFollowupItem[]>([])
+    const [loadingFollowups, setLoadingFollowups] = useState(false)
+    const [showSuccessAlert, setShowSuccessAlert] = useState(false)
     const router = useRouter()
- // const [nextFollowupDate, setNextFollowupDate] = useState("")
-  const [loading, setLoading] = useState(false)
-
+    
   const formatDate = (date?: string | null) => {
-    if (!date) return "-"
+   if (!date) return ""
 
     return new Date(date).toLocaleDateString("en-IN", {
       day: "2-digit",
@@ -60,10 +63,57 @@ export function SupplierResponseEnquiry({
       year: "numeric",
     })
   }
+
+  useEffect(() => {
+  const fetchFollowups = async () => {
+    if (!open || !enquiry?.id) return
+
+   
+
+    try {
+      setLoadingFollowups(true)
+
+      const token = localStorage.getItem("access_token")
+
+      if (!token) {
+        return
+      }
+
+      const response = await SupplierEnquiryFollowups.getFollowups(
+        enquiry.id,
+        token
+      )
+
+      setFollowups(Array.isArray(response) ? response : [])
+    } catch (error) {
+      console.error("Failed to load follow-up history:", error)
+      setFollowups([])
+    } finally {
+      setLoadingFollowups(false)
+    }
+  }
+
+  fetchFollowups()
+}, [open, enquiry?.id])
+
+if (!enquiry) return null
+     const details = (() => {
+    try {
+      return JSON.parse(enquiry.details || "{}")
+    } catch {
+      return {}
+    }
+  })()
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
 
   if (loading) return
+  setMessageError("")
+
+if (!message.trim()) {
+  setMessageError("Followup message is required")
+  return
+}
 
   try {
     setLoading(true)
@@ -101,14 +151,18 @@ const handleSubmit = async (e: React.FormEvent) => {
       token,
       payload
     )
+    
 
-    toast.success("Follow-up submitted successfully!", {
-    position: "top-right",
-    duration: 3000,
-})
+   const updatedFollowups =
+  await SupplierEnquiryFollowups.getFollowups(
+    enquiry.id,
+    token
+  )
 
-    setMessage("")
-    onOpenChange(false)
+setFollowups(Array.isArray(updatedFollowups) ? updatedFollowups : [])
+
+setMessage("")
+setShowSuccessAlert(true)
   } catch (error: any) {
     console.error("Failed to submit follow-up")
     console.error("Actual error:", error)
@@ -143,6 +197,30 @@ const handleSubmit = async (e: React.FormEvent) => {
           onSubmit={handleSubmit}
           className="h-full min-h-0 flex flex-col"
         >
+
+          {showSuccessAlert && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-[90%] max-w-sm rounded-lg bg-white p-6 shadow-xl">
+              <h3 className="text-lg font-semibold text-center text-green-600">
+                Success
+              </h3>
+
+              <p className="mt-3 text-sm text-center text-slate-600">
+                Follow-up submitted successfully!
+              </p>
+
+              <Button
+                type="button"
+                className="mt-5 w-full bg-[#00AFEF] hover:bg-[#0098d6]"
+                onClick={() => {
+                  setShowSuccessAlert(false)
+                }}
+              >
+                OK
+              </Button>
+            </div>
+          </div>
+        )}
           {/* HEADER - ALWAYS VISIBLE */}
           <div className="shrink-0 bg-white px-5 pt-5 pb-3 border-b border-slate-200">
             <DialogHeader>
@@ -186,30 +264,28 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1">
-                      <Label className={labelClass}>Status</Label>
-                      <Input
-                        value={
-                          apiStatusToUiStatus[enquiry.status] ||
-                          enquiry.status
-                        }
-                        readOnly
-                        className={inputClass}
-                      />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <Label className={labelClass}>Status</Label>
+                  <Input
+                    value={
+                      apiStatusToUiStatus[enquiry.status] ||
+                      enquiry.status
+                    }
+                    readOnly
+                    className={inputClass}
+                  />
+                </div>
 
-                    <div className="flex flex-col gap-1">
-                      <Label className={labelClass}>
-                        Current Next Follow-up
-                      </Label>
-                      <Input
-                        value={formatDate(enquiry.next_followup)}
-                        readOnly
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
+                <div className="flex flex-col gap-1">
+                  <Label className={labelClass}>Service Type</Label>
+                  <Input
+                    value={enquiry.service_type}
+                    readOnly
+                    className={inputClass}
+                  />
+                </div>
+              </div>
 
                   <div className="flex flex-col gap-1">
                     <Label className={labelClass}>Subject</Label>
@@ -220,15 +296,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <Label className={labelClass}>Service Type</Label>
-                    <Input
-                      value={enquiry.service_type}
-                      readOnly
-                      className={inputClass}
-                    />
-                  </div>
-
+                
                   <div className="rounded-lg border border-slate-200 bg-muted/20 p-3 space-y-3">
                     <div>
                       <h3 className="font-semibold text-sm text-slate-800">
@@ -255,6 +323,50 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </div>
                   </div>
 
+                  <div className="rounded-lg border border-slate-200 bg-white p-3 space-y-3">
+                <h3 className="font-semibold text-sm text-slate-800">
+                  Follow-up History
+                </h3>
+
+                {loadingFollowups && (
+                  <p className="text-xs text-muted-foreground">
+                    Loading follow-up history...
+                  </p>
+                )}
+
+                {!loadingFollowups && followups.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No follow-up history found.
+                  </p>
+                )}
+
+                {!loadingFollowups &&
+                  followups.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-md border border-slate-200 bg-muted/20 px-3 py-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold text-slate-800">
+                          {item.stage}
+                        </p>
+
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatDate(item.followup_at)}
+                        </p>
+                      </div>
+
+                      <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap">
+                        {item.note}
+                      </p>
+
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Status: {item.status}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+
                   <div className="flex flex-col gap-1">
                     <Label className={labelClass}>
                       Follow-up Message / Query
@@ -263,9 +375,25 @@ const handleSubmit = async (e: React.FormEvent) => {
                   placeholder="Type your follow-up or query here..."
                   rows={3}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                  setMessage(e.target.value)
+                  setMessageError("")
+                }}
                   className={textareaClass}
                 />
+                <ErrorMessage message={messageError} />
+                <div className="flex flex-col gap-1 mt-3">
+                <Label className={labelClass}>
+                  Next Follow-up Date
+                </Label>
+
+                  <Input
+                  type="date"
+                  value={nextFollowupDate}
+                  onChange={(e) => setNextFollowupDate(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
                   </div>
 
                   

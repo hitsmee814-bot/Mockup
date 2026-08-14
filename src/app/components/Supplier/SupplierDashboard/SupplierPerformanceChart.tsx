@@ -112,17 +112,18 @@ export function SupplierPerformanceChart() {
       viewport={{ once: true, margin: "-50px" }}
       transition={{ type: "spring", stiffness: 200, damping: 24 }}
     >
-      <Card className="h-full">
-        <CardHeader className="flex-row items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/10">
-            <BarChart3 className="h-4 w-4 text-primary" />
-          </div>
-          <CardTitle className="text-base sm:text-lg">
-            Monthly Performance
-          </CardTitle>
-        </CardHeader>
+      <Card className="overflow-hidden">
 
-        <CardContent>
+    <CardHeader className="flex items-center gap-3 px-6 pt-3 pb-4 border-b -mt-3">
+      <BarChart3 className="h-5 w-5 text-primary" />
+      <CardTitle className="text-2xl font-bold">
+        Monthly Performance
+      </CardTitle>
+    </CardHeader>
+
+
+        <CardContent className="pt-2">
+           
           {loading && (
             <p className="text-sm text-muted-foreground">
               Loading monthly performance...
@@ -186,14 +187,13 @@ export function SupplierPerformanceChart() {
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(value, name) => {
-                    if (name === "revenue") {
-                      const num = Number(value ?? 0)
-                      return [`₹${(num / 1000).toFixed(0)}k`, "Revenue"]
-                    }
+                 formatter={(value, name, item) => {
+                  if (item.dataKey === "revenue") {
+                    return [`₹${Number(value).toLocaleString("en-IN")}`, "Revenue"];
+                  }
 
-                    return [value ?? 0, "Orders"]
-                  }}
+                  return [value, "Orders"];
+                }}
                 />
                 <Legend />
 

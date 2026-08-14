@@ -1,9 +1,11 @@
-// Mockup/src/lib/apiClient.ts
+// const BASE_URL =
+//   process.env.NEXT_PUBLIC_API_BASE_URL ||
+//   "https://ascendus.bonhomiee.com";
 
-const BASE_URL =
+
+  const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://ascendus.bonhomiee.com";
-
+  "http://127.0.0.1:8000";
 type RequestMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 type ResponseType = "json" | "blob" | "text" | "raw";

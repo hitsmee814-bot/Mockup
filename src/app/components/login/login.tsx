@@ -283,6 +283,7 @@ const validatePhone = (value: string, countryCode: string) => {
             console.log("Login Response:", response);
             toast.success("Welcome Back", { position: "top-right" });
             localStorage.setItem("access_token", response.access_token)
+            console.log(localStorage.getItem("access_token"))  
             localStorage.setItem("refresh_token", response.refresh_token)
             localStorage.setItem("isLoggedIn","true")
             localStorage.setItem("username", username)

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader} from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Enquiry } from "./types"
-import { MessageSquare, Filter } from "lucide-react"
+import { Filter } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import { toast } from "sonner"
 import {
@@ -24,7 +24,7 @@ import {
   SupplierEnquiryDetailsById,
   type SupplierEnquiryDetailsByIdResponse,
 } from "@/services/SupplierPortalServices/SupplierEnquiryDetailsById"
-import { RaiseEnquiry } from "./SupplierRaiseEnquiry"
+
 
 const statusColor: Record<string, string> = {
   New: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
@@ -56,7 +56,7 @@ const uiStatusToApiStatus: Record<Enquiry["status"], string> = {
   Closed: "CLOSED",
 }
 
-const statusOrder: string[] = [
+const customerStatusOrder: string[] = [
   "NEW",
   "IN_PROGRESS",
   "FOLLOWUP",
@@ -65,9 +65,22 @@ const statusOrder: string[] = [
   "CLOSED",
 ]
 
-type FilterStatus =  Enquiry["status"]
+const supplierStatusOrder: string[] = [
+  "NEW",
+  "IN_PROGRESS",
+  "FOLLOWUP",
+  "CLOSED",
+]
 
-export function EnquiryTable() {
+type FilterStatus =  Enquiry["status"]
+type EnquiryTab = "CUS" | "SUP"
+
+type EnquiryTableProps = {
+  activeTab: "CUS" | "SUP"
+  setActiveTab: React.Dispatch<React.SetStateAction<"CUS" | "SUP">>
+}
+
+export function EnquiryTable({ activeTab, setActiveTab }: EnquiryTableProps) {
    const router = useRouter()
  const [filter, setFilter] = useState<FilterStatus>("New")
 const [filterOptions, setFilterOptions] = useState<FilterStatus[]>([])
@@ -78,10 +91,15 @@ const [loadingEnquiries, setLoadingEnquiries] = useState(false)
 const [page, setPage] = useState(1)
 const [pageSize] = useState(20)
 
+
 const [selectedEnquiry, setSelectedEnquiry] =
   useState<SupplierEnquiryDetailsByIdResponse | null>(null)
 
 const [openResponse, setOpenResponse] = useState(false) 
+useEffect(() => {
+  setFilter("New")
+  setPage(1)
+}, [activeTab])
 
 useEffect(() => {
   const fetchEnquiries = async () => {
@@ -117,7 +135,11 @@ useEffect(() => {
         ? response
         : response?.data ?? []
 
-      setEnquiries(data)
+      const filteredByTab = data.filter((item) =>
+  item.enquiry_no?.startsWith(activeTab)
+)
+
+setEnquiries(filteredByTab)
     } catch (err) {
       console.error("Enquiry list API error:", err)
     } finally {
@@ -126,7 +148,7 @@ useEffect(() => {
   }
 
   fetchEnquiries()
-}, [filter, page, pageSize])
+}, [filter, page, pageSize, activeTab])
 
   useEffect(() => {
     const fetchEnquiryCounts = async () => {
@@ -148,9 +170,12 @@ useEffect(() => {
 
         const counts: Record<string, number> = {}
         
-        const dynamicOptions: FilterStatus[] = statusOrder
-        .map((status) => apiStatusToUiStatus[status])
-        .filter((status): status is FilterStatus => Boolean(status))
+       const selectedStatusOrder =
+  activeTab === "CUS" ? customerStatusOrder : supplierStatusOrder
+
+const dynamicOptions: FilterStatus[] = selectedStatusOrder
+  .map((status) => apiStatusToUiStatus[status])
+  .filter((status): status is FilterStatus => Boolean(status))
 
         data.forEach((item) => {
           const uiStatus = apiStatusToUiStatus[item.status]
@@ -176,13 +201,11 @@ useEffect(() => {
     }
 
     fetchEnquiryCounts()
-  }, [])
+  }, [activeTab])
 
 
    
-const resultCount = loadingCounts
-  ? "..."
-  : statusCounts[filter] ?? enquiries.length
+const resultCount = loadingEnquiries ? "..." : enquiries.length
 
 
 const visibleFields: (keyof SupplierEnquiryListItem)[] = [
@@ -324,22 +347,52 @@ const handleEnquiryClick = async (enquiryId: number) => {
         <CardHeader className="space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
-              <MessageSquare className="h-4 w-4 text-primary" />
-            </div>
+            
 
-            <CardTitle className="text-base sm:text-lg">
-              Customer Enquiries
-            </CardTitle>
-
-            <Badge variant="outline" className="text-[10px]">
-              {resultCount} results
-            </Badge>
+           
           </div>
 
-          <RaiseEnquiry />
+         
         </div>
+<div className="flex items-center gap-3 border-b pb-2">
+ <button
+  type="button"
+  onClick={() => {
+    setActiveTab("CUS")
+    setFilter("New")
+    setPage(1)
+  }}
+  className={`text-base sm:text-lg font-semibold transition-colors ${
+    activeTab === "CUS"
+      ? "text-primary"
+      : "text-muted-foreground hover:text-foreground"
+  }`}
+>
+  Customer Enquiries
+</button>
 
+<span className="text-muted-foreground">|</span>
+
+<button
+  type="button"
+  onClick={() => {
+    setActiveTab("SUP")
+    setFilter("New")
+    setPage(1)
+  }}
+  className={`text-base sm:text-lg font-semibold transition-colors ${
+    activeTab === "SUP"
+      ? "text-primary"
+      : "text-muted-foreground hover:text-foreground"
+  }`}
+>
+  My Enquiries
+</button>
+
+  <Badge variant="outline" className="text-[10px] ml-auto">
+    {resultCount} results
+  </Badge>
+</div>  
           <div className="flex items-center gap-1.5 flex-wrap">
             <Filter className="h-3.5 w-3.5 text-muted-foreground" />
 
@@ -385,7 +438,7 @@ const handleEnquiryClick = async (enquiryId: number) => {
 {!loadingEnquiries && enquiries.length === 0 && (
   <TableRow>
     <TableCell colSpan={12} className="text-center py-6 text-sm text-muted-foreground">
-      No enquiries found for {filter}.
+      No {activeTab === "CUS" ? "customer" : "supplier"} enquiries found for {filter}.
     </TableCell>
   </TableRow>
 )}
