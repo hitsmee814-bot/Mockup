@@ -67,11 +67,6 @@ export const AgentHeader = forwardRef<HTMLElement, {}>((props, ref) => {
               <span className="hidden md:inline">Login</span>
             </PremiumButton>
           )}
-
-          <PremiumButton variant="secondary" size="sm">
-            <HiOutlineBriefcase size={18} />
-            <span className="hidden md:inline">Book Demo</span>
-          </PremiumButton>
         </div>
       </div>
     </header>

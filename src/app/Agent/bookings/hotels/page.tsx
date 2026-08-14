@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Hotel, Calendar, MapPin, Eye } from "lucide-react";
+import { AgentNewBooking } from "@/app/components/Agent/AgentDashboard/AgentNewBooking";
 
 const hotelBookings = [
   {
@@ -61,13 +62,17 @@ export default function HotelBookingsPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="flex items-center justify-between flex-wrap gap-3"
       >
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-          Hotel Bookings
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Manage all hotel reservations
-        </p>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+            Hotel Bookings
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage all hotel reservations
+          </p>
+        </div>
+        <AgentNewBooking />
       </motion.div>
 
       <Card>

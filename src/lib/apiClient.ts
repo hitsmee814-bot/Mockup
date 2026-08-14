@@ -1,3 +1,5 @@
+// Mockup/src/lib/apiClient.ts
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   "https://ascendus.bonhomiee.com";
@@ -92,7 +94,15 @@ export async function apiClient<T = any>(
   if (!response.ok) {
     let errorMessage = "Failed to process your request.";
 
-    // Try extracting backend error from JSON response only
+    // Handle 401 Unauthorized - Token expired
+    if (response.status === 401) {
+      errorMessage = "Your session has expired. Please login again.";
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("loggedInType");
+    }
+
     const errorData =
       responseType === "json" && data ? data : {};
 
@@ -138,6 +148,8 @@ export async function apiClient<T = any>(
     } else if (response.status === 500) {
       errorMessage =
         "Server error. Please try again later.";
+    } else if (response.status === 401) {
+      errorMessage = "Session expired. Please login again.";
     } else if (errorData?.detail) {
       if (typeof errorData.detail === "string") {
         errorMessage = errorData.detail;

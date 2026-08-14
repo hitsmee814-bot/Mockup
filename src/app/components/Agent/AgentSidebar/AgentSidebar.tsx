@@ -59,6 +59,7 @@ const navigation = [
     items: [
       { title: "Dashboard", href: "/Agent/dashboard", icon: LayoutDashboard },
       { title: "Enquiries", href: "/Agent/enquiries", icon: MessageSquare },
+      { title: "Customers", href: "/Agent/customers", icon: Users },
     ],
   },
   {
@@ -88,9 +89,7 @@ const navigation = [
     label: "MANAGEMENT",
     icon: Users,
     requiresAgent: true,
-    items: [
-      { title: "Sub-Agents", href: "/Agent/sub-agents", icon: Users },
-    ],
+    items: [{ title: "Sub-Agents", href: "/Agent/sub-agents", icon: Users }],
   },
 ];
 
@@ -103,7 +102,6 @@ export function AgentSidebar() {
   const [showLoader, setShowLoader] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [isAgent, setIsAgent] = useState(false);
-
   const [openGroups, setOpenGroups] = useState<string[]>(["MAIN"]);
 
   useEffect(() => {
@@ -138,6 +136,10 @@ export function AgentSidebar() {
     return true;
   });
 
+  const isGroupActive = (group: typeof navigation[0]) => {
+    return group.items.some((item) => pathname?.startsWith(item.href));
+  };
+
   return (
     <>
       <GlobalLoader
@@ -151,126 +153,174 @@ export function AgentSidebar() {
         }}
       />
 
-      <Sidebar collapsible="icon" className="bg-white border-r flex flex-col h-full mt-[5rem]">
-        <SidebarContent className="flex-1 overflow-x-hidden">
-          {filteredNavigation.map((group) => {
-            const GroupIcon = group.icon;
-            const isOpen = openGroups.includes(group.label);
+      <Sidebar
+        collapsible="icon"
+        className="bg-white border-r flex flex-col h-full mt-[5rem] overflow-x-hidden"
+      >
+        <SidebarContent className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="flex flex-col h-full">
+            {/* Expanded mode - normal layout */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden group-data-[collapsible=icon]:hidden">
+              {filteredNavigation.map((group) => {
+                const GroupIcon = group.icon;
+                const isOpen = openGroups.includes(group.label);
+                const isActive = isGroupActive(group);
 
-            return (
-              <SidebarGroup key={group.label}>
-                {/* COLLAPSED MODE */}
-                <div className="hidden group-data-[collapsible=icon]:block">
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className="flex justify-center p-2 w-full">
-                            <GroupIcon className="h-5 w-5 text-[#3FB8FF]" />
-                          </button>
-                        </PopoverTrigger>
-
-                        <PopoverContent side="right" align="start" className="w-48 p-2">
-                          <div className="space-y-1">
-                            {group.items.map((item) => {
-                              const Icon = item.icon;
-                              const isActive = pathname?.startsWith(item.href);
-
-                              return (
-                                <button
-                                  key={item.title}
-                                  onClick={() => router.push(item.href)}
-                                  className={`
-                                    flex items-center gap-2 w-full p-2 rounded-md text-sm
-                                    ${
-                                      isActive
-                                        ? "text-[#FBAB18]"
-                                        : "hover:bg-[#3FB8FF15]"
-                                    }
-                                  `}
-                                >
-                                  <Icon className="h-4 w-4" />
-                                  {item.title}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </div>
-
-                {/* EXPANDED HEADER */}
-                <div className="group-data-[collapsible=icon]:hidden">
-                  <SidebarGroupLabel
-                    onClick={() => toggleGroup(group.label)}
-                    className="flex items-center justify-between cursor-pointer px-2 py-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <GroupIcon className="h-5 w-5 text-[#3FB8FF]" />
-                      <span className="text-sm font-medium text-[#3FB8FF]">
-                        {group.label}
-                      </span>
-                    </div>
-
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform ${
-                        isOpen ? "rotate-180" : ""
+                return (
+                  <SidebarGroup key={group.label} className="py-1">
+                    <SidebarGroupLabel
+                      onClick={() => toggleGroup(group.label)}
+                      className={`flex items-center justify-between cursor-pointer px-2 py-1.5 transition-colors ${
+                        isActive ? "text-[#FBAB18]" : "text-[#3FB8FF]"
                       }`}
-                    />
-                  </SidebarGroupLabel>
-                </div>
-
-                {/* SUBMENU */}
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
                     >
-                      <SidebarGroupContent>
-                        <SidebarMenu className="pl-6 ml-3 border-l border-[#3FB8FF20]">
+                      <div className="flex items-center gap-2">
+                        <GroupIcon
+                          className={`h-5 w-5 ${
+                            isActive ? "text-[#FBAB18]" : "text-[#3FB8FF]"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm font-medium ${
+                            isActive ? "text-[#FBAB18]" : "text-[#3FB8FF]"
+                          }`}
+                        >
+                          {group.label}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                          isOpen ? "rotate-180" : ""
+                        } ${isActive ? "text-[#FBAB18]" : "text-[#3FB8FF]"}`}
+                      />
+                    </SidebarGroupLabel>
+
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                        >
+                          <SidebarGroupContent>
+                            <SidebarMenu className="pl-6 ml-3 border-l border-[#3FB8FF20]">
+                              {group.items.map((item) => {
+                                const Icon = item.icon;
+                                const isItemActive = pathname?.startsWith(
+                                  item.href
+                                );
+
+                                return (
+                                  <SidebarMenuItem key={item.title}>
+                                    <SidebarMenuButton
+                                      asChild
+                                      tooltip={item.title}
+                                    >
+                                      <button
+                                        onClick={() => {
+                                          router.push(item.href);
+                                          if (state === "expanded")
+                                            toggleSidebar();
+                                        }}
+                                        className={`
+                                          flex items-center gap-3 p-2 rounded-md w-full transition-colors
+                                          ${
+                                            isItemActive
+                                              ? "text-[#FBAB18] bg-[#FBAB18]/10"
+                                              : "text-[#3FB8FF] hover:bg-[#3FB8FF15]"
+                                          }
+                                        `}
+                                      >
+                                        <Icon
+                                          className={`h-5 w-5 ${
+                                            isItemActive
+                                              ? "text-[#FBAB18]"
+                                              : ""
+                                          }`}
+                                        />
+                                        <span
+                                          className={`group-data-[collapsible=icon]:hidden ${
+                                            isItemActive
+                                              ? "text-[#FBAB18]"
+                                              : "text-[#3FB8FF]"
+                                          }`}
+                                        >
+                                          {item.title}
+                                        </span>
+                                      </button>
+                                    </SidebarMenuButton>
+                                  </SidebarMenuItem>
+                                );
+                              })}
+                            </SidebarMenu>
+                          </SidebarGroupContent>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </SidebarGroup>
+                );
+              })}
+            </div>
+
+            {/* Collapsed mode - ONLY ICONS at TOP with equal spacing */}
+            <div className="hidden group-data-[collapsible=icon]:flex flex-col overflow-x-hidden">
+              <div className="flex flex-col gap-1 py-2">
+                {filteredNavigation.map((group) => {
+                  const isActive = isGroupActive(group);
+                  const GroupIcon = group.icon;
+
+                  return (
+                    <Popover key={group.label}>
+                      <PopoverTrigger asChild>
+                        <button
+                          className={`flex justify-center p-2 w-full transition-colors ${
+                            isActive ? "text-[#FBAB18]" : "text-[#3FB8FF]"
+                          }`}
+                        >
+                          <GroupIcon
+                            className={`h-5 w-5 ${
+                              isActive ? "text-[#FBAB18]" : "text-[#3FB8FF]"
+                            }`}
+                          />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent side="right" align="start" className="w-48 p-2">
+                        <div className="space-y-1">
                           {group.items.map((item) => {
                             const Icon = item.icon;
-                            const isActive = pathname?.startsWith(item.href);
+                            const isItemActive = pathname?.startsWith(item.href);
 
                             return (
-                              <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton asChild tooltip={item.title}>
-                                  <button
-                                    onClick={() => {
-                                      router.push(item.href);
-                                      if (state === "expanded") toggleSidebar();
-                                    }}
-                                    className={`
-                                      flex items-center gap-3 p-2 rounded-md w-full
-                                      ${
-                                        isActive
-                                          ? "text-[#FBAB18]"
-                                          : "text-[#3FB8FF] hover:bg-[#3FB8FF15]"
-                                      }
-                                    `}
-                                  >
-                                    <Icon className="h-5 w-5" />
-                                    <span className="group-data-[collapsible=icon]:hidden">
-                                      {item.title}
-                                    </span>
-                                  </button>
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
+                              <button
+                                key={item.title}
+                                onClick={() => router.push(item.href)}
+                                className={`
+                                  flex items-center gap-2 w-full p-2 rounded-md text-sm
+                                  ${
+                                    isItemActive
+                                      ? "text-[#FBAB18] bg-[#FBAB18]/10"
+                                      : "hover:bg-[#3FB8FF15] text-[#3FB8FF]"
+                                  }
+                                `}
+                              >
+                                <Icon
+                                  className={`h-4 w-4 ${
+                                    isItemActive ? "text-[#FBAB18]" : ""
+                                  }`}
+                                />
+                                {item.title}
+                              </button>
                             );
                           })}
-                        </SidebarMenu>
-                      </SidebarGroupContent>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </SidebarGroup>
-            );
-          })}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </SidebarContent>
 
         <SidebarFooter className="border-t mb-[5rem]">
@@ -280,7 +330,7 @@ export function AgentSidebar() {
                 <button
                   onClick={() => router.push("/Agent/profile")}
                   className={`
-                    flex items-center gap-3 p-2
+                    flex items-center gap-3 p-2 transition-colors
                     ${
                       isProfileActive
                         ? "text-[#FBAB18]"
@@ -317,7 +367,6 @@ export function AgentSidebar() {
         </SidebarFooter>
       </Sidebar>
 
-      {/* LOGOUT DIALOG */}
       <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -326,7 +375,6 @@ export function AgentSidebar() {
               Are you sure you want to log out?
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction

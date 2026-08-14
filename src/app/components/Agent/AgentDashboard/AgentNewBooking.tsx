@@ -29,7 +29,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 
-export function AgentRaiseEnquiry() {
+export function AgentNewBooking() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -68,7 +68,7 @@ export function AgentRaiseEnquiry() {
     }
 
     setError(null);
-    toast.success("Enquiry raised successfully!");
+    toast.success("Booking created successfully!");
     setOpen(false);
     setTravelDate(undefined);
   };
@@ -93,7 +93,7 @@ export function AgentRaiseEnquiry() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> Raise Enquiry
+          <Plus className="h-4 w-4" /> New Booking
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -102,7 +102,7 @@ export function AgentRaiseEnquiry() {
         showCloseButton={false}
       >
         <div className="px-6 pt-6 pb-2 flex-shrink-0">
-          <DialogTitle>Raise New Enquiry</DialogTitle>
+          <DialogTitle>Create New Booking</DialogTitle>
         </div>
 
         <div
@@ -134,12 +134,12 @@ export function AgentRaiseEnquiry() {
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="name">
+                      <Label htmlFor="customerName">
                         Customer Name <span className="text-red-500">*</span>
                       </Label>
                       <Input
-                        id="name"
-                        name="name"
+                        id="customerName"
+                        name="customerName"
                         placeholder="Full name"
                         required
                         onChange={handleInputChange}
@@ -161,13 +161,33 @@ export function AgentRaiseEnquiry() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="email@example.com"
-                      />
+                      <Label>
+                        Booking Type <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        required
+                        onValueChange={() => {
+                          const trigger = document.querySelector(
+                            '[name="bookingType"]'
+                          ) as HTMLButtonElement;
+                          if (trigger) {
+                            trigger.classList.remove("border-red-500");
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full" name="bookingType">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="HOTEL">Hotel</SelectItem>
+                          <SelectItem value="FLIGHT">Flight</SelectItem>
+                          <SelectItem value="PACKAGE">Package</SelectItem>
+                          <SelectItem value="TRANSFER">Transfer</SelectItem>
+                          <SelectItem value="SIGHTSEEING">
+                            Sightseeing
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="destination">
@@ -180,53 +200,6 @@ export function AgentRaiseEnquiry() {
                         required
                         onChange={handleInputChange}
                       />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1.5">
-                      <Label>Travel Type</Label>
-                      <Select>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Domestic">Domestic</SelectItem>
-                          <SelectItem value="International">
-                            International
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Priority</Label>
-                      <Select>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="High">High</SelectItem>
-                          <SelectItem value="Medium">Medium</SelectItem>
-                          <SelectItem value="Low">Low</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Source</Label>
-                      <Select>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Website">Website</SelectItem>
-                          <SelectItem value="Phone">Phone</SelectItem>
-                          <SelectItem value="Walk-in">Walk-in</SelectItem>
-                          <SelectItem value="Referral">Referral</SelectItem>
-                          <SelectItem value="Social Media">
-                            Social Media
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                   </div>
 
@@ -275,21 +248,55 @@ export function AgentRaiseEnquiry() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="budget">Budget Range</Label>
-                    <Input
-                      id="budget"
-                      name="budget"
-                      placeholder="e.g. ₹2-3L"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="totalAmount">
+                        Total Amount <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="totalAmount"
+                        name="totalAmount"
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        placeholder="0.00"
+                        required
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>
+                        Status <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        required
+                        onValueChange={() => {
+                          const trigger = document.querySelector(
+                            '[name="bookingStatus"]'
+                          ) as HTMLButtonElement;
+                          if (trigger) {
+                            trigger.classList.remove("border-red-500");
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full" name="bookingStatus">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                          <SelectItem value="PENDING">Pending</SelectItem>
+                          <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="description">Description</Label>
                     <textarea
-                      id="notes"
-                      name="notes"
-                      placeholder="Any special requirements..."
+                      id="description"
+                      name="description"
+                      placeholder="Additional details about the booking..."
                       rows={3}
                       className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] max-h-[150px]"
                       style={{
@@ -328,7 +335,7 @@ export function AgentRaiseEnquiry() {
                 }
               }}
             >
-              Submit Enquiry
+              Submit Booking
             </Button>
           </div>
         </div>

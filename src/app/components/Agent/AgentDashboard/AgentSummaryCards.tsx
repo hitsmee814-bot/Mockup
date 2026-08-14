@@ -1,3 +1,5 @@
+// Mockup/src/app/components/Agent/AgentDashboard/AgentSummaryCards.tsx
+
 "use client";
 
 import { motion, Variants } from "framer-motion";
@@ -12,10 +14,18 @@ import {
   Minus,
   Users,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { bookingService } from "@/services/agent/bookingService";
+import { commissionService } from "@/services/agent/commissionService";
+import { walletService } from "@/services/agent/walletService";
+import { payoutService } from "@/services/agent/payoutService";
+import type { PendingPayout } from "@/services/agent/payoutService";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type ChangeType = "up" | "down" | "neutral";
 
-type CardItem = {
+interface CardItem {
   title: string;
   value: string;
   change: string;
@@ -24,60 +34,8 @@ type CardItem = {
   color: string;
   bg: string;
   gradient: string;
-};
-
-const cards: CardItem[] = [
-  {
-    title: "Total Bookings",
-    value: "156",
-    change: "+12 this month",
-    changeType: "up",
-    icon: Calendar,
-    color: "text-primary",
-    bg: "bg-primary/10",
-    gradient: "from-primary/5 to-transparent",
-  },
-  {
-    title: "Total Commission",
-    value: "₹4.56L",
-    change: "+18.2%",
-    changeType: "up",
-    icon: TrendingUp,
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
-    gradient: "from-emerald-500/5 to-transparent",
-  },
-  {
-    title: "Wallet Balance",
-    value: "₹1.25L",
-    change: "Available for withdrawal",
-    changeType: "neutral",
-    icon: Wallet,
-    color: "text-violet-500",
-    bg: "bg-violet-500/10",
-    gradient: "from-violet-500/5 to-transparent",
-  },
-  {
-    title: "Active Clients",
-    value: "89",
-    change: "+8 this month",
-    changeType: "up",
-    icon: Users,
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
-    gradient: "from-amber-500/5 to-transparent",
-  },
-  {
-    title: "Pending Payouts",
-    value: "₹89K",
-    change: "Due this week",
-    changeType: "neutral",
-    icon: DollarSign,
-    color: "text-rose-500",
-    bg: "bg-rose-500/10",
-    gradient: "from-rose-500/5 to-transparent",
-  },
-];
+  loading?: boolean;
+}
 
 const container = {
   hidden: {},
@@ -97,7 +55,7 @@ const item: Variants = {
     scale: 1,
     filter: "blur(0px)",
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 260,
       damping: 20,
     },
@@ -105,6 +63,160 @@ const item: Variants = {
 };
 
 export function AgentSummaryCards() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalBookings, setTotalBookings] = useState(0);
+  const [totalCommission, setTotalCommission] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [pendingPayouts, setPendingPayouts] = useState<PendingPayout[]>([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("access_token") || "";
+
+      if (!token) {
+        setError("Unable to load dashboard data. Login token was not found.");
+        toast.error("Session expired. Please login again.", {
+          position: "top-right",
+          duration: 3000,
+        });
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("loggedInType");
+        router.push("/login");
+        return;
+      }
+
+      const [bookings, commission, wallet, pending] = await Promise.all([
+        bookingService.getTotalBookings(),
+        commissionService.getTotalCommission(),
+        walletService.getWalletBalance(),
+        payoutService.getPendingPayouts().catch(() => [] as PendingPayout[]),
+      ]);
+
+      setTotalBookings(bookings.total_bookings || 0);
+      setTotalCommission(commission.total_commission || 0);
+      setWalletBalance(wallet.wallet_balance || 0);
+
+      const actualPending = pending.filter(
+        (p: PendingPayout) => p.payout_status === "PENDING"
+      );
+      setPendingPayouts(actualPending);
+    } catch (err: any) {
+      console.error("Failed to fetch dashboard data:", err);
+      setError(
+        err?.message ||
+          "Unable to load dashboard data. Please try again later."
+      );
+
+      if (err?.message?.includes("401") || err?.message?.includes("expired")) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("loggedInType");
+        router.push("/login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cards: CardItem[] = [
+    {
+      title: "Total Bookings",
+      value: loading ? "..." : error ? "-" : totalBookings.toString(),
+      change: error ? "Data unavailable" : `Total bookings`,
+      changeType: "neutral",
+      icon: Calendar,
+      color: "text-primary",
+      bg: "bg-primary/10",
+      gradient: "from-primary/5 to-transparent",
+      loading,
+    },
+    {
+      title: "Total Commission",
+      value: loading
+        ? "..."
+        : error
+        ? "-"
+        : `₹${totalCommission.toLocaleString("en-IN")}`,
+      change: error ? "Data unavailable" : `Earned so far`,
+      changeType: "neutral",
+      icon: TrendingUp,
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      gradient: "from-emerald-500/5 to-transparent",
+      loading,
+    },
+    {
+      title: "Wallet Balance",
+      value: loading
+        ? "..."
+        : error
+        ? "-"
+        : `₹${walletBalance.toLocaleString("en-IN")}`,
+      change: error ? "Data unavailable" : "Available for withdrawal",
+      changeType: "neutral",
+      icon: Wallet,
+      color: "text-violet-500",
+      bg: "bg-violet-500/10",
+      gradient: "from-violet-500/5 to-transparent",
+      loading,
+    },
+    {
+      title: "Active Clients",
+      value: loading ? "..." : error ? "-" : "0",
+      change: error ? "Data unavailable" : "From your bookings",
+      changeType: "neutral",
+      icon: Users,
+      color: "text-amber-500",
+      bg: "bg-amber-500/10",
+      gradient: "from-amber-500/5 to-transparent",
+      loading,
+    },
+    {
+      title: "Pending Payouts",
+      value: loading
+        ? "..."
+        : error
+        ? "-"
+        : `₹${pendingPayouts
+            .reduce(
+              (sum: number, p: PendingPayout) => sum + (p.commission_amount || 0),
+              0
+            )
+            .toLocaleString("en-IN")}`,
+      change: error
+        ? "Data unavailable"
+        : pendingPayouts.length > 0
+        ? `${pendingPayouts.length} bookings pending`
+        : "No pending payouts",
+      changeType: "neutral",
+      icon: DollarSign,
+      color: "text-rose-500",
+      bg: "bg-rose-500/10",
+      gradient: "from-rose-500/5 to-transparent",
+      loading,
+    },
+  ];
+
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <motion.div
       variants={container}
@@ -166,13 +278,11 @@ export function AgentSummaryCards() {
                   </span>
                 </div>
               </div>
-              <motion.div
-                className={`${c.bg} ${c.color} p-2.5 sm:p-3 rounded-xl`}
-                whileHover={{ rotate: 12, scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 300 }}
+              <div
+                className={`${c.bg} ${c.color} p-1.5 rounded-lg shrink-0 absolute -top-1 -right-1`}
               >
                 <c.icon className="h-5 w-5" />
-              </motion.div>
+              </div>
             </CardContent>
           </Card>
         </motion.div>

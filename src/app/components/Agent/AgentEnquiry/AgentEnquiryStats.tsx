@@ -75,7 +75,7 @@ const item: Variants = {
     scale: 1,
     filter: "blur(0px)",
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 260,
       damping: 20,
     },
@@ -138,13 +138,11 @@ export function AgentEnquiryStats() {
                   </span>
                 </div>
               </div>
-              <motion.div
-                className={`${s.bg} ${s.color} p-2.5 sm:p-3 rounded-xl`}
-                whileHover={{ rotate: 12, scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 300 }}
+              <div
+                className={`${s.bg} ${s.color} p-1.5 rounded-lg shrink-0 absolute -top-1 -right-1`}
               >
                 <s.icon className="h-5 w-5" />
-              </motion.div>
+              </div>
             </CardContent>
           </Card>
         </motion.div>

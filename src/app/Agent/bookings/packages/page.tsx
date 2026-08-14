@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Users, DollarSign, Eye } from "lucide-react";
 import { useState } from "react";
+import { AgentNewBooking } from "@/app/components/Agent/AgentDashboard/AgentNewBooking";
 
 // Mock data for package bookings
 const packageBookings = [
@@ -85,13 +86,17 @@ export default function PackageBookingsPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="flex items-center justify-between flex-wrap gap-3"
       >
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-          Package Bookings
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Manage all package tour bookings
-        </p>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+            Package Bookings
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage all package tour bookings
+          </p>
+        </div>
+        <AgentNewBooking />
       </motion.div>
 
       <Card>

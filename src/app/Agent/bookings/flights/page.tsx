@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plane, Calendar, MapPin, Eye } from "lucide-react";
+import { AgentNewBooking } from "@/app/components/Agent/AgentDashboard/AgentNewBooking";
 
 const flightBookings = [
   {
@@ -61,13 +62,17 @@ export default function FlightBookingsPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="flex items-center justify-between flex-wrap gap-3"
       >
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-          Flight Bookings
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Manage all flight ticket bookings
-        </p>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+            Flight Bookings
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage all flight ticket bookings
+          </p>
+        </div>
+        <AgentNewBooking />
       </motion.div>
 
       <Card>

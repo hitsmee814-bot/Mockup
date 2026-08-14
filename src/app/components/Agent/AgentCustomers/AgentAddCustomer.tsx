@@ -11,30 +11,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { AlertCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
 
-export function AgentRaiseEnquiry() {
+export function AgentAddCustomer() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [travelDate, setTravelDate] = useState<Date | undefined>(undefined);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,10 +40,6 @@ export function AgentRaiseEnquiry() {
       }
     });
 
-    if (!travelDate) {
-      isValid = false;
-    }
-
     if (!isValid) {
       setError("Please fill all the required details");
       if (scrollContainerRef.current) {
@@ -68,15 +49,12 @@ export function AgentRaiseEnquiry() {
     }
 
     setError(null);
-    toast.success("Enquiry raised successfully!");
+    toast.success("Customer added successfully!");
     setOpen(false);
-    setTravelDate(undefined);
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     if (e.target.value) {
       e.target.classList.remove("border-red-500");
@@ -86,14 +64,13 @@ export function AgentRaiseEnquiry() {
   const handleCancel = () => {
     setOpen(false);
     setError(null);
-    setTravelDate(undefined);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> Raise Enquiry
+          <Plus className="h-4 w-4" /> Add Customer
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -102,7 +79,7 @@ export function AgentRaiseEnquiry() {
         showCloseButton={false}
       >
         <div className="px-6 pt-6 pb-2 flex-shrink-0">
-          <DialogTitle>Raise New Enquiry</DialogTitle>
+          <DialogTitle>Add New Customer</DialogTitle>
         </div>
 
         <div
@@ -134,12 +111,12 @@ export function AgentRaiseEnquiry() {
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="name">
+                      <Label htmlFor="customerName">
                         Customer Name <span className="text-red-500">*</span>
                       </Label>
                       <Input
-                        id="name"
-                        name="name"
+                        id="customerName"
+                        name="customerName"
                         placeholder="Full name"
                         required
                         onChange={handleInputChange}
@@ -161,126 +138,36 @@ export function AgentRaiseEnquiry() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">
+                        Email <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="email"
                         name="email"
                         type="email"
                         placeholder="email@example.com"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="destination">
-                        Destination <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="destination"
-                        name="destination"
-                        placeholder="e.g. Bali, Goa"
                         required
                         onChange={handleInputChange}
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1.5">
-                      <Label>Travel Type</Label>
-                      <Select>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Domestic">Domestic</SelectItem>
-                          <SelectItem value="International">
-                            International
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Priority</Label>
-                      <Select>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="High">High</SelectItem>
-                          <SelectItem value="Medium">Medium</SelectItem>
-                          <SelectItem value="Low">Low</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Source</Label>
-                      <Select>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Website">Website</SelectItem>
-                          <SelectItem value="Phone">Phone</SelectItem>
-                          <SelectItem value="Walk-in">Walk-in</SelectItem>
-                          <SelectItem value="Referral">Referral</SelectItem>
-                          <SelectItem value="Social Media">
-                            Social Media
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="travelDate">
-                        Travel Date <span className="text-red-500">*</span>
-                      </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                          >
-                            {travelDate ? (
-                              format(travelDate, "yyyy-MM-dd")
-                            ) : (
-                              <span>Select date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 max-w-[280px]" side="bottom" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={travelDate}
-                            onSelect={setTravelDate}
-                            initialFocus
-                            className="max-w-[280px]"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="pax">
-                        No. of Travellers <span className="text-red-500">*</span>
-                      </Label>
+                      <Label htmlFor="company">Company Name</Label>
                       <Input
-                        id="pax"
-                        name="pax"
-                        type="number"
-                        min={1}
-                        placeholder="1"
-                        required
+                        id="company"
+                        name="company"
+                        placeholder="Company name"
                         onChange={handleInputChange}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="budget">Budget Range</Label>
+                    <Label htmlFor="address">Address</Label>
                     <Input
-                      id="budget"
-                      name="budget"
-                      placeholder="e.g. ₹2-3L"
+                      id="address"
+                      name="address"
+                      placeholder="Street address, city, state, pincode"
+                      onChange={handleInputChange}
                     />
                   </div>
 
@@ -289,7 +176,7 @@ export function AgentRaiseEnquiry() {
                     <textarea
                       id="notes"
                       name="notes"
-                      placeholder="Any special requirements..."
+                      placeholder="Any additional notes about the customer..."
                       rows={3}
                       className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] max-h-[150px]"
                       style={{
@@ -328,7 +215,7 @@ export function AgentRaiseEnquiry() {
                 }
               }}
             >
-              Submit Enquiry
+              Add Customer
             </Button>
           </div>
         </div>
