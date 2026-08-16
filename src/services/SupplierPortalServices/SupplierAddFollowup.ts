@@ -1,10 +1,10 @@
 import { apiClient } from "@/lib/apiClient";
 
 export interface SupplierAddFollowupPayload {
-  responded_by_user_id: number;
-  note: string;
+   note: string;
   status: string;
   stage: string;
+  next_followup_date: string;
 }
 
 export const supplierAddFollowupService = {
