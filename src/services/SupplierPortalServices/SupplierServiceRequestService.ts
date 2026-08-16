@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 
 export type ServiceRequestListItem = {
   id: number;
+   service_request_id: number;  
   demand_request_no: string;
   service_request_no: string;
   destination: string;

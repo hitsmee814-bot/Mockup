@@ -60,13 +60,7 @@ export const SupplierHeader = forwardRef<HTMLElement, {}>((props, ref) => {
                     </PremiumButton>
                     )}
 
-                    <PremiumButton
-                        variant="secondary"
-                        size="sm"
-                    >
-                        <HiOutlineBriefcase size={18} />
-                        <span className="hidden md:inline">Book Demo</span>
-                    </PremiumButton>
+                    
 
                 </div>
 

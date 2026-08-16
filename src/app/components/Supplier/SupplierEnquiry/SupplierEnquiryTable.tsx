@@ -7,32 +7,58 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Enquiry } from "./types"
-import { Filter } from "lucide-react"
+
 import { useRouter } from 'next/navigation'
 import { toast } from "sonner"
 import {
   SupplierEnquiryList,
   type SupplierEnquiryListItem,
 } from "@/services/SupplierPortalServices/SupplierEnquiryList"
-
+import { SupplierEnquiryFollowupDialog } from "./SupplierEnquiryFollowupDialog"
 import {
-  SupplierEnquiryCount,
-  type SupplierEnquiryCountItem,
-} from "@/services/SupplierPortalServices/SupplierEnquiryCount"
-import { SupplierResponseEnquiry } from "./supplierResponseEnquiry"
+  CustomerEnquiryList,
+  type CustomerEnquiryListItem,
+} from "@/services/SupplierPortalServices/CustomerEnquiryList"
+import { ServiceRequestFollowupDialog } from "./ServiceRequestFollowupDialog"
+import { SupplierEnquiryDetailsDialog } from "./SupplierEnquiryDetailsDialog"
+import { CustomerEnquiryDetailsDialog } from "./CustomerEnquiryDetailsDialog"
+import { SupplierServiceRequestDetailsDialog } from "./SupplierServiceRequestDetails"
+
 import {
   SupplierEnquiryDetailsById,
   type SupplierEnquiryDetailsByIdResponse,
 } from "@/services/SupplierPortalServices/SupplierEnquiryDetailsById"
 
+import {
+  CustomerEnquiryDetails,
+  type CustomerEnquiryDetails as CustomerEnquiryDetailsType,
+} from "@/services/SupplierPortalServices/CustomerEnquiryDetails"
+
+const serviceTypeLabel: Record<string, string> = {
+  HOTEL: "Hotel",
+  TRANSFER: "Transfer",
+  CAR_RENTAL: "Car Rental",
+  TOUR_PACKAGE: "Tour Package",
+  ACTIVITY: "Activity",
+  VISA: "Visa",
+  INSURANCE: "Insurance",
+  CRUISE: "Cruise",
+  RAIL: "Rail",
+  BUS: "Bus",
+}
 
 const statusColor: Record<string, string> = {
-  New: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-  "In Progress": "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  Quoted: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
-  "Follow Up": "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-  Converted: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  Closed: "bg-red-500/15 text-red-600 dark:text-red-400",
+  New: "bg-blue-100 text-blue-700",
+
+  "In Progress": "bg-green-100 text-green-700",
+
+  "Follow Up": "bg-amber-100 text-amber-700",
+
+  Quoted: "bg-purple-100 text-purple-700",
+
+  Closed: "bg-purple-100 text-purple-700",
+
+  Converted: "bg-purple-100 text-purple-700",
 }
 
 
@@ -61,8 +87,6 @@ const customerStatusOrder: string[] = [
   "IN_PROGRESS",
   "FOLLOWUP",
   "QUOTED",
-  "CONVERTED",
-  "CLOSED",
 ]
 
 const supplierStatusOrder: string[] = [
@@ -84,9 +108,8 @@ export function EnquiryTable({ activeTab, setActiveTab }: EnquiryTableProps) {
    const router = useRouter()
  const [filter, setFilter] = useState<FilterStatus>("New")
 const [filterOptions, setFilterOptions] = useState<FilterStatus[]>([])
-  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({})
-  const [loadingCounts, setLoadingCounts] = useState(true)
-  const [enquiries, setEnquiries] = useState<SupplierEnquiryListItem[]>([])
+  
+  const [enquiries, setEnquiries] = useState<any[]>([])
 const [loadingEnquiries, setLoadingEnquiries] = useState(false)
 const [page, setPage] = useState(1)
 const [pageSize] = useState(20)
@@ -101,6 +124,42 @@ useEffect(() => {
   setPage(1)
 }, [activeTab])
 
+
+const [serviceRequestDialogOpen, setServiceRequestDialogOpen] =
+  useState(false)
+
+const [selectedServiceRequestId, setSelectedServiceRequestId] =
+  useState<number | null>(null)
+
+  const [followupDialogOpen, setFollowupDialogOpen] =
+  useState(false)
+  const [supplierFollowupDialogOpen, setSupplierFollowupDialogOpen] =
+  useState(false)
+
+const [selectedSupplierEnquiryId, setSelectedSupplierEnquiryId] =
+  useState<number | null>(null)
+  const [selectedSupplierEnquiry, setSelectedSupplierEnquiry] =
+  useState<SupplierEnquiryListItem | null>(null)
+  const [selectedServiceRequestNo, setSelectedServiceRequestNo] =
+  useState<string | null>(null)
+  const [customerEnquiryDetailsOpen, setCustomerEnquiryDetailsOpen] =
+  useState(false)
+
+const [selectedCustomerEnquiry, setSelectedCustomerEnquiry] =
+  useState<CustomerEnquiryDetailsType | null>(null)
+
+const [customerEnquiryDetailsLoading, setCustomerEnquiryDetailsLoading] =
+  useState(false)
+
+const handleSupplierFollowUpClick = (
+  enquiry: SupplierEnquiryListItem
+) => {
+  
+  setSelectedSupplierEnquiryId(enquiry.id)
+  setSelectedSupplierEnquiry(enquiry)
+  setSupplierFollowupDialogOpen(true)
+}
+  
 useEffect(() => {
   const fetchEnquiries = async () => {
     try {
@@ -124,22 +183,28 @@ useEffect(() => {
 
       const apiStatus = uiStatusToApiStatus[filter]
      
-    const response: any = await SupplierEnquiryList.getEnquiries(
-        token,
-        apiStatus,
-        page,
-        pageSize
-      )
-   
-      const data: SupplierEnquiryListItem[] = Array.isArray(response)
-        ? response
-        : response?.data ?? []
+    let response: any
 
-      const filteredByTab = data.filter((item) =>
-  item.enquiry_no?.startsWith(activeTab)
-)
+      if (activeTab === "CUS") {
+        response = await CustomerEnquiryList.getCustomerEnquiries(
+          token,
+          apiStatus,
+          page,
+          pageSize
+        )
+      } else {
+        response = await SupplierEnquiryList.getEnquiries(
+          token,
+          apiStatus,
+          page,
+          pageSize
+        )
+      }
+        const data = Array.isArray(response)
+  ? response
+  : response?.data ?? []
 
-setEnquiries(filteredByTab)
+setEnquiries(data)
     } catch (err) {
       console.error("Enquiry list API error:", err)
     } finally {
@@ -150,89 +215,189 @@ setEnquiries(filteredByTab)
   fetchEnquiries()
 }, [filter, page, pageSize, activeTab])
 
-  useEffect(() => {
-    const fetchEnquiryCounts = async () => {
-      try {
-        setLoadingCounts(true)
-
-        const token = localStorage.getItem("access_token") || ""
-
-        if (!token) {
-          console.error("Unable to load enquiry counts. Token not found.")
-          return
-        }
-
-        const response: any = await SupplierEnquiryCount.getEnquiryCount(token)
-
-        const data: SupplierEnquiryCountItem[] = Array.isArray(response)
-          ? response
-          : response?.data ?? []
-
-        const counts: Record<string, number> = {}
-        
-       const selectedStatusOrder =
-  activeTab === "CUS" ? customerStatusOrder : supplierStatusOrder
-
-const dynamicOptions: FilterStatus[] = selectedStatusOrder
-  .map((status) => apiStatusToUiStatus[status])
-  .filter((status): status is FilterStatus => Boolean(status))
-
-        data.forEach((item) => {
-          const uiStatus = apiStatusToUiStatus[item.status]
-
-          if (uiStatus) {
-            const count = Number(item.cnt ?? 0)
-
-            counts[uiStatus] = count
-           
-            
-          }
-        })
-
-       
-
-        setStatusCounts(counts)
-        setFilterOptions(dynamicOptions)
-      } catch (err) {
-        console.error("Enquiry count API error:", err)
-      } finally {
-        setLoadingCounts(false)
-      }
-    }
-
-    fetchEnquiryCounts()
-  }, [activeTab])
-
-
+  
    
 const resultCount = loadingEnquiries ? "..." : enquiries.length
 
 
-const visibleFields: (keyof SupplierEnquiryListItem)[] = [
+const customerVisibleFields = [
+  "service_request_no",
   "enquiry_no",
   "subject",
   "service_type",
-  "details",
+  "destination",
+  "travel_date",
   "status",
-  "next_followup",
-  "assigned_to",
-  "created_at",
-  "updated_at",
+  "action",
 ]
+
+const supplierVisibleFields = [
+  "enquiry_no",
+  "subject",
+  "service_type",
+  "status",
+  "created_at",
+  "action",
+]
+
+
+
 const formatHeader = (key: string) => {
-  return key
+ const headers: Record<string, string> = {
+  service_request_no: "SR No",
+  enquiry_no: "Customer Enquiry No",
+  subject: "Subject",
+  service_type: "Service Type",
+  destination: "Destination",
+  travel_date: "Travel Date",
+  status: "Status",
+  created_at: "Created On",
+  action: "Action",
+}
+
+  return headers[key] ?? key
     .replaceAll("_", " ")
     .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-const formatCellValue = (
-  field: keyof SupplierEnquiryListItem,
+type CustomerTableField =
+  | keyof CustomerEnquiryListItem
+  | "action"
+
+const formatCustomerEnquiryCellValue = (
+ field: CustomerTableField,
   value: any,
-  enquiry?: SupplierEnquiryListItem
+  enquiry?: CustomerEnquiryListItem
 ) => {
+
+
+  if (field === "action") {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-8"
+       onClick={() =>
+        handleFollowUpClick(
+        enquiry!.id,
+        enquiry!.service_request_no
+  )
+}
+      >
+        Follow Up
+      </Button>
+    )
+  }
+
+
   if (value === null || value === undefined || value === "") {
     return "-"
   }
+
+  if (field === "enquiry_no") {
+    return (
+      <button
+        type="button"
+        className="cursor-pointer font-mono text-xs font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
+        onClick={() => {
+        if (value) {
+          handleCustomerEnquiryClick(String(value))
+        }
+      }}
+      >
+        {String(value)}
+      </button>
+    )
+  }
+
+ if (field === "service_request_no") {
+  return (
+    <button
+      type="button"
+      className="cursor-pointer font-mono text-xs font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
+      onClick={() => {
+      if (enquiry) {
+        handleServiceRequestClick(enquiry)
+      }
+    }}
+    >
+      {String(value)}
+    </button>
+  )
+}
+
+  if (
+    field === "travel_date" ||
+    field === "assigned_at" ||
+    field === "bid_close_at"
+  ) {
+    return value
+      ? new Date(value).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "-"
+  }
+
+  if (field === "status") {
+    const displayStatus =
+      apiStatusToUiStatus[String(value)] || String(value)
+
+    return (
+      <span
+        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+          statusColor[displayStatus] || ""
+        }`}
+      >
+        {displayStatus}
+      </span>
+    )
+  }
+
+  if (field === "service_type") 
+  {
+  return (
+    <Badge variant="outline" className="text-[10px]">
+      {serviceTypeLabel[String(value)] ?? String(value)}
+    </Badge>
+  )
+}
+
+  return String(value)
+}
+
+
+
+const formatSupplierEnquiryCellValue = (
+  field: keyof SupplierEnquiryListItem | "action",
+  value: any,
+  enquiry?: SupplierEnquiryListItem
+) => {
+
+  // Action column does not have a value in the API response
+  if (field === "action") {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-8"
+        onClick={() => {
+          if (enquiry?.id) {
+            handleSupplierFollowUpClick(enquiry)
+          }
+        }}
+      >
+        Follow Up
+      </Button>
+    )
+  }
+
+  // Handle empty values for normal columns
+  if (value === null || value === undefined || value === "") {
+    return "-"
+  }
+
 
 if (field === "enquiry_no") {
   return (
@@ -301,15 +466,77 @@ if (field === "enquiry_no") {
     )
   }
 
-  if (field === "service_type") {
-    return (
-      <Badge variant="outline" className="text-[10px]">
-        {String(value)}
-      </Badge>
-    )
-  }
+  if (field === "service_type") 
+    {
+  return (
+    <Badge variant="outline" className="text-[10px]">
+      {serviceTypeLabel[String(value)] ?? String(value)}
+    </Badge>
+  )
+}
 
   return String(value)
+}
+
+const handleFollowUpClick = (
+  serviceRequestId: number,
+  serviceRequestNo: string
+) => {
+  setSelectedServiceRequestId(serviceRequestId)
+  setSelectedServiceRequestNo(serviceRequestNo)
+  setFollowupDialogOpen(true)
+}
+
+const handleServiceRequestClick = (
+  enquiry: CustomerEnquiryListItem
+) => {
+  setSelectedServiceRequestId(enquiry.id)
+  setServiceRequestDialogOpen(true)
+}
+
+
+const handleCustomerEnquiryClick = async (
+  enquiryNo: string
+) => {
+  try {
+    setCustomerEnquiryDetailsLoading(true)
+
+    const token = localStorage.getItem("access_token") || ""
+
+    if (!token) {
+      toast.error("Session expired. Please login again.", {
+        position: "top-right",
+        duration: 3000,
+      })
+      return
+    }
+
+    const response =
+      await CustomerEnquiryDetails.getCustomerEnquiryDetails(
+        token,
+        enquiryNo
+      )
+
+    setSelectedCustomerEnquiry(response)
+    setCustomerEnquiryDetailsOpen(true)
+
+  } catch (error: any) {
+    console.error(
+      "Failed to load customer enquiry details:",
+      error
+    )
+
+    toast.error(
+      error?.message ||
+        "Failed to load customer enquiry details.",
+      {
+        position: "top-right",
+        duration: 3000,
+      }
+    )
+  } finally {
+    setCustomerEnquiryDetailsLoading(false)
+  }
 }
 
 const handleEnquiryClick = async (enquiryId: number) => {
@@ -344,85 +571,59 @@ const handleEnquiryClick = async (enquiryId: number) => {
       transition={{ type: "spring", stiffness: 200, damping: 24 }}
     >
       <Card className="overflow-hidden">
-        <CardHeader className="space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            
+        
+      <CardHeader className="!p-0">
+  <div className="flex items-center gap-3 border-b px-6 pt-0 pb-2">
 
-           
-          </div>
+    <button
+      type="button"
+      onClick={() => {
+        setActiveTab("CUS")
+        setFilter("New")
+        setPage(1)
+      }}
+      className={`text-base sm:text-lg font-semibold transition-colors ${
+        activeTab === "CUS"
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      Customer Enquiries
+    </button>
 
-         
-        </div>
-<div className="flex items-center gap-3 border-b pb-2">
- <button
-  type="button"
-  onClick={() => {
-    setActiveTab("CUS")
-    setFilter("New")
-    setPage(1)
-  }}
-  className={`text-base sm:text-lg font-semibold transition-colors ${
-    activeTab === "CUS"
-      ? "text-primary"
-      : "text-muted-foreground hover:text-foreground"
-  }`}
->
-  Customer Enquiries
-</button>
+    <span className="text-muted-foreground">|</span>
 
-<span className="text-muted-foreground">|</span>
+    <button
+      type="button"
+      onClick={() => {
+        setActiveTab("SUP")
+        setFilter("New")
+        setPage(1)
+      }}
+      className={`text-base sm:text-lg font-semibold transition-colors ${
+        activeTab === "SUP"
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      Supplier Enquiries
+    </button>
 
-<button
-  type="button"
-  onClick={() => {
-    setActiveTab("SUP")
-    setFilter("New")
-    setPage(1)
-  }}
-  className={`text-base sm:text-lg font-semibold transition-colors ${
-    activeTab === "SUP"
-      ? "text-primary"
-      : "text-muted-foreground hover:text-foreground"
-  }`}
->
-  My Enquiries
-</button>
-
-  <Badge variant="outline" className="text-[10px] ml-auto">
-    {resultCount} results
-  </Badge>
-</div>  
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-
-            {filterOptions.map((f) => (
-              <Button
-                key={f}
-                variant={filter === f ? "default" : "ghost"}
-                size="sm"
-                className="h-7 text-xs px-2.5"
-                onClick={() => {
-                setPage(1)
-                setFilter(f)
-              }}
-              >
-                {f}
-                
-              </Button>
-            ))}
-          </div>
-        </CardHeader>
-          <CardContent className="p-0 sm:px-6 sm:pb-6">
+  </div>
+</CardHeader>
+          <CardContent className="px-6 pt-0 pb-6">
                     <div className="overflow-x-auto">
                       <Table>
                             <TableHeader>
                             <TableRow className="bg-muted/50">
-                              {visibleFields.map((field) => (
+                            {(activeTab === "CUS"
+                                ? customerVisibleFields
+                                : supplierVisibleFields
+                            ).map((field) => (
                                 <TableHead key={field}>
-                                  {formatHeader(field)}
+                                    {formatHeader(field)}
                                 </TableHead>
-                              ))}
+                            ))}
                             </TableRow>
                           </TableHeader>
                             <TableBody>
@@ -458,10 +659,43 @@ const handleEnquiryClick = async (enquiryId: number) => {
                   }}
                   className="border-b hover:bg-muted/30 transition-colors"
                 >
-                  {visibleFields.map((field) => (
-                    <TableCell key={field} className="text-sm">
-                      {formatCellValue(field, enq[field], enq)}
-                    </TableCell>
+                 {(activeTab === "CUS"
+                      ? customerVisibleFields
+                      : supplierVisibleFields
+                  ).map((field) => (
+                      <TableCell key={field}>
+                {activeTab === "CUS"
+              ? field === "action"
+                ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8"
+                     onClick={() =>
+                      handleFollowUpClick(
+                        (enq as CustomerEnquiryListItem).id,
+                        (enq as CustomerEnquiryListItem).service_request_no
+                      )
+                    }
+                    >
+                      Follow Up
+                    </Button>
+                  )
+                : formatCustomerEnquiryCellValue(
+                    field as keyof CustomerEnquiryListItem,
+                    (enq as CustomerEnquiryListItem)[
+                      field as keyof CustomerEnquiryListItem
+                    ],
+                    enq as CustomerEnquiryListItem
+                  )
+              : formatSupplierEnquiryCellValue(
+                  field as keyof SupplierEnquiryListItem,
+                  (enq as SupplierEnquiryListItem)[
+                    field as keyof SupplierEnquiryListItem
+                  ],
+                  enq as SupplierEnquiryListItem
+                )}
+                      </TableCell>
                   ))}
                 </motion.tr>
               ))}
@@ -494,12 +728,55 @@ const handleEnquiryClick = async (enquiryId: number) => {
                   </div>
                   </CardContent>
       </Card>
-      <SupplierResponseEnquiry
+      <ServiceRequestFollowupDialog
+          open={followupDialogOpen}
+          serviceRequestId={selectedServiceRequestId}
+          serviceRequestNo={selectedServiceRequestNo}
+          onClose={() => {
+            setFollowupDialogOpen(false)
+            setSelectedServiceRequestId(null)
+            setSelectedServiceRequestNo(null)
+          }}
+        />
+      <SupplierEnquiryDetailsDialog
       open={openResponse}
       onOpenChange={setOpenResponse}
       enquiry={selectedEnquiry}
       apiStatusToUiStatus={apiStatusToUiStatus}
     />
+
+    <SupplierServiceRequestDetailsDialog
+  open={serviceRequestDialogOpen}
+  serviceRequestId={selectedServiceRequestId}
+  onClose={() => setServiceRequestDialogOpen(false)}
+   />
+
+   <CustomerEnquiryDetailsDialog
+    open={customerEnquiryDetailsOpen}
+    details={selectedCustomerEnquiry}
+    loading={customerEnquiryDetailsLoading}
+    onClose={() => {
+      setCustomerEnquiryDetailsOpen(false)
+      setSelectedCustomerEnquiry(null)
+    }}
+/>
+<SupplierEnquiryFollowupDialog
+  open={supplierFollowupDialogOpen}
+  onOpenChange={(open) => {
+    setSupplierFollowupDialogOpen(open)
+
+    if (!open) {
+      setSelectedSupplierEnquiryId(null)
+      setSelectedSupplierEnquiry(null)
+    }
+  }}
+  enquiryId={selectedSupplierEnquiryId}
+  enquiryNo={selectedSupplierEnquiry?.enquiry_no}
+  onSuccess={() => {
+    
+  }}
+/>
+
     </motion.div>
   )
 }

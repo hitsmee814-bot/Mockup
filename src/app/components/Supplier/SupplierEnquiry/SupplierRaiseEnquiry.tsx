@@ -198,6 +198,7 @@ const fetchServiceTypes = async () => {
           p-0 overflow-hidden
           flex flex-col
           bg-white rounded-[4px]
+          [&>button]:hidden
         "
       >
         <motion.form
@@ -282,7 +283,7 @@ const fetchServiceTypes = async () => {
                       setServiceType(value)
                       setServiceTypeError("")
                     }}>
-                      <SelectTrigger className={inputClass}>
+                     <SelectTrigger className={`${inputClass} w-full`}>
                         <SelectValue placeholder="Select service type" />
                       </SelectTrigger>
                     <SelectContent>
@@ -342,7 +343,7 @@ const fetchServiceTypes = async () => {
                 type="button"
                 variant="destructive"
                 onClick={handleCancel}
-                className="h-11 flex-1"
+                className="h-9 flex-1"
               >
                 Cancel
               </Button>
@@ -350,7 +351,7 @@ const fetchServiceTypes = async () => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="h-11 flex-1 bg-[#00AFEF] hover:bg-[#0098d6]"
+                className="h-9 flex-1 bg-[#00AFEF] hover:bg-[#0098d6]"
               >
                 {loading ? "Submitting..." : "Submit Enquiry"}
               </Button>

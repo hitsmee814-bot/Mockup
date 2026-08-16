@@ -64,14 +64,14 @@ const statusStyles: Record<string, string> = {
   ACTIVE:
     "bg-emerald-50 text-emerald-700 border border-emerald-200",
 
-  INACTIVE:
-    "bg-amber-50 text-amber-700 border border-amber-200",
-
-  DRAFT:
-    "bg-blue-50 text-blue-700 border border-blue-200",
-
   DELETED:
     "bg-red-50 text-red-700 border border-red-200",
+
+  DRAFT:
+    "bg-orange-50 text-orange-700 border border-orange-200",
+
+  INACTIVE:
+    "bg-purple-50 text-purple-700 border border-purple-200",
 }
 const statusLabel: Record<RateStatus, string> = {
    ACTIVE: "Active",
@@ -386,7 +386,9 @@ const handleViewRates = async (catalog: any) => {
 
   {!loadingCatalogs &&
     catalogs.map((catalog) => (
-      <TableRow key={catalog.id}>
+      <TableRow key={catalog.id}
+       className="border-b hover:bg-muted/30 transition-colors"
+      >
         <TableCell className="max-w-[200px] text-left">
   <div
   className="truncate font-medium hover:text-[#00AFEF] cursor-help transition-colors"
@@ -411,10 +413,10 @@ const handleViewRates = async (catalog: any) => {
 
     return (
       <span
-        className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${
-          typeStyles[catalog.service_type] ||
-          "bg-slate-50 text-slate-700 border border-slate-200"
-        }`}
+        className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-semibold ${
+        typeStyles[catalog.service_type] ||
+        "bg-slate-50 text-slate-700 border border-slate-200"
+      }`}
       >
         <Icon className="h-3.5 w-3.5" />
 
@@ -431,10 +433,10 @@ const handleViewRates = async (catalog: any) => {
         <TableCell className="text-left">{catalog.validity}</TableCell>
        <TableCell className="w-[100px] text-left">
   <span
-    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-      statusStyles[catalog.status] ||
-      "bg-slate-100 text-slate-700"
-    }`}
+   className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+  statusStyles[catalog.status] ||
+  "bg-slate-100 text-slate-700"
+}`}
   >
     {catalog.status}
   </span>
