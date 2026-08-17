@@ -8,13 +8,15 @@ import {
 } from "lucide-react"
 import DemandDetailsDialog from "./DemandDetailsDialog";
 import { SupplierPlaceBidDialog } from "./SupplierPlaceBidDialog"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+
 import { Badge } from "@/components/ui/badge"
 import { CalendarDays, Clock } from "lucide-react";
-
+import {
+  supplierBidSummaryService,
+  type SupplierBidSummary,
+} from "@/services/SupplierPortalServices/SupplierBidSummaryService";
 
 import { useEffect, useState } from "react";
 import {
@@ -76,6 +78,9 @@ export default function SupplierDemandBidding() {
 
 const [demands, setDemands] = useState<ServiceRequestListItem[]>([]);
 const [loading, setLoading] = useState(false);
+const [bidSummaries, setBidSummaries] = useState<
+  Record<number, SupplierBidSummary>
+>({});
 
   const [selectedDemand, setSelectedDemand] =
   useState<ServiceRequestListItem | null>(null);
@@ -95,13 +100,42 @@ const loadDemands = async () => {
     setLoading(true);
     const token = localStorage.getItem("access_token") || "";
     const response =
-      await supplierServiceRequestService.getAssignedServiceRequests({
-        token,
-        page: 1,
-        size: 20,
-      });
+  await supplierServiceRequestService.getAssignedServiceRequests({
+    token,
+    page: 1,
+    size: 20,
+  });
 
-    setDemands(response);
+setDemands(response);
+
+const summaries = await Promise.all(
+  response.map(async (demand) => {
+    try {
+      const summary =
+        await supplierBidSummaryService.getBidSummary(
+          token,
+          demand.id
+        );
+
+      return [demand.id, summary] as const;
+    } catch (error) {
+      console.error(
+        `Failed to load bid summary for demand ${demand.id}`,
+        error
+      );
+
+      return [demand.id, {
+        lowest_bid: null,
+        supplier_bid: null,
+        supplier_rank: null,
+        bid_id: null,
+        currency: null,
+      }] as const;
+    }
+  })
+);
+
+setBidSummaries(Object.fromEntries(summaries));
   } catch (err) {
     console.error(err);
   } finally {
@@ -206,6 +240,58 @@ const loadDemands = async () => {
                     
                   </div>
 
+                  {/* Bid Summary */}
+                {(() => {
+                  const bidSummary = bidSummaries[d.id];
+
+                  return (
+                    <div className="mt-4 w-full max-w-xl rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                      <div className="grid grid-cols-3 divide-x divide-slate-200 text-center">
+
+                        {/* Lowest Bid */}
+                        <div className="px-3">
+                          <p className="text-xs text-slate-500">
+                            Lowest Bid
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-slate-800">
+                            {bidSummary?.lowest_bid != null
+                              ? `${bidSummary.currency ?? ""} ${bidSummary.lowest_bid.toLocaleString("en-IN")}`
+                              : "—"}
+                          </p>
+                        </div>
+
+                        {/* Your Bid */}
+                        <div className="px-3">
+                          <p className="text-xs text-slate-500">
+                            Your Bid
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-[#00AFEF]">
+                            {bidSummary?.supplier_bid != null
+                              ? `${bidSummary.currency ?? ""} ${bidSummary.supplier_bid.toLocaleString("en-IN")}`
+                              : "Not placed"}
+                          </p>
+                        </div>
+
+                        {/* Your Rank */}
+                        <div className="px-3">
+                          <p className="text-xs text-slate-500">
+                            Your Rank
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-slate-800">
+                            {bidSummary?.supplier_rank != null
+                              ? `#${bidSummary.supplier_rank}`
+                              : "—"}
+                          </p>
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                })()}
+
                   {/* Service badges */}
                 <div className="flex flex-wrap gap-2">
            <div className="flex items-center gap-3 mt-3">
@@ -237,30 +323,52 @@ const loadDemands = async () => {
                 </div>
 
                
-              {/* Right */}
-            <div className="flex flex-col items-end gap-2 min-w-[180px]">
+           {/* Right */}
+      <div className="flex flex-col items-end gap-3 min-w-[220px]">
 
-              <Button
-                size="sm"
-                className="bg-[#00AFEF] text-white hover:bg-[#0099D1]"
-                onClick={() => setDialogId(d.id)}
-              >
-                <Gavel className="mr-1 h-4 w-4" />
-                Place Bid
-              </Button>
+  {/* Bid Summary */}
+  {(() => {
+    const bidSummary = bidSummaries[d.id];
 
-              {/* Place Bid Dialog */}
-              <SupplierPlaceBidDialog
-                open={dialogId === d.id}
-                onOpenChange={(open) =>
-                  setDialogId(open ? d.id : null)
-                }
-                demandId={d.id}
-                serviceRequestNo={d.service_request_no}
-                destination={d.destination}
-              />
+    return (
+      <>
+        
+        {/* Bid Button */}
+        <Button
+          size="sm"
+          className="bg-[#00AFEF] text-white hover:bg-[#0099D1]"
+          onClick={() => setDialogId(d.id)}
+        >
+          <Gavel className="mr-1 h-4 w-4" />
 
-            </div>
+          {bidSummary?.bid_id
+            ? "Update Bid"
+            : "Place Bid"}
+        </Button>
+
+        {/* Place Bid Dialog */}
+      <SupplierPlaceBidDialog
+        open={dialogId === d.id}
+        onOpenChange={(open) =>
+          setDialogId(open ? d.id : null)
+        }
+        demandId={d.id}
+        serviceRequestNo={d.service_request_no}
+        destination={d.destination}
+        bidId={bidSummaries[d.id]?.bid_id ?? null}
+        existingBidAmount={
+          bidSummaries[d.id]?.supplier_bid ?? null
+        }
+        existingCurrency={
+          bidSummaries[d.id]?.currency ?? null
+        }
+         onBidSuccess={loadDemands}
+      />
+      </>
+    );
+  })()}
+
+</div>
               </div>
             </Card>
           </motion.div>

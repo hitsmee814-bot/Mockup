@@ -26,6 +26,11 @@ type SupplierPlaceBidDialogProps = {
   demandId: number | null
   serviceRequestNo?: string
   destination?: string
+
+  bidId?: number | null
+  existingBidAmount?: number | null
+  existingCurrency?: string | null
+   onBidSuccess?: () => void
 }
 export function SupplierPlaceBidDialog({
   open,
@@ -33,6 +38,10 @@ export function SupplierPlaceBidDialog({
   demandId,
   serviceRequestNo,
   destination,
+  bidId,
+  existingBidAmount,
+  existingCurrency,
+  onBidSuccess,
 }: SupplierPlaceBidDialogProps) {
 
   const [quotedAmount, setQuotedAmount] = useState("")
@@ -59,10 +68,23 @@ export function SupplierPlaceBidDialog({
   }
 
   useEffect(() => {
-    if (!open) {
-      resetForm()
-    }
-  }, [open])
+  if (!open) {
+    resetForm()
+    return
+  }
+
+  if (bidId && existingBidAmount != null) {
+    setQuotedAmount(String(existingBidAmount))
+    setCurrency(existingCurrency ?? "")
+  } else {
+    resetForm()
+  }
+}, [
+  open,
+  bidId,
+  existingBidAmount,
+  existingCurrency,
+])
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
@@ -104,28 +126,52 @@ const handleSubmit = async (e: React.FormEvent) => {
       return
     }
 
-    const payload = {
-      demand_id: demandId,
-      quoted_amount: Number(quotedAmount),
-      currency: currency.trim().toUpperCase(),
-      notes: notes.trim() || undefined,
-      delivery_days: deliveryDays
-        ? Number(deliveryDays)
-        : undefined,
-    }
+    const isUpdate = !!bidId
 
-    await createSupplierBidService.createBid(
-      token,
-      payload
-    )
+if (isUpdate) {
+  const updatePayload = {
+    quoted_amount: Number(quotedAmount),
+    notes: notes.trim() || undefined,
+    delivery_days: deliveryDays
+      ? Number(deliveryDays)
+      : undefined,
+  }
 
-     toast.success("Bid submitted successfully.", {
-      position: "top-right",
-      duration: 3000,
-    })
+  await createSupplierBidService.updateBid(
+    token,
+    bidId!,
+    updatePayload
+  )
+} else {
+  const createPayload = {
+    demand_id: demandId,
+    quoted_amount: Number(quotedAmount),
+    currency: currency.trim().toUpperCase(),
+    notes: notes.trim() || undefined,
+    delivery_days: deliveryDays
+      ? Number(deliveryDays)
+      : undefined,
+  }
+
+  await createSupplierBidService.createBid(
+    token,
+    createPayload
+  )
+}
+
+     toast.success(
+  isUpdate
+    ? "Bid updated successfully."
+    : "Bid submitted successfully.",
+  {
+    position: "top-right",
+    duration: 3000,
+  }
+)
     
     resetForm()
     onOpenChange(false)
+    onBidSuccess?.()
 
   } catch (error) {
     console.error("Create bid error:", error)
