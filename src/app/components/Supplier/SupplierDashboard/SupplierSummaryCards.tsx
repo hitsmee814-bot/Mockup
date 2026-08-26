@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { useRouter } from 'next/navigation'
-import { toast } from "sonner"
+
 import {
   DollarSign,
   TrendingUp,
@@ -53,7 +52,7 @@ const item = {
 } as const
 
 export function SupplierSummaryCards() {
-   const router = useRouter()
+  
   const [kpiData, setKpiData] = useState<KPIResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -66,25 +65,61 @@ export function SupplierSummaryCards() {
 
         const token = localStorage.getItem("access_token") || ""
 
-        if (!token) {
-          setError("Unable to load dashboard data. Login token was not found.")
-           toast.error("Session expired. Please login again.",{
-        position: "top-right",
-         duration: 3000,})
-       localStorage.removeItem("access_token");
-       localStorage.removeItem("refresh_token");
-
-      router.push("/login");
-
-  return;
+       if (!token) {
+          return
         }
 
         const response: any = await kpiService.getKpis(token)
 
-      console.log("KPI API response:", response)
+      
 
       const data = response?.data ?? response
+      if (
+        !data ||
+        typeof data !== "object" ||
+        !("total_bids" in data) ||
+        !("active_requests" in data) ||
+        !("won_bids" in data) ||
+        !("revenue" in data) ||
+        !("bid_success_rate" in data)
+      ) {
+        setError("Unable to load dashboard data. Please try again later.")
+        return
+      }
 
+      const numericFields = [
+      data.total_bids,
+      data.active_requests,
+      data.won_bids,
+      data.revenue,
+      data.bid_success_rate,
+    ]
+
+    const hasInvalidNumber = numericFields.some(
+      (value) => typeof value !== "number" || !Number.isFinite(value)
+    )
+
+    if (hasInvalidNumber) {
+      setError("Unable to load dashboard data. Please try again later.")
+      return
+    }
+const hasInvalidKpiValue =
+  data.total_bids < 0 ||
+  data.active_requests < 0 ||
+  data.won_bids < 0 ||
+  data.revenue < 0
+
+if (hasInvalidKpiValue) {
+  setError("Unable to load dashboard data. Please try again later.")
+  return
+}
+
+    const bidSuccessRate = Number(data.bid_success_rate)
+
+if (bidSuccessRate < 0 || bidSuccessRate > 100) {
+  setError("Unable to load dashboard data. Please try again later.")
+  return
+}
       setKpiData({
         total_bids: Number(data?.total_bids ?? 0),
         active_requests: Number(data?.active_requests ?? 0),
@@ -96,18 +131,28 @@ export function SupplierSummaryCards() {
         // const data = await kpiService.getKpis(token)
         
         // setKpiData(data)
-      } catch (err: any) {
-         
-        console.error("KPI API error:", err)
-        setError(err?.message || "Unable to load dashboard data. Please try again later.")
-      } finally {
-        setLoading(false)
-      }
-    }
+      } catch (err: unknown) {
+  console.error("KPI API error:", err)
 
-    fetchKpis()
-   
-  }, [])
+  const message = err instanceof Error ? err.message : ""
+
+  if (
+    message === "Session expired. Please login again." ||
+    message === "Your session has expired. Please login again."
+  ) {
+    window.dispatchEvent(new Event("session-expired"))
+    return
+  }
+
+  setError("Unable to load dashboard data. Please try again later.")
+}finally {
+              setLoading(false)
+            }
+          }
+
+          fetchKpis()
+        
+        }, [])
 
   const getValue = (value: number | undefined) => {
     if (loading) return "..."
@@ -152,7 +197,7 @@ export function SupplierSummaryCards() {
         ? "..."
         : error
         ? "-"
-        : `₹${kpiData?.revenue ?? 0}`,
+      : `₹${Number(kpiData?.revenue ?? 0).toLocaleString("en-IN")}`,
       change: error ? "Data unavailable" : "Total revenue",
       changeType: error ? "neutral" : "up",
       icon: DollarSign,

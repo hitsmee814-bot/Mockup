@@ -4,12 +4,16 @@ import { useEffect, useState } from "react"
 import { SupplierServiceTypes } from "@/services/SupplierPortalServices/SupplierServiceTypes"
 import { ServiceSubcategories } from "@/services/SupplierPortalServices/ServiceSubcategories"
 import { useRouter } from 'next/navigation'
-import { supplierCreateEnquiryService } from "@/services/SupplierPortalServices/SupplierCreateEnquiry"
+
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+
+import { CalendarIcon } from "lucide-react"
 import { ErrorMessage } from "../../signup/supplier/SupplierUtils"
 import { ServiceSubcategoryParameters } from "@/services/SupplierPortalServices/ServiceSubcategoryParameters"
 import SectionHeader from "../SectionHeader";
@@ -42,9 +46,9 @@ import { SupplierCreateCatalogRateService } from "@/services/SupplierPortalServi
 
 const labelClass =
   "text-slate-700 text-[14px] font-medium mb-2 block"
-
 const inputClass =
-  "h-10 w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
+  "h-10 w-full cursor-text bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
+
   const inputClassSelect =
   "h-11 w-full bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]"
     const thClass =
@@ -53,8 +57,14 @@ const inputClass =
   const tdClass =
   "border border-slate-200 px-4 py-3 whitespace-nowrap";
 
-  export function AddSupplierCatalogItem() {
-   const router = useRouter()
+type AddSupplierCatalogItemProps = {
+  onSaved?: (status: "ACTIVE" | "DRAFT") => void
+}
+
+export function AddSupplierCatalogItem({
+  onSaved,
+}: AddSupplierCatalogItemProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
    const [serviceType, setServiceType] = useState("")
     const [loading, setLoading] = useState(false)
@@ -63,6 +73,11 @@ const [serviceTypeLoading, setServiceTypeLoading] = useState(false)
 const [showSuccessAlert, setShowSuccessAlert] = useState(false)
 const [submittedEnquiryNo, setSubmittedEnquiryNo] = useState("")
 const [serviceTypeError, setServiceTypeError] = useState("")
+const [validFromCalendarOpen, setValidFromCalendarOpen] = useState(false)
+const [validToCalendarOpen, setValidToCalendarOpen] = useState(false)
+const [effectiveFromCalendarOpen, setEffectiveFromCalendarOpen] =
+  useState(false)
+const [effectiveToCalendarOpen, setEffectiveToCalendarOpen] = useState(false)
 const [serviceName, setServiceName] = useState("")
 const [description, setDescription] = useState("")
 const [city, setCity] = useState("")
@@ -71,9 +86,17 @@ const [currency, setCurrency] = useState("")
 const [validFrom, setValidFrom] = useState("")
 const [validTo, setValidTo] = useState("")
 const [status, setStatus] = useState("ACTIVE")
-
+const [effectiveFromError, setEffectiveFromError] = useState("")
+const [effectiveToError, setEffectiveToError] = useState("")
 const [serviceNameError, setServiceNameError] = useState("")
 const [currencyError, setCurrencyError] = useState("")
+const [descriptionError, setDescriptionError] = useState("")
+const [cityError, setCityError] = useState("")
+const [countryError, setCountryError] = useState("")
+const [validFromError, setValidFromError] = useState("")
+const [validToError, setValidToError] = useState("")
+const [rateCurrencyError, setRateCurrencyError] = useState("")
+const [selectedPricingFactorsError, setSelectedPricingFactorsError] = useState("")
 
 const [rates, setRates] = useState<any[]>([])
 
@@ -114,6 +137,8 @@ useEffect(() => {
 }, [validTo])
 
 const toggleSubcategory = (id: number) => {
+  setSelectedPricingFactorsError("")
+
   setSelectedSubcategories((prev) => {
     const updated = prev.includes(id)
       ? prev.filter(x => x !== id)
@@ -123,15 +148,32 @@ const toggleSubcategory = (id: number) => {
   })
 }
 
-
 const validateEffectiveDates = () => {
+
+  if (!effectiveFrom) {
+  toast.error("Effective From is required", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return false
+}
+
+if (!effectiveTo) {
+  toast.error("Effective To is required", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return false
+}
   if (
     effectiveFrom &&
     validFrom &&
     effectiveFrom < validFrom
   ) {
     toast.error(
-      "Effective From cannot be earlier than Valid From"
+      "Effective From cannot be earlier than Valid From",{
+      position: "top-right",
+     duration: 3000,}
     )
     return false
   }
@@ -142,7 +184,9 @@ const validateEffectiveDates = () => {
     effectiveTo > validTo
   ) {
     toast.error(
-      "Effective To cannot be later than Valid To"
+      "Effective To cannot be later than Valid To",{
+      position: "top-right",
+     duration: 3000,}
     )
     return false
   }
@@ -153,7 +197,9 @@ const validateEffectiveDates = () => {
     effectiveFrom > effectiveTo
   ) {
     toast.error(
-      "Effective From cannot be after Effective To"
+      "Effective From cannot be after Effective To",{
+      position: "top-right",
+     duration: 3000,}
     )
     return false
   }
@@ -162,25 +208,301 @@ const validateEffectiveDates = () => {
 }
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
 
-  if (loading) return
+const getRateCardFieldName = (subcategoryName: string) => {
+  const name = subcategoryName.trim().toLowerCase()
 
-let hasError = false
+  const map: Record<string, string> = {
+    // HOTEL
+    "hotel type": "hotel_type",
+    "room type": "hotel_room_type",
+    "hotel room type": "hotel_room_type",
+    "meal plan": "hotel_meal_plan",
+    "hotel meal plan": "hotel_meal_plan",
+    "occupancy": "hotel_occupancy",
+    "hotel occupancy": "hotel_occupancy",
+    "season": "hotel_season",
+    "hotel season": "hotel_season",
+    "stay duration": "hotel_stay_duration",
+    "number of nights": "hotel_stay_duration",
+
+    // TRANSFER
+    "vehicle type": "transfer_vehicle_type",
+    "transfer vehicle type": "transfer_vehicle_type",
+    "route": "transfer_route",
+    "transfer route": "transfer_route",
+    "trip type": "transfer_trip_type",
+    "transfer trip type": "transfer_trip_type",
+    "distance slab": "transfer_distance_slab",
+    "passenger capacity": "transfer_passenger_capacity",
+    "time slot": "transfer_time_slot",
+
+    // CAR RENTAL
+    "vehicle category": "car_rental_vehicle_category",
+    "rental duration": "car_rental_rental_duration",
+    "driver type": "car_rental_driver_type",
+    "extra km slab": "car_rental_extra_km_slab",
+    "fuel policy": "car_rental_fuel_policy",
+
+    // TOUR PACKAGE
+    "package name": "tour_package_name",
+    "duration": "tour_package_duration",
+    "number of persons": "tour_package_number_of_persons",
+    "hotel star rating": "tour_package_hotel_star_rating",
+    "inclusions": "tour_package_inclusion_type",
+    "inclusion type": "tour_package_inclusion_type",
+
+    // ACTIVITY
+    "activity name": "activity_name",
+    "passenger category": "activity_passenger_category",
+    "activity time slot": "activity_time_slot",
+    "activity type": "activity_type",
+    "group size": "activity_group_size",
+
+    // INSURANCE
+    "destination": "insurance_destination",
+    "traveller age band": "insurance_traveller_age_band",
+    "trip duration": "insurance_trip_duration",
+    "coverage plan": "insurance_coverage_plan",
+    "insurance trip type": "insurance_trip_type",
+
+    // VISA
+    "country": "visa_country",
+    "visa type": "visa_type",
+    "processing type": "visa_processing_type",
+    "validity": "visa_validity",
+
+    // CRUISE
+    "cruise name": "cruise_name",
+    "cabin type": "cruise_cabin_type",
+    "cruise duration": "cruise_duration",
+    "departure date": "cruise_departure_date",
+    "cruise occupancy": "cruise_occupancy",
+
+    // RAIL
+    "train class": "rail_train_class",
+    "seat/berth type": "rail_seat_berth_type",
+    "passenger type": "rail_passenger_category",
+    "rail passenger category": "rail_passenger_category",
+    "fare type": "rail_fare_type",
+
+    // BUS
+    "bus type": "bus_type",
+    "bus route": "bus_route",
+    "bus seat type": "bus_seat_type",
+    "bus time slot": "bus_time_slot"
+  }
+
+  return map[name]
+}
+
+const validateServiceDetails = () => {
+  let isValid = true
+
+  // Clear previous errors
+  setServiceTypeError("")
+  setServiceNameError("")
+  setDescriptionError("")
+  setCountryError("")
+  setCityError("")
+  setCurrencyError("")
+  setValidFromError("")
+  setValidToError("")
+
+  if (!serviceType.trim()) {
+    setServiceTypeError("Required")
+    isValid = false
+  }
+
+  if (!serviceName.trim()) {
+    setServiceNameError("Required")
+    isValid = false
+  }
+
+  if (!description.trim()) {
+    setDescriptionError("Required")
+    isValid = false
+  }
+
+  if (!country.trim()) {
+    setCountryError("Required")
+    isValid = false
+  }
+
+  if (!city.trim()) {
+    setCityError("Required")
+    isValid = false
+  }
 
 
-setServiceTypeError("")
+  const today = new Date().toISOString().split("T")[0]
 
+if (!validFrom) {
+  setValidFromError("Required")
+  isValid = false
+} else if (validFrom < today) {
+  setValidFromError("Date cannot be earlier than today")
+  isValid = false
+}
 
+if (!validTo) {
+  setValidToError("Required")
+  isValid = false
+} else if (validTo < today) {
+  setValidToError("Date cannot be earlier than today")
+  isValid = false
+}
 
-if (!serviceType) {
-  setServiceTypeError("Service type is required")
-  hasError = true
+if (validFrom && validTo && validFrom > validTo) {
+  setValidToError("Valid To cannot be earlier than Valid From")
+  isValid = false
+}
+
+  return isValid
+}
+
+const validatePricingFactors = () => {
+  if (selectedSubcategories.length === 0) {
+    toast.error("Select at least one pricing factor", {
+      position: "top-right",
+      duration: 3000,
+    })
+    return false
+  }
+
+  return true
+}
+const validateRates = () => {
+  if (rates.length === 0) {
+    toast.error("Add at least one rate", {
+      position: "top-right",
+      duration: 3000,
+    })
+    return false
+  }
+
+  return true
 }
 
 
-if (hasError) return
+const handleSaveAsDraft = async () => {
+  if (loading) return
+
+  if (!serviceType.trim()) {
+    toast.error("Service Type is required", {
+      position: "top-right",
+      duration: 3000,
+    })
+    return
+  }
+
+  if (!serviceName.trim()) {
+    toast.error("Service Name is required", {
+      position: "top-right",
+      duration: 3000,
+    })
+    return
+  }
+
+  try {
+    setLoading(true)
+
+    const token = localStorage.getItem("access_token")
+
+    if (!token) {
+      toast.error("Session expired. Please login again.", {
+        position: "top-right",
+        duration: 3000,
+      })
+
+      localStorage.removeItem("access_token")
+      localStorage.removeItem("refresh_token")
+      router.push("/login")
+      return
+    }
+
+    const selectedService = serviceTypes.find(
+      (item) => item.service_type === serviceType
+    )
+
+    if (!selectedService?.id) {
+      throw new Error(
+        "Selected service type could not be identified."
+      )
+    }
+
+    const draftPayload = {
+      supplier_service_id: Number(selectedService.id),
+      service_name: serviceName.trim(),
+      description: description.trim() || undefined,
+      city: city.trim() || undefined,
+      country: country || undefined,
+      currency: currency || "INR",
+      valid_from: validFrom || undefined,
+      valid_to: validTo || undefined,
+      status: "DRAFT",
+    }
+
+    const catalog =
+      await SupplierCreateCatalogRateService.createCatalog(
+        draftPayload
+      )
+
+    if (!catalog?.id) {
+      throw new Error(
+        "Draft was created but no catalog ID was returned."
+      )
+    }
+
+    toast.success("Catalog saved as draft.", {
+      position: "top-right",
+      duration: 3000,
+    })
+
+onSaved?.("DRAFT")
+
+    setOpen(false)
+    resetForm()
+  } catch (error: any) {
+    console.error("Failed to save draft:", error)
+
+    toast.error(
+      error?.message || "Failed to save draft. Please try again.",
+      {
+        position: "top-right",
+        duration: 3000,
+      }
+    )
+  } finally {
+    setLoading(false)
+  }
+}
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+   
+
+
+  if (loading) return
+  const serviceDetailsValid = validateServiceDetails()
+
+if (!serviceDetailsValid) {
+  return
+}
+const pricingFactorsValid = validatePricingFactors()
+
+
+if (!pricingFactorsValid) {
+  return
+}
+
+const ratesValid = validateRates()
+
+if (!ratesValid) {
+  return
+}
+
+
 
   try {
     setLoading(true)
@@ -198,60 +520,90 @@ if (hasError) return
 
   return;
     }
-const supplierId = Number(localStorage.getItem("userId"));
-   const payload = {
-  supplier_service_id: serviceType,
-  service_name: serviceName,
-  description,
-  city,
-  country,
-  currency,
-  status,
-  valid_from: validFrom,
-  valid_to: validTo,
+
+const selectedService = serviceTypes.find(
+  (item) => item.service_type === serviceType
+)
+if (!selectedService?.id) {
+  throw new Error(
+    "Selected service type could not be identified."
+  )
 }
 
-  //   const response =
-  // await SupplierCreateCatalogRateService.createCatalogAndRate(
+const catalogPayload = {
+ supplier_service_id: Number(selectedService.id),
+  service_name: serviceName.trim(),
+  description: description.trim(),
+  city: city.trim(),
+  country,
+  currency,
+  valid_from: validFrom,
+  valid_to: validTo,
+  status: "ACTIVE",
+}
 
-  //   {
-  //     supplier_service_id: Number(serviceType),
-  //     service_name: serviceName,
-  //     description,
-  //     city,
-  //     country,
-  //     currency,
-  //     valid_from: validFrom,
-  //     valid_to: validTo,
-  //     status,
-  //   },
+const catalog =
+  await SupplierCreateCatalogRateService.createCatalog(
+    catalogPayload
+  )
 
-  //   {
-      
-  //     rate_name: rateName,
-  //     base_price: Number(basePrice),
-  //     tax_percent: Number(taxPercent || 0),
-  //     markup_percent: Number(markupPercent || 0),
-  //     currency: rateCurrency,
-  //     min_pax: minPax ? Number(minPax) : 1,
-  //     max_pax: maxPax ? Number(maxPax) : undefined,
-  //     effective_from: effectiveFrom,
-  //     effective_to: effectiveTo || undefined,
-  //     status,
-  //   }
+if (!catalog?.id) {
+  throw new Error(
+    "Catalog was created but no catalog ID was returned."
+  )
+}
+for (const rate of rates) {
+  const ratePayload = {
+    catalog_id: catalog.id,
 
-  // )
+    rate_name: rate.rate_name,
+    base_price: Number(rate.base_price),
+    tax_percent: Number(rate.tax_percent || 0),
+    markup_percent: Number(rate.markup_percent || 0),
+    currency: rate.currency,
 
-// console.log(response)
+    min_pax: rate.min_pax
+      ? Number(rate.min_pax)
+      : 1,
 
-toast.success(
-  "Catalog and Rate created successfully",
-  {
-    position: "top-right",
-    duration: 3000,
+    max_pax: rate.max_pax
+      ? Number(rate.max_pax)
+      : undefined,
+
+    effective_from: rate.effective_from,
+    effective_to: rate.effective_to || undefined,
+
+    status: "ACTIVE",
+
+    ...Object.fromEntries(
+      Object.entries(rate).filter(
+        ([key]) =>
+          key !== "combinationKey" &&
+          key !== "attributes" &&
+          ![
+            "rate_name",
+            "base_price",
+            "tax_percent",
+            "markup_percent",
+            "currency",
+            "min_pax",
+            "max_pax",
+            "effective_from",
+            "effective_to",
+          ].includes(key)
+      )
+    ),
   }
-)
 
+  await SupplierCreateCatalogRateService.createRate(
+    ratePayload
+  )
+}
+toast.success("Catalog and rates created successfully.", {
+  position: "top-right",
+  duration: 3000,
+})
+onSaved?.("ACTIVE")
 setOpen(false)
 resetForm()
 
@@ -348,7 +700,9 @@ const fetchServiceTypes = async () => {
 
     if (!token) {
       toast.error(
-        "Session expired. Please login again."
+        "Session expired. Please login again.",{
+      position: "top-right",
+     duration: 3000,}
       )
       return
     }
@@ -576,6 +930,7 @@ useEffect(() => {
     title="Service Details"
     description="Basic information about the service you're offering."
   />
+
          <div className="grid grid-cols-2 gap-6 w-full">
 
   <div>
@@ -587,8 +942,13 @@ useEffect(() => {
   value={serviceType}
   onValueChange={handleServiceTypeChange}
 >
-     <SelectTrigger
-  className={`${inputClassSelect}`}>
+    <SelectTrigger
+  className={`${inputClassSelect} ${
+    serviceTypeError
+      ? "border-red-500 ring-1 ring-red-500"
+      : ""
+  }`}
+>
         <SelectValue placeholder="Select service type" />
       </SelectTrigger>
 
@@ -619,7 +979,11 @@ useEffect(() => {
         setServiceNameError("")
       }}
       placeholder="Enter service name"
-      className={inputClass}
+      className={`${inputClass} ${
+      serviceNameError
+    ? "border-red-500 ring-1 ring-red-500"
+    : ""
+    }`}
     />
 
     <ErrorMessage message={serviceNameError} /> 
@@ -646,7 +1010,7 @@ useEffect(() => {
     value={description}
     onChange={(e) => {
       const text = e.target.value
-
+      setDescriptionError("")
       // Limit to approximately 100 words
       const words = text.trim().split(/\s+/)
 
@@ -655,7 +1019,14 @@ useEffect(() => {
       }
     }}
     placeholder="Enter service description (Maximum 100 words)"
-    className="w-full min-h-[140px] bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] resize-none"
+    className={`w-full min-h-[140px] bg-white border text-slate-900
+  placeholder:text-slate-400
+  focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF]
+  resize-none ${
+    descriptionError
+      ? "border-red-500 ring-1 ring-red-500"
+      : "border-slate-300"
+  }`}
   />
 
   <div className="mt-1 text-xs text-slate-500">
@@ -664,6 +1035,7 @@ useEffect(() => {
       : 0}
     /100 words
   </div>
+  <ErrorMessage message={descriptionError} />
 </div>
      <div className="grid grid-cols-2 gap-6 w-full">
 
@@ -676,11 +1048,19 @@ useEffect(() => {
     <Select
       value={country}
       onValueChange={(value) => {
-      setCountry(value);
-      setCity("");
-}}
+      setCountry(value)
+      setCountryError("")
+      setCity("")
+      setCityError("")
+    }}
     >
-      <SelectTrigger className={`${inputClassSelect}`}>
+            <SelectTrigger
+        className={`${inputClassSelect} ${
+          countryError
+            ? "border-red-500 ring-1 ring-red-500"
+            : ""
+        }`}
+      >
         <SelectValue placeholder="Select country" />
       </SelectTrigger>
 
@@ -697,7 +1077,7 @@ useEffect(() => {
         <SelectItem value="Maldives">Maldives</SelectItem>
       </SelectContent>
     </Select>
-
+          <ErrorMessage message={countryError} />
   </div>
   <div>
     <Label className={labelClass}>
@@ -708,18 +1088,24 @@ useEffect(() => {
   value={city}
   readOnly={!country}
   placeholder={country ? "Enter city" : "Select Country First"}
-  className={`${inputClass} ${!country ? "bg-gray-100 cursor-not-allowed" : ""}`}
+  className={`${inputClass} ${
+  cityError
+    ? "border-red-500 ring-1 ring-red-500"
+    : "border-slate-300"
+} ${!country ? "bg-gray-100 cursor-not-allowed" : ""}`}
   onClick={() => {
     if (!country) {
       toast.info("Please select a country first.");
     }
   }}
-  onChange={(e) => {
-    if (country) {
-      setCity(e.target.value);
-    }
-  }}
+ onChange={(e) => {
+  if (country) {
+    setCity(e.target.value)
+    setCityError("")
+  }
+}}
 />
+<ErrorMessage message={cityError} />
   </div>
 
   
@@ -727,28 +1113,177 @@ useEffect(() => {
 </div>
     
      <div className="grid grid-cols-2 gap-6 w-full">
-     <div>
-  <Label className={labelClass}>Valid From</Label>
+<div>
+  <Label className={labelClass}>
+    Valid From
+  </Label>
 
-  <Input
-    type="date"
-    title="Allowed format: YYYY-MM-DD"
-    value={validFrom}
-    onChange={(e) => setValidFrom(e.target.value)}
-    className={inputClass}
-  />
+<Popover
+  open={validFromCalendarOpen}
+  onOpenChange={setValidFromCalendarOpen}
+>
+    <PopoverTrigger asChild>
+      <Button
+        type="button"
+        variant="outline"
+        className={`
+          h-10
+          w-full
+          justify-start
+          cursor-pointer
+          rounded-md
+          bg-white
+          px-3
+          text-left
+          font-normal
+          text-slate-900
+          hover:bg-white
+          hover:text-slate-900
+          ${
+            validFromError
+              ? "border-red-500 ring-1 ring-red-500"
+              : "border-slate-300"
+          }
+        `}
+      >
+        <CalendarIcon
+          className="mr-2 h-4 w-4 shrink-0 text-[#00AFEF]"
+        />
+
+        {validFrom ? (
+          format(new Date(validFrom), "dd MMM yyyy")
+        ) : (
+          <span className="text-slate-400">
+            Select valid from
+          </span>
+        )}
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent
+      className="w-auto p-0"
+      align="start"
+    >
+      <Calendar
+        mode="single"
+        selected={
+          validFrom
+            ? new Date(validFrom)
+            : undefined
+        }
+      onSelect={(date) => {
+      if (!date) return
+
+      const formattedDate =
+        format(date, "yyyy-MM-dd")
+
+      setValidFrom(formattedDate)
+      setValidFromError("")
+      setValidFromCalendarOpen(false)
+    }}
+        disabled={(date) => {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          return date < today
+        }}
+      />
+    </PopoverContent>
+  </Popover>
+
+  <ErrorMessage message={validFromError} />
 </div>
 
 <div>
-  <Label className={labelClass}>Valid To</Label>
+  <Label className={labelClass}>
+    Valid To
+  </Label>
 
-  <Input
-    type="date"
-    title="Allowed format: YYYY-MM-DD"
-    value={validTo}
-    onChange={(e) => setValidTo(e.target.value)}
-    className={inputClass}
-  />
+ <Popover
+  open={validToCalendarOpen}
+  onOpenChange={setValidToCalendarOpen}
+>
+    <PopoverTrigger asChild>
+      <Button
+        type="button"
+        variant="outline"
+        className={`
+          h-10
+          w-full
+          justify-start
+          cursor-pointer
+          rounded-md
+          bg-white
+          px-3
+          text-left
+          font-normal
+          text-slate-900
+          hover:bg-white
+          hover:text-slate-900
+          ${
+            validToError
+              ? "border-red-500 ring-1 ring-red-500"
+              : "border-slate-300"
+          }
+        `}
+      >
+        <CalendarIcon
+          className="mr-2 h-4 w-4 shrink-0 text-[#00AFEF]"
+        />
+
+        {validTo ? (
+          format(new Date(validTo), "dd MMM yyyy")
+        ) : (
+          <span className="text-slate-400">
+            Select valid to
+          </span>
+        )}
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent
+      className="w-auto p-0"
+      align="start"
+    >
+      <Calendar
+        mode="single"
+        selected={
+          validTo
+            ? new Date(validTo)
+            : undefined
+        }
+       onSelect={(date) => {
+        if (!date) return
+
+        const formattedDate =
+          format(date, "yyyy-MM-dd")
+
+        setValidTo(formattedDate)
+        setValidToError("")
+        setValidToCalendarOpen(false)
+      }}
+        disabled={(date) => {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          if (date < today) {
+            return true
+          }
+
+          if (validFrom) {
+            const fromDate = new Date(validFrom)
+            fromDate.setHours(0, 0, 0, 0)
+
+            return date < fromDate
+          }
+
+          return false
+        }}
+      />
+    </PopoverContent>
+  </Popover>
+
+  <ErrorMessage message={validToError} />
 </div>
 
     </div>
@@ -815,10 +1350,11 @@ useEffect(() => {
   </Popover>
   </div>
   {subcategoryLoading ? (
-    <p className="text-sm text-slate-500">
-      Loading...
-    </p>
-  ) : (
+  <p className="text-sm text-slate-500">
+    Loading...
+  </p>
+) : (
+  <div>
     <div className="grid grid-cols-2 gap-3 mt-2">
       {subcategories.map((item: any) => (
         <label
@@ -826,12 +1362,12 @@ useEffect(() => {
           className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 cursor-pointer"
         >
           <input
-    type="checkbox"
-    checked={selectedSubcategories.includes(item.id)}
-    disabled={rates.length > 0}
-    onChange={() => toggleSubcategory(item.id)}
-    className="h-4 w-4 accent-[#00AFEF] disabled:cursor-not-allowed disabled:opacity-50"
-/>
+            type="checkbox"
+            checked={selectedSubcategories.includes(item.id)}
+            disabled={rates.length > 0}
+            onChange={() => toggleSubcategory(item.id)}
+            className="h-4 w-4 accent-[#00AFEF] disabled:cursor-not-allowed disabled:opacity-50"
+          />
 
           <span className="text-sm">
             {item.subcategory_name}
@@ -839,8 +1375,12 @@ useEffect(() => {
         </label>
       ))}
     </div>
-  )}
+
+    <ErrorMessage message={selectedPricingFactorsError} />
+  </div>
+)}
 </div>
+
   </div>
   <div className="space-y-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-8 shadow-sm">
 
@@ -958,11 +1498,20 @@ useEffect(() => {
       Currency
     </Label>
 
-    <Select
-      value={rateCurrency}
-      onValueChange={setRateCurrency}
+   <Select
+     value={rateCurrency}
+      onValueChange={(value) => {
+        setRateCurrency(value)
+         setRateCurrencyError("")
+      }}
     >
-      <SelectTrigger className={inputClass}>
+      <SelectTrigger
+      className={`${inputClass} ${
+  rateCurrencyError
+    ? "border-red-500 ring-1 ring-red-500"
+    : ""
+    }`}
+    >
         <SelectValue placeholder="Select currency" />
       </SelectTrigger>
 
@@ -977,6 +1526,7 @@ useEffect(() => {
         <SelectItem value="MYR">MYR - Malaysian Ringgit</SelectItem>
       </SelectContent>
     </Select>
+    <ErrorMessage message={rateCurrencyError} />
   </div>
 
   {/* Tax Percent */}
@@ -1039,56 +1589,298 @@ useEffect(() => {
 
   {/* Effective From */}
   <div>
-    <Label className={labelClass}>
-      Effective From
-    </Label>
+  <Label className={labelClass}>
+    Effective From
+  </Label>
 
-    <Input
-      type="date"
-      title="Must be within Valid From and Valid To"
-      value={effectiveFrom}
-      onChange={(e) => setEffectiveFrom(e.target.value)}
-      className={inputClass}
-    />
-  </div>
+<Popover
+  open={effectiveFromCalendarOpen}
+  onOpenChange={setEffectiveFromCalendarOpen}
+>
+    <PopoverTrigger asChild>
+      <Button
+        type="button"
+        variant="outline"
+        className={`
+          h-10
+          w-full
+          justify-start
+          cursor-pointer
+          rounded-md
+          bg-white
+          px-3
+          text-left
+          font-normal
+          text-slate-900
+          hover:bg-white
+          hover:text-slate-900
+          ${
+            effectiveFromError
+              ? "border-red-500 ring-1 ring-red-500"
+              : "border-slate-300"
+          }
+        `}
+      >
+        <CalendarIcon
+          className="mr-2 h-4 w-4 shrink-0 text-[#00AFEF]"
+        />
+
+        {effectiveFrom ? (
+          format(
+            new Date(effectiveFrom),
+            "dd MMM yyyy"
+          )
+        ) : (
+          <span className="text-slate-400">
+            Select effective from
+          </span>
+        )}
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent
+      className="w-auto p-0"
+      align="start"
+    >
+      <Calendar
+        mode="single"
+        selected={
+          effectiveFrom
+            ? new Date(effectiveFrom)
+            : undefined
+        }
+      onSelect={(date) => {
+        if (!date) return
+
+        const formattedDate =
+          format(date, "yyyy-MM-dd")
+
+        setEffectiveFrom(formattedDate)
+        setEffectiveFromError("")
+        setEffectiveFromCalendarOpen(false)
+}}
+        disabled={(date) => {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          if (date < today) {
+            return true
+          }
+
+          if (validFrom) {
+            const fromDate = new Date(validFrom)
+            fromDate.setHours(0, 0, 0, 0)
+
+            if (date < fromDate) {
+              return true
+            }
+          }
+
+          if (validTo) {
+            const toDate = new Date(validTo)
+            toDate.setHours(0, 0, 0, 0)
+
+            if (date > toDate) {
+              return true
+            }
+          }
+
+          return false
+        }}
+      />
+    </PopoverContent>
+  </Popover>
+
+  <ErrorMessage message={effectiveFromError} />
+</div>
 
   {/* Effective To */}
-  <div>
-    <Label className={labelClass}>
-      Effective To
-    </Label>
+ <div>
+  <Label className={labelClass}>
+    Effective To
+  </Label>
 
-    <Input
-      type="date"
-      title="Must be within Valid From and Valid To"
-      value={effectiveTo}
-      onChange={(e) => setEffectiveTo(e.target.value)}
-      className={inputClass}
-    />
-  </div>
+ <Popover
+  open={effectiveToCalendarOpen}
+  onOpenChange={setEffectiveToCalendarOpen}
+>
+    <PopoverTrigger asChild>
+      <Button
+        type="button"
+        variant="outline"
+        
+        className={`
+          h-10
+          w-full
+          justify-start
+          cursor-pointer
+          rounded-md
+          bg-white
+          px-3
+          text-left
+          font-normal
+          text-slate-900
+          hover:bg-white
+          hover:text-slate-900
+          ${
+            effectiveToError
+              ? "border-red-500 ring-1 ring-red-500"
+              : "border-slate-300"
+          }
+        `}
+      >
+        <CalendarIcon
+          className="mr-2 h-4 w-4 shrink-0 text-[#00AFEF]"
+        />
+
+        {effectiveTo ? (
+          format(
+            new Date(effectiveTo),
+            "dd MMM yyyy"
+          )
+        ) : (
+          <span className="text-slate-400">
+            Select effective to
+          </span>
+        )}
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent
+      className="w-auto p-0"
+      align="start"
+    >
+      <Calendar
+        mode="single"
+        selected={
+          effectiveTo
+            ? new Date(effectiveTo)
+            : undefined
+        }
+          onSelect={(date) => {
+        if (!date) return
+
+        const formattedDate =
+          format(date, "yyyy-MM-dd")
+
+        setEffectiveTo(formattedDate)
+        setEffectiveToError("")
+        setEffectiveToCalendarOpen(false)
+      }}
+        disabled={(date) => {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          if (date < today) {
+            return true
+          }
+
+          if (effectiveFrom) {
+            const fromDate = new Date(effectiveFrom)
+            fromDate.setHours(0, 0, 0, 0)
+
+            if (date < fromDate) {
+              return true
+            }
+          }
+
+          if (validTo) {
+            const validToDate = new Date(validTo)
+            validToDate.setHours(0, 0, 0, 0)
+
+            if (date > validToDate) {
+              return true
+            }
+          }
+
+          return false
+        }}
+      />
+    </PopoverContent>
+  </Popover>
+
+  <ErrorMessage message={effectiveToError} />
+</div>
 
 </div>
 
 
-<div className="flex gap-3 mt-6">
-
-  
-
-  <Button
+<div className="mt-6">
+   <Button
     type="button"
+     
     className="h-11 px-6 rounded-xl bg-[#00AFEF] hover:bg-[#0099d6]"
     onClick={() => {
 
-      if (!rateName || !basePrice) {
-        toast.error(
-          "Rate Name and Base Price are required"
-        )
-        return
-      }
+     if (!rateName.trim()) {
+  toast.error("Rate Name is required", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
+
+if (!basePrice || Number(basePrice) <= 0) {
+  toast.error("Base Price must be greater than 0", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
+if (!rateCurrency.trim()) {
+  toast.error("Currency is required", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
+if (taxPercent !== "" && Number(taxPercent) < 0) {
+  toast.error("Tax % cannot be negative", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
+if (markupPercent !== "" && Number(markupPercent) < 0) {
+  toast.error("Markup % cannot be negative", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
+if (minPax !== "" && Number(minPax) < 1) {
+  toast.error("Min Pax must be at least 1", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
+
+if (
+  maxPax !== "" &&
+  minPax !== "" &&
+  Number(maxPax) < Number(minPax)
+) {
+  toast.error("Max Pax cannot be less than Min Pax", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
+
+
 
       if (!validateEffectiveDates()) {
         return
       }
+
+    if (selectedSubcategories.length === 0) {
+    toast.error("Select at least one pricing factor", {
+    position: "top-right",
+    duration: 3000,
+  })
+  return
+}
       // Ensure every selected pricing factor has a value
 const missingParameter = selectedSubcategories.some(
   (id) => !selectedParameters[id]
@@ -1096,7 +1888,9 @@ const missingParameter = selectedSubcategories.some(
 
 if (missingParameter) {
   toast.error(
-    "Please select a value for every pricing factor."
+    "Please select a value for every pricing factor.",{
+      position: "top-right",
+     duration: 3000,}
   );
   return;
 }
@@ -1112,7 +1906,9 @@ const combinationKey = [...selectedSubcategories]
 
 if (duplicate) {
   toast.error(
-    "A rate already exists for this pricing factor combination."
+    "A rate already exists for this pricing factor combination.",{
+      position: "top-right",
+     duration: 3000,}
   );
   return;
 }
@@ -1133,20 +1929,37 @@ if (duplicate) {
 
           });
 
-     const newRate = {
-      combinationKey,
-    rate_name: rateName,
-    base_price: basePrice,
-    tax_percent: taxPercent,
-    markup_percent: markupPercent,
-    currency: rateCurrency,
-    min_pax: minPax,
-    max_pax: maxPax,
-    effective_from: effectiveFrom,
-    effective_to: effectiveTo,
-    attributes
-};
+  const rateCardFields: Record<string, string> = {}
 
+attributes.forEach((attribute) => {
+  if (!attribute.name || !attribute.value) return
+
+  const fieldName = getRateCardFieldName(attribute.name)
+
+  if (fieldName) {
+    rateCardFields[fieldName] = attribute.value
+  }
+})
+
+const newRate = {
+  combinationKey,
+
+  rate_name: rateName,
+  base_price: basePrice,
+  tax_percent: taxPercent,
+  markup_percent: markupPercent,
+  currency: rateCurrency,
+
+  min_pax: minPax,
+  max_pax: maxPax,
+
+  effective_from: effectiveFrom,
+  effective_to: effectiveTo,
+
+  ...rateCardFields,
+
+  attributes
+}
 setRates(prev => [
     ...prev,
     newRate
@@ -1166,7 +1979,9 @@ setRates(prev => [
   >
     Add Rate
   </Button>
-
+    <p className="mt-1 text-xs text-slate-500">
+  Add this rate to your list.
+</p>
 </div>
 
   </div>
@@ -1253,18 +2068,28 @@ setRates(prev => [
           <td className="border border-slate-200 px-4 py-3">{r.effective_to}</td>
           <td className="border border-slate-200 px-4 py-3 text-center">
 
-          <button
-              type="button"
-              onClick={() => {
-                  setRates(prev =>
-                      prev.filter((_, i) => i !== index)
-                  )
-              }}
-              className="text-red-600 hover:text-red-700"
-              title="Delete Rate"
-          >
-              <Trash2 size={18} />
-          </button>
+  <Button
+  type="button"
+  variant="ghost"
+  size="icon"
+  onClick={() => {
+    setRates(prev => {
+      const updatedRates = prev.filter((_, i) => i !== index)
+
+      if (updatedRates.length === 0) {
+        setSelectedSubcategories([])
+        setSelectedParameters({})
+        setParameterOptions({})
+      }
+
+      return updatedRates
+    })
+  }}
+  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+  title="Delete Rate"
+>
+  <Trash2 className="h-4 w-4" />
+</Button>
 
       </td>
                 </tr>
@@ -1294,6 +2119,13 @@ setRates(prev => [
   className="h-10 min-w-[120px]"
 >
   Cancel
+</Button>
+<Button
+  type="button"
+  onClick={handleSaveAsDraft}
+  className="h-10 min-w-[140px] border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+>
+  Save as Draft
 </Button>
 
 <Button

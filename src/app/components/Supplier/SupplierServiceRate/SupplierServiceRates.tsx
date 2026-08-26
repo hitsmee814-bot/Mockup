@@ -168,7 +168,10 @@ const handleViewRates = async (catalog: any) => {
   } catch (error) {
     console.error(error)
 
-    toast.error("Unable to load rates")
+   
+    toast.error("Unable to load rates", {
+  position: "top-right",
+})
 
     setRates([])
   } finally {
@@ -177,42 +180,56 @@ const handleViewRates = async (catalog: any) => {
 }
   
 
-  useEffect(() => {
-  const fetchCatalogs = async () => {
-    try {
-      setLoadingCatalogs(true)
+const fetchCatalogs = async () => {
+  try {
+    setLoadingCatalogs(true)
 
-      const token = localStorage.getItem("access_token")
+    const token = localStorage.getItem("access_token")
 
-      if (!token) {
-        toast.error("Session expired. Please login again.")
-        return
-      }
-
-      const response =
-      await supplierServiceList.getCatalogWithRateCount({
-      token,
-      page,
-      size: pageSize,
-      status: activeStatus,
+    if (!token) {
+     
+      toast.error("Session expired. Please login again", {
+      position: "top-right",
     })
-
-      console.log("Catalog API Response:", response)
-
-      setCatalogs(Array.isArray(response) ? response : [])
-    } catch (error: any) {
-      console.error("Catalog API Error:", error)
-
-      toast.error(
-        error?.message || "Unable to load catalog items."
-      )
-
-      setCatalogs([])
-    } finally {
-      setLoadingCatalogs(false)
+      return
     }
-  }
 
+    const response =
+      await supplierServiceList.getCatalogWithRateCount({
+        token,
+        page,
+        size: pageSize,
+        status: activeStatus,
+      })
+
+    console.log("Catalog API Response:", response)
+
+    setCatalogs(Array.isArray(response) ? response : [])
+  } catch (error: any) {
+    console.error("Catalog API Error:", error)
+
+        toast.error(error?.message || "Unable to load catalog items.", {
+  position: "top-right",
+})
+   
+
+    setCatalogs([])
+  } finally {
+    setLoadingCatalogs(false)
+  }
+}
+
+const handleCatalogSaved = (status: "ACTIVE" | "DRAFT") => {
+  setPage(1)
+  setActiveStatus(status)
+}
+
+const handleDraftSaved = () => {
+  setPage(1)
+  setActiveStatus("DRAFT")
+}
+
+useEffect(() => {
   fetchCatalogs()
 }, [page, pageSize, activeStatus])
 
@@ -225,7 +242,10 @@ const handleViewRates = async (catalog: any) => {
       localStorage.getItem("access_token")
 
     if (!token) {
-      toast.error("Session expired")
+     
+      toast.error("Session expired", {
+      position: "top-right",
+    })
       return
     }
 
@@ -235,14 +255,20 @@ const handleViewRates = async (catalog: any) => {
       token
     )
 
-    toast.success("Deleted successfully")
+
+    toast.success("Deleted successfully", {
+  position: "top-right",
+})
 
     setDeleteDialogOpen(false)
-
-    // refresh list here
+    await fetchCatalogs()
+ 
 
   } catch (error) {
-    toast.error("Delete failed")
+  
+    toast.error("Delete failed", {
+  position: "top-right",
+})
   }
 }
   const formatDate = (date?: string | null) => {
@@ -284,7 +310,9 @@ const handleViewRates = async (catalog: any) => {
         </p>  
         </div>
 
-      <AddSupplierCatalogItem />
+        <AddSupplierCatalogItem
+          onSaved={handleCatalogSaved}
+        />
       </motion.div>
 
       <motion.div

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from 'next/navigation'
-import { toast } from "sonner"
+
 import {
   XAxis,
   YAxis,
@@ -42,7 +41,7 @@ const monthOrder = [
 ]
 
 export function SupplierPerformanceChart() {
-   const router = useRouter()
+  
   const [performanceData, setPerformanceData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -56,17 +55,8 @@ export function SupplierPerformanceChart() {
         const token = localStorage.getItem("access_token") || ""
 
         if (!token) {
-          setError("Unable to load monthly performance. Login token was not found.")
-          toast.error("Session expired. Please login again.",{
-        position: "top-right",
-         duration: 3000,})
-       localStorage.removeItem("access_token");
-       localStorage.removeItem("refresh_token");
-
-      router.push("/login");
-
-  return;
-        }
+            return
+          }
 
         const currentYear = new Date().getFullYear()
 
@@ -76,10 +66,27 @@ export function SupplierPerformanceChart() {
         )
 
         if (!response?.data || !Array.isArray(response.data)) {
-          setError("Unable to load monthly performance. Invalid API response.")
+         setError("Unable to load monthly performance. Please try again later.")
           return
         }
 
+        const hasInvalidRow = response.data.some(
+  (item: any) =>
+    typeof item?.month !== "string" ||
+    !monthOrder.includes(item.month) ||
+    typeof item?.revenue !== "number" ||
+    !Number.isFinite(item.revenue) ||
+    item.revenue < 0 ||
+    typeof item?.orders !== "number" ||
+    !Number.isFinite(item.orders) ||
+    item.orders < 0 ||
+    !Number.isInteger(item.orders)
+)
+
+      if (hasInvalidRow) {
+        setError("Unable to load monthly performance. Please try again later.")
+        return
+      }
         const sortedData: ChartData[] = [...response.data]
           .sort(
             (a, b) =>
@@ -91,13 +98,21 @@ export function SupplierPerformanceChart() {
           }))
 
         setPerformanceData(sortedData)
-      } catch (err: any) {
-        console.error("Monthly performance API error:", err)
-        setError(
-          err?.message ||
-            "Unable to load monthly performance. Please try again later."
-        )
-      } finally {
+      } catch (err: unknown) {
+  console.error("Monthly performance API error:", err)
+
+  const message = err instanceof Error ? err.message : ""
+
+  if (
+    message === "Session expired. Please login again." ||
+    message === "Your session has expired. Please login again."
+  ) {
+    window.dispatchEvent(new Event("session-expired"))
+    return
+  }
+
+  setError("Unable to load monthly performance. Please try again later.")
+}finally {
         setLoading(false)
       }
     }

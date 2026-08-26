@@ -18,8 +18,8 @@ import {
   Line,Legend,
 } from "recharts"
 import { Target } from "lucide-react"
-import { useRouter } from 'next/navigation'
-import { toast } from "sonner"
+
+
 import { SupplierBidSuccessRateMonthly } from "@/services/SupplierPortalServices/SupplierBidSuccessRateMonthly"
 
 type ChartData = {
@@ -31,7 +31,7 @@ export function SupplierBidSuccessRate() {
   const [data, setData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
- const router = useRouter()
+ 
   useEffect(() => {
     const fetchBidSuccessRateMonthly = async () => {
       try {
@@ -41,43 +41,52 @@ export function SupplierBidSuccessRate() {
         const token = localStorage.getItem("access_token") || ""
 
         if (!token) {
-          const msg = "Unable to load bid success rate. Token not found."
-          setError(msg)
-           toast.error("Session expired. Please login again.",{
-        position: "top-right",
-         duration: 3000,})
-       localStorage.removeItem("access_token");
-       localStorage.removeItem("refresh_token");
-
-      router.push("/login");
-
-  return;
-        }
+            return
+          }
 
         const res =
           await SupplierBidSuccessRateMonthly.getBidSuccessRateMonthly(token)
 
-         if (!res?.data || !Array.isArray(res.data)) {
-          const msg = "Invalid response from server."
-          setError(msg)
-          return
-        }
+       if (!res?.data || !Array.isArray(res.data)) {
+        setError("Unable to load bid success rate. Please try again later.")
+        return
+      }
 
+      const hasInvalidRow = res.data.some(
+      (item: any) =>
+        typeof item?.label !== "string" ||
+        !item.label ||
+        typeof item?.value !== "number" ||
+        !Number.isFinite(item.value) ||
+        item.value < 0 ||
+        item.value > 100
+    )
+
+      if (hasInvalidRow) {
+        setError("Unable to load bid success rate. Please try again later.")
+        return
+      }
       const formattedData: ChartData[] = res.data.map((item: any) => ({
         label: item.label,
         value: Number(item.value ?? 0),
       }))
 
       setData(formattedData)
-      } catch (err: any) {
-        console.error("Bid success monthly API error:", err)
+          } catch (err: unknown) {
+  console.error("Bid success monthly API error:", err)
 
-        const msg =
-          err?.message ||
-          "Unable to load bid success rate. Please try again later."
+  const message = err instanceof Error ? err.message : ""
 
-        setError(msg)
-         }
+  if (
+    message === "Session expired. Please login again." ||
+    message === "Your session has expired. Please login again."
+  ) {
+    window.dispatchEvent(new Event("session-expired"))
+    return
+  }
+
+  setError("Unable to load bid success rate. Please try again later.")
+}
          finally {
         setLoading(false)
       }
