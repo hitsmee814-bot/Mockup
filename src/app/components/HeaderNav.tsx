@@ -285,7 +285,7 @@ const handleNavClick = (id: string) => {
                     </nav>
 
                     <div className="hidden md:flex items-center gap-4">
-                        <SearchDialog />
+                        {/* <SearchDialog /> */}
 
                         {isLoggedIn ? (
                             <PremiumButton
