@@ -1,10 +1,10 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, Variants } from "framer-motion"
 import { ArrowRight, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-const fadeUp = {
+const fadeUp: Variants  = {
     hidden: {
         opacity: 0,
         y: 30,
@@ -56,7 +56,6 @@ export function AboutUs() {
 
             <div className="relative mx-auto max-w-5xl px-6 sm:px-8">
 
-                {/* Eyebrow */}
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -81,7 +80,6 @@ export function AboutUs() {
                 </motion.div>
 
 
-                {/* Main content */}
                 <div className="mx-auto max-w-4xl text-center">
 
                     {/* Heading */}
@@ -145,7 +143,6 @@ export function AboutUs() {
                     </motion.p>
 
 
-                    {/* CTA */}
                     <motion.div
                         initial="hidden"
                         whileInView="visible"
@@ -213,7 +210,6 @@ export function AboutUs() {
                 </div>
 
 
-                {/* Bottom decorative line */}
                 <motion.div
                     initial={{
                         opacity: 0,

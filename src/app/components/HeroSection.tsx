@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, Variants } from "framer-motion"
 import { ChevronDown, ArrowRight, Plane, MapPin } from "lucide-react"
 import { useRouter } from "next/navigation"
 import HeaderNav from "./HeaderNav"
@@ -9,7 +9,7 @@ import AuthRoleDialog from "./AuthDialog"
 
 const repoPath = process.env.NODE_ENV === "production" ? "/Mockup" : ""
 
-const wordVariant = {
+const wordVariant: Variants = {
     hidden: {
         opacity: 0,
         y: 25,
