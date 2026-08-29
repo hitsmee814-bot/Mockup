@@ -12,7 +12,7 @@ import RoadmapTimeline from "./components/RoadMap/RoadMap"
 import CoverflowCarousel from "./components/package-carousel/CarouselCards"
 import TopPackages from "./components/TopPackages"
 import Testimonials from "./components/TestimonialsSection"
-import { AboutUs } from "./components/AboutUs"
+import { AboutUs } from "./components/AboutUsLanding"
 import HeroSection from "./components/HeroSection"
 
 export default function HomePage() {

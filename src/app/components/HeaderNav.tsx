@@ -23,13 +23,21 @@ type NavItem = {
     children?: NavChild[]
     hot?: boolean
 }
+// const navItems: NavItem[] = [
+//     { label: "Curated Trips", id: "toppackages" },
+//     { label: "Our Offerings", id: "packages" },
+//     { label: "The Bonhomiee Way", id: "aboutus" },
+//     { label: "Contact Us", id: "faq" },
+//     { label: "AI", id: "ai", hot: true },
+
+// ]
+
 const navItems: NavItem[] = [
     { label: "Curated Trips", id: "toppackages" },
     { label: "Our Offerings", id: "packages" },
-    { label: "The Bonhomiee Way", id: "aboutus" },
+    { label: "The Bonhomiee Way", id: "about" },
     { label: "Contact Us", id: "faq" },
     { label: "AI", id: "ai", hot: true },
-
 ]
 
 // const navItems = [
@@ -93,18 +101,32 @@ export default function HeaderNav({
         return () => window.removeEventListener("scroll", handleScroll)
     }, [enableScrollBg])
 
-    const handleNavClick = (id: string) => {
-        console.log(id);
-        if(id==="packages"){
-            router.push("/itinerary/packages")
-        }
-        const el = document.getElementById(id)
-        if (!el) return
-
-        const y = el.getBoundingClientRect().top + window.scrollY
-        window.scrollTo({ top: y, behavior: "smooth" })
+const handleNavClick = (id: string) => {
+    if (id === "packages") {
+        router.push("/itinerary/packages")
         setMenuOpen(false)
+        return
     }
+
+    if (id === "about") {
+        router.push("/about")
+        setMenuOpen(false)
+        return
+    }
+
+    const el = document.getElementById(id)
+
+    if (!el) return
+
+    const y = el.getBoundingClientRect().top + window.scrollY
+
+    window.scrollTo({
+        top: y,
+        behavior: "smooth",
+    })
+
+    setMenuOpen(false)
+}
 
     return (
         <>
