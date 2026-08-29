@@ -13,12 +13,14 @@ import CoverflowCarousel from "./components/package-carousel/CarouselCards"
 import TopPackages from "./components/TopPackages"
 import Testimonials from "./components/TestimonialsSection"
 import { AboutUs } from "./components/AboutUs"
+import HeroSection from "./components/HeroSection"
 
 export default function HomePage() {
 
   return (
 <>
-      <VideoMain />
+      {/* <VideoMain /> */}
+      <HeroSection/>
       {/* <Hero /> */}
       {/* <FloatingCardsSection /> */}
       {/* Keep below carousel cards */}

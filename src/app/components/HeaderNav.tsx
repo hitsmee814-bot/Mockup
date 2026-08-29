@@ -121,7 +121,7 @@ export default function HeaderNav({
     ${isScrolled ? "backdrop-blur-xl" : ""}
   `}
                 style={{
-                    background: isScrolled ? "#0E40C7" : "transparent",
+                    background: isScrolled ? "#0E40C7" : "#0E40C7",
                 }}
             >
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
