@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowDown } from "lucide-react"
+import { ArrowDown, ArrowLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 const fadeUp = {
     hidden: {
@@ -19,9 +20,40 @@ const fadeUp = {
 }
 
 export default function AboutHero() {
+        const router = useRouter()
+
     return (
         <section className="relative min-h-[100svh] overflow-hidden bg-white">
+<motion.button
+    initial={{ opacity: 0, x: -10 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.5, delay: 0.2 }}
+    onClick={() => router.back()}
+    className="
+        absolute
+        left-6
+        top-7
+        z-30
+        flex
+        items-center
+        gap-2
+        text-sm
+        font-medium
+        text-black/40
+        transition-colors
+        duration-300
+        hover:text-[#0E40C7]
+        sm:left-8
+        lg:left-10
+    "
+>
+    <ArrowLeft
+        className="h-4 w-4"
+        strokeWidth={1.7}
+    />
 
+    <span>Back</span>
+</motion.button>
             <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
 
                 <div
