@@ -79,7 +79,7 @@ export function ItinerarySidebar() {
     const { toggleSidebar, state } = useSidebar()
     const router = useRouter()
     const pathname = usePathname()
-    const { logout } = useAuth()
+    const { isLoggedIn,logout } = useAuth()
 
     const [showLoader, setShowLoader] = useState(false)
     const [openDialog, setOpenDialog] = useState(false)
@@ -271,25 +271,7 @@ export function ItinerarySidebar() {
 
                 <SidebarFooter className="border-t mb-[5rem]">
                     <SidebarMenu>
-
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip="Profile">
-                                <button
-                                    onClick={() => router.push("/itinerary/profile")}
-                                    className={`
-        flex items-center gap-3 p-2
-        ${isProfileActive ? "text-[#FBAB18]" : "text-[#3FB8FF] hover:text-[#3FB8FF]"}
-      `}
-                                >
-                                    <User className={`h-5 w-5 ${isProfileActive ? "text-[#FBAB18]" : "text-[#3FB8FF]"}`} />
-
-                                    <span className="group-data-[collapsible=icon]:hidden">
-                                        Profile
-                                    </span>
-                                </button>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
+                      <SidebarMenuItem>
                             <SidebarMenuButton asChild tooltip="Priority Matcher">
                                 <a
                                     href="/Mockup/assets/pages/Hua_Hin_Planner_READY.html"
@@ -305,52 +287,53 @@ export function ItinerarySidebar() {
                                 </a>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-                        {/* <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip="Priority Matcher">
-                                <a
-                                    href="/Mockup/assets/pages/Family vacation choice.html"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-3 p-2 text-[#3FB8FF] hover:bg-[#3FB8FF15] rounded-md"
-                                >
-                                    <ExternalLink className="h-5 w-5" />
+                        {isLoggedIn && (
+      <>
+        {/* PROFILE */}
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Profile">
+            <button
+              onClick={() => router.push("/itinerary/profile")}
+              className={`
+                flex items-center gap-3 p-2
+                ${isProfileActive
+                  ? "text-[#FBAB18]"
+                  : "text-[#3FB8FF] hover:text-[#3FB8FF]"
+                }
+              `}
+            >
+              <User
+                className={`h-5 w-5 ${
+                  isProfileActive
+                    ? "text-[#FBAB18]"
+                    : "text-[#3FB8FF]"
+                }`}
+              />
 
-                                    <span className="group-data-[collapsible=icon]:hidden">
-                                        Priority Matcher
-                                    </span>
-                                </a>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip="Priority Matcher">
-                                <a
-                                    href="/Mockup/assets/pages/Leaderion LT Offsite.html"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-3 p-2 text-[#3FB8FF] hover:bg-[#3FB8FF15] rounded-md"
-                                >
-                                    <ExternalLink className="h-5 w-5" />
+              <span className="group-data-[collapsible=icon]:hidden">
+                Profile
+              </span>
+            </button>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
 
-                                    <span className="group-data-[collapsible=icon]:hidden">
-                                        LT Offsite
-                                    </span>
-                                </a>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem> */}
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip="Logout">
-                                <button
-                                    onClick={() => setOpenDialog(true)}
-                                    className="flex items-center gap-3 p-2 text-red-500"
-                                >
-                                    <LogOut className="h-5 w-5" />
-                                    <span className="group-data-[collapsible=icon]:hidden">
-                                        Logout
-                                    </span>
-                                </button>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+        {/* LOGOUT */}
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Logout">
+            <button
+              onClick={() => setOpenDialog(true)}
+              className="flex items-center gap-3 p-2 text-red-500"
+            >
+              <LogOut className="h-5 w-5" />
 
+              <span className="group-data-[collapsible=icon]:hidden">
+                Logout
+              </span>
+            </button>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </>
+    )}
                     </SidebarMenu>
                 </SidebarFooter>
             </Sidebar>
