@@ -143,7 +143,8 @@ const handleNavClick = (id: string) => {
     ${isScrolled ? "backdrop-blur-xl" : ""}
   `}
                 style={{
-                    background: isScrolled ? "#0E40C7" : "#0E40C7",
+                    // background: isScrolled ? "#0E40C7" : "#0E40C7",
+                    background: isScrolled ? "#0E40C7" : "transparent",
                 }}
             >
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">

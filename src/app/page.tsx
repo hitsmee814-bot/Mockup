@@ -19,8 +19,8 @@ export default function HomePage() {
 
   return (
 <>
-      {/* <VideoMain /> */}
-      <HeroSection/>
+      <VideoMain />
+      {/* <HeroSection/> */}
       {/* <Hero /> */}
       {/* <FloatingCardsSection /> */}
       {/* Keep below carousel cards */}
