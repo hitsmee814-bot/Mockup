@@ -324,7 +324,7 @@ const validatePhone = (value: string, countryCode: string) => {
         <AuthPageGuard>
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
 
-            <header className="fixed top-0 left-0 right-0 h-20 bg-[#3FB8FF] backdrop-blur-md border-b border-slate-200 z-50">
+            <header className="fixed top-0 left-0 right-0 h-20 bg-[#0e40c7] backdrop-blur-md border-b border-slate-200 z-50">
                 <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-4">
 
                     <div
@@ -354,7 +354,7 @@ const validatePhone = (value: string, countryCode: string) => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-[#3FB8FF] z-[9999] flex flex-col pt-28 px-8"
+                        className="fixed inset-0 bg-[#0e40c7] z-[9999] flex flex-col pt-28 px-8"
                     >
                         <button
                             onClick={() => setMenuOpen(false)}
@@ -392,7 +392,7 @@ const validatePhone = (value: string, countryCode: string) => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 text-[#3FB8FF]"
+                    className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 text-[#0e40c7]"
                 >
                     Welcome Back
                 </motion.h1>
@@ -453,11 +453,11 @@ const validatePhone = (value: string, countryCode: string) => {
                                         >
                                             <div className="relative">
                                             <motion.div
-                                                className="absolute inset-0 rounded-full bg-[#3FB8FF]/20 blur-xl"
+                                                className="absolute inset-0 rounded-full bg-[#0e40c7]/20 blur-xl"
                                                 animate={{ scale: [1, 1.4, 1] }}
                                                 transition={{ duration: 1.4, repeat: Infinity }}
                                             />
-                                            <div className="h-8 w-8 rounded-full bg-[#3FB8FF]" />
+                                            <div className="h-8 w-8 rounded-full bg-[#0e40c7]" />
                                             </div>
                                         </motion.div>
 
@@ -474,7 +474,7 @@ const validatePhone = (value: string, countryCode: string) => {
                                             {[0, 1, 2].map((i) => (
                                             <motion.div
                                                 key={i}
-                                                className="h-1.5 w-1.5 rounded-full bg-[#3FB8FF]"
+                                                className="h-1.5 w-1.5 rounded-full bg-[#0e40c7]"
                                                 animate={{ opacity: [0.3, 1, 0.3] }}
                                                 transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                                             />
@@ -483,14 +483,14 @@ const validatePhone = (value: string, countryCode: string) => {
                                         </motion.div>
                                     </motion.div>
                                     )}
-                                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#3FB8FF] to-[#FBAB18]" />
-                                <div className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18] opacity-5 rounded-full blur-3xl" />
+                                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#0e40c7] to-[#FBAB18]" />
+                                <div className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-[#0e40c7] to-[#FBAB18] opacity-5 rounded-full blur-3xl" />
 
                                 <div className="relative z-10">
                                     <div className="flex items-center justify-between mb-8">
                                         <div className="flex items-center gap-4">
                                             {selectedUserType && (
-                                                <div className="p-3 rounded-xl bg-gradient-to-br from-[#3FB8FF] to-[#FBAB18]">
+                                                <div className="p-3 rounded-xl bg-gradient-to-br from-[#0e40c7] to-[#FBAB18]">
                                                     <selectedUserType.icon className="h-6 w-6 text-white" />
                                                 </div>
                                             )}
@@ -537,7 +537,7 @@ const validatePhone = (value: string, countryCode: string) => {
                                             }}
                                             verificationEmailError={verificationEmailError}
                                             phoneError={phoneError}
-                                            gradient="from-[#3FB8FF] to-[#FBAB18]"
+                                            gradient="from-[#0e40c7] to-[#FBAB18]"
                                             onMobileChange={(value) => {
                                                 setMobile(value)
                                                 setPhoneError(validatePhone(value, selectedCountry!.code))
@@ -562,7 +562,7 @@ const validatePhone = (value: string, countryCode: string) => {
                                             username={username}
                                             password={password}
                                             emailError={emailError}
-                                            gradient="from-[#3FB8FF] to-[#FBAB18]"
+                                            gradient="from-[#0e40c7] to-[#FBAB18]"
                                             onUsernameChange={(value) => {
                                                 setUsername(value)
                                                 // setEmailError(validateEmail(value))
