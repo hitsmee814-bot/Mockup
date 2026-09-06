@@ -101,7 +101,7 @@ export function PackageDetailPage({ pkg }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-none">
       {/* Breadcrumb */}
       <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 pb-2">
         <nav className="flex items-center gap-1.5 text-xs text-gray-400">

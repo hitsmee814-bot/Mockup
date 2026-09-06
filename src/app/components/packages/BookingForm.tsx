@@ -106,7 +106,7 @@ export function BookingForm({ pkg }: BookingFormProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-none">
       {/* Breadcrumb */}
       <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2">
         <nav className="flex items-center gap-1.5 text-xs text-gray-400">

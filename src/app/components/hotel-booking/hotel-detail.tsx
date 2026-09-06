@@ -67,7 +67,7 @@ export function HotelDetail({ id }: { id: string }) {
     <TooltipProvider delayDuration={200}>
       <div className="force-light">
         <Header title="Hotel" />
-        <div className="min-h-screen bg-white text-gray-800 p-4 md:p-8 space-y-5">
+        <div className="min-h-screen bg-none text-gray-800 p-4 md:p-8 space-y-5">
           {/* Breadcrumb */}
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}>

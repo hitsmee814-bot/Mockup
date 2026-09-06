@@ -90,7 +90,7 @@ export function Package() {
         filters.maxDays !== DEFAULT_FILTERS.maxDays;
 
     return (
-        <div className="min-h-screen bg-white px-3 sm:px-4 py-6 sm:py-10">
+        <div className="min-h-screen bg-none px-3 sm:px-4 py-6 sm:py-10">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="text-center space-y-3">

@@ -98,7 +98,7 @@ export function Billing({ id }: { id: string }) {
           )}
         </AnimatePresence>
 
-        <div className="min-h-screen bg-white text-gray-800 p-4 md:p-8">
+        <div className="min-h-screen bg-none text-gray-800 p-4 md:p-8">
           <div className="flex items-center gap-3 mb-5">
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => router.back()}><ArrowLeft className="h-4 w-4" /></Button>
             <Breadcrumb>

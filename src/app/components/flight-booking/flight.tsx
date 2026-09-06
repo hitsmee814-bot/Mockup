@@ -36,7 +36,7 @@ export function Flight() {
 
   return (
     <div className="force-light">
-      <div className="min-h-screen bg-white text-gray-800 p-4 md:p-8">
+      <div className="min-h-screen bg-none text-gray-800 p-4 md:p-8">
         <AnimatePresence>
           {searching && (
             <motion.div
