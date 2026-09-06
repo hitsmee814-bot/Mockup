@@ -45,10 +45,16 @@ export function Package() {
 
     useEffect(() => {
         setLoading(true);
+
         tourService.getAll()
-            .then((data) => setTours(data.length ? data : []))
+            .then((data) => {
+                const parsedTours = data.map((item: any) =>
+                    typeof item === "string" ? JSON.parse(item) : item
+                );
+
+                setTours(parsedTours);
+            })
             .finally(() => setLoading(false));
-            console.log(tours)
     }, []);
 
     // Derive unique destinations for quick filter pills
