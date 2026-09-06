@@ -45,16 +45,10 @@ export function Package() {
 
     useEffect(() => {
         setLoading(true);
-
         tourService.getAll()
-            .then((data) => {
-                const parsedTours = data.map((item: any) =>
-                    typeof item === "string" ? JSON.parse(item) : item
-                );
-
-                setTours(parsedTours);
-            })
+            .then((data) => setTours(data.length ? data : []))
             .finally(() => setLoading(false));
+            console.log(tours)
     }, []);
 
     // Derive unique destinations for quick filter pills
@@ -64,6 +58,7 @@ export function Package() {
     );
 
     const filtered = useMemo(() => {
+        
         return tours.filter((pkg) => {
             const { tour } = pkg;
 
@@ -143,11 +138,9 @@ export function Package() {
                 <AnimatePresence mode="wait">
                     {loading ? (
                         <motion.div
-                            key="skeleton"
                             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
                             transition={{ duration: 0.25 }}
                         >
                             {Array.from({ length: 8 }).map((_, i) => (
@@ -155,49 +148,63 @@ export function Package() {
                             ))}
                         </motion.div>
                     ) : filtered.length > 0 ? (
-                        <motion.div
-                            key={`${activeDestination}-${search}`}
-                            initial="hidden"
-                            animate="show"
-                            exit={{ opacity: 0 }}
-                        >                            <motion.p
-                            className="text-xs text-gray-400 mb-5"
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                                Showing <span className="font-semibold text-gray-700">{filtered.length}</span> tours
+                        <div>
+                            <motion.p
+                                className="text-xs text-gray-400 mb-5"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                Showing{" "}
+                                <span className="font-semibold text-gray-700">
+                                    {filtered.length}
+                                </span>{" "}
+                                tours
+
                                 {activeDestination !== "All" && (
                                     <>
-                                        {" "}in <span className="font-semibold" style={{ color: "#3FB8FF" }}>{activeDestination}</span>
+                                        {" "}in{" "}
+                                        <span
+                                            className="font-semibold"
+                                            style={{ color: "#3FB8FF" }}
+                                        >
+                                            {activeDestination}
+                                        </span>
                                     </>
                                 )}
                             </motion.p>
-                            <motion.div
-                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-                                variants={staggerContainer}
-                                initial="hidden"
-                                animate="show"
-                            >
+
+                    <motion.div
+                        key={filtered.map((pkg) => pkg.tour.id).join("-")}
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+                        variants={staggerContainer}
+                        initial="hidden"
+                        animate="show"
+                    >
                                 {filtered.map((pkg) => (
-                                    <motion.div key={pkg.tour.id} variants={cardVariant}>
+                                    <motion.div
+                                        key={pkg.tour.id}
+                                        variants={cardVariant}
+                                    >
                                         <PackageCard pkg={pkg} />
                                     </motion.div>
                                 ))}
                             </motion.div>
-                        </motion.div>
+                        </div>
                     ) : (
                         <motion.div
-                            key="empty"
                             className="text-center py-24 text-gray-400"
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
                             transition={{ duration: 0.4 }}
                         >
                             <p className="text-5xl mb-4">🔍</p>
-                            <p className="font-bold text-base text-gray-600">No tours found</p>
-                            <p className="text-sm mt-1">Try a different filter or search term</p>
+                            <p className="font-bold text-base text-gray-600">
+                                No tours found
+                            </p>
+                            <p className="text-sm mt-1">
+                                Try a different filter or search term
+                            </p>
                         </motion.div>
                     )}
                 </AnimatePresence>
