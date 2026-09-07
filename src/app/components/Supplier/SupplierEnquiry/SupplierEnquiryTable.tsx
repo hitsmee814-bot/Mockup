@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader} from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Enquiry } from "./types"
-
+import { useAuth } from "@/app/context/AuthContext"
 import { useRouter } from 'next/navigation'
 import { toast } from "sonner"
 import {
@@ -96,17 +96,30 @@ const supplierStatusOrder: string[] = [
   "CLOSED",
 ]
 
-type FilterStatus =  Enquiry["status"]
+type FilterStatus = Enquiry["status"] | "All"
 type EnquiryTab = "CUS" | "SUP"
 
 type EnquiryTableProps = {
   activeTab: "CUS" | "SUP"
-  setActiveTab: React.Dispatch<React.SetStateAction<"CUS" | "SUP">>
-}
 
-export function EnquiryTable({ activeTab, setActiveTab }: EnquiryTableProps) {
+  setActiveTab: React.Dispatch<
+    React.SetStateAction<"CUS" | "SUP">
+  >
+
+  refreshKey: number
+
+  onRefresh: () => void
+}
+export function EnquiryTable({
+  activeTab,
+  setActiveTab,
+  refreshKey,
+  onRefresh,
+}: EnquiryTableProps) {
    const router = useRouter()
- const [filter, setFilter] = useState<FilterStatus>("New")
+   const { logout } = useAuth()
+   const sessionHandled = useRef(false)
+const [filter, setFilter] = useState<FilterStatus>("All")
 const [filterOptions, setFilterOptions] = useState<FilterStatus[]>([])
   
   const [enquiries, setEnquiries] = useState<any[]>([])
@@ -114,16 +127,25 @@ const [loadingEnquiries, setLoadingEnquiries] = useState(false)
 const [page, setPage] = useState(1)
 const [pageSize] = useState(20)
 
+const [followupRefreshKey, setFollowupRefreshKey] = useState(0)
+
 
 const [selectedEnquiry, setSelectedEnquiry] =
   useState<SupplierEnquiryDetailsByIdResponse | null>(null)
 
 const [openResponse, setOpenResponse] = useState(false) 
+
 useEffect(() => {
-  setFilter("New")
+  if (refreshKey > 0) {
+    setFilter("All")
+    setPage(1)
+  }
+}, [refreshKey])
+
+useEffect(() => {
+  setFilter("All")
   setPage(1)
 }, [activeTab])
-
 
 const [serviceRequestDialogOpen, setServiceRequestDialogOpen] =
   useState(false)
@@ -161,27 +183,21 @@ const handleSupplierFollowUpClick = (
 }
   
 useEffect(() => {
+  let isCurrentRequest = true
   const fetchEnquiries = async () => {
     try {
       
       setLoadingEnquiries(true)
+         setEnquiries([])
 
-      const token = localStorage.getItem("access_token") || ""
+      const token = localStorage.getItem("access_token")
 
       if (!token) {
-        console.error("Unable to load enquiries. Token not found.")
-         toast.error("Session expired. Please login again.",{
-      position: "top-right",
-     duration: 3000,})
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-
-  router.push("/login");
-
-  return;
+        router.replace("/auth")
+        return
       }
 
-      const apiStatus = uiStatusToApiStatus[filter]
+    const apiStatus = filter === "All" ? undefined  : uiStatusToApiStatus[filter]
      
     let response: any
 
@@ -200,21 +216,81 @@ useEffect(() => {
           pageSize
         )
       }
-        const data = Array.isArray(response)
-  ? response
-  : response?.data ?? []
+     let data: any[] = []
 
-setEnquiries(data)
-    } catch (err) {
-      console.error("Enquiry list API error:", err)
-    } finally {
-      setLoadingEnquiries(false)
-    }
+if (Array.isArray(response)) {
+  data = response
+} else if (Array.isArray(response?.data)) {
+  data = response.data
+} else {
+  console.error(
+    "Enquiry API returned an unexpected response format:",
+    response
+  )
+
+  throw new Error("Unable to load enquiries. Please try again.")
+}
+
+  const visibleData = data.filter(
+  (enquiry) => String(enquiry?.status).toUpperCase() !== "DELETED"
+)
+
+if (isCurrentRequest) {
+  setEnquiries(visibleData)
+}
+    } catch (err: any) {
+
+        if (!isCurrentRequest) {
+    return
   }
 
-  fetchEnquiries()
-}, [filter, page, pageSize, activeTab])
+  console.error("Enquiry list API error:", err)
 
+if (err?.message?.toLowerCase().includes("session expired")) {
+  if (sessionHandled.current) {
+    return
+  }
+
+  sessionHandled.current = true
+
+  logout()
+
+  toast.error("Your session has expired. Please log in again.", {
+    position: "top-right",
+    duration: 3000,
+  })
+
+  router.replace("/auth")
+  return
+}
+  toast.error(
+    err?.message ||
+      "Failed to load enquiries. Please try again.",
+    {
+      position: "top-right",
+      duration: 3000,
+    }
+  )
+} finally {
+  if (isCurrentRequest) {
+    setLoadingEnquiries(false)
+  }
+}
+  }
+
+    fetchEnquiries()
+
+  return () => {
+    isCurrentRequest = false
+  }
+}, [
+  filter,
+  page,
+  pageSize,
+  activeTab,
+  refreshKey,
+  followupRefreshKey,
+])
   
    
 const resultCount = loadingEnquiries ? "..." : enquiries.length
@@ -503,13 +579,10 @@ const handleCustomerEnquiryClick = async (
 
     const token = localStorage.getItem("access_token") || ""
 
-    if (!token) {
-      toast.error("Session expired. Please login again.", {
-        position: "top-right",
-        duration: 3000,
-      })
+      if (!token) {
+      router.replace("/auth")
       return
-    }
+    }   
 
     const response =
       await CustomerEnquiryDetails.getCustomerEnquiryDetails(
@@ -543,9 +616,10 @@ const handleEnquiryClick = async (enquiryId: number) => {
   try {
     const token = localStorage.getItem("access_token") || ""
 
-    if (!token) {
-        return
-    }
+  if (!token) {
+  router.replace("/auth")
+  return
+}
 
     const response =
       await SupplierEnquiryDetailsById.getEnquiryDetailsById(
@@ -579,7 +653,7 @@ const handleEnquiryClick = async (enquiryId: number) => {
       type="button"
       onClick={() => {
         setActiveTab("CUS")
-        setFilter("New")
+        setFilter("All")
         setPage(1)
       }}
       className={`text-base sm:text-lg font-semibold transition-colors ${
@@ -597,7 +671,7 @@ const handleEnquiryClick = async (enquiryId: number) => {
       type="button"
       onClick={() => {
         setActiveTab("SUP")
-        setFilter("New")
+        setFilter("All")
         setPage(1)
       }}
       className={`text-base sm:text-lg font-semibold transition-colors ${
@@ -628,23 +702,38 @@ const handleEnquiryClick = async (enquiryId: number) => {
                           </TableHeader>
                             <TableBody>
                           <AnimatePresence mode="popLayout">
-                            {loadingEnquiries && (
-                          <TableRow>
-                            <TableCell colSpan={12} className="text-center py-6 text-sm text-muted-foreground">
-                              Loading enquiries...
-                            </TableCell>
-                          </TableRow>
-                        )}
-
-{!loadingEnquiries && enquiries.length === 0 && (
+                         {loadingEnquiries && (
   <TableRow>
-    <TableCell colSpan={12} className="text-center py-6 text-sm text-muted-foreground">
-      No {activeTab === "CUS" ? "customer" : "supplier"} enquiries found for {filter}.
+    <TableCell
+      colSpan={
+        activeTab === "CUS"
+          ? customerVisibleFields.length
+          : supplierVisibleFields.length
+      }
+      className="text-center py-6 text-sm text-muted-foreground"
+    >
+      Loading enquiries...
     </TableCell>
   </TableRow>
 )}
-             {!loadingEnquiries &&
-              enquiries.map((enq, i) => (
+
+{!loadingEnquiries && enquiries.length === 0 && (
+  <TableRow>
+    <TableCell
+      colSpan={
+        activeTab === "CUS"
+          ? customerVisibleFields.length
+          : supplierVisibleFields.length
+      }
+      className="text-center py-6 text-sm text-muted-foreground"
+    >
+     {filter === "All"
+  ? `No ${activeTab === "CUS" ? "customer" : "supplier"} enquiries found.`
+  : `No ${activeTab === "CUS" ? "customer" : "supplier"} enquiries found for ${filter}.`}
+    </TableCell>
+  </TableRow>
+)}        {!loadingEnquiries &&
+            enquiries.map((enq, i) => (
                 <motion.tr
                   key={enq.id}
                   layout
@@ -729,15 +818,18 @@ const handleEnquiryClick = async (enquiryId: number) => {
                   </CardContent>
       </Card>
       <ServiceRequestFollowupDialog
-          open={followupDialogOpen}
-          serviceRequestId={selectedServiceRequestId}
-          serviceRequestNo={selectedServiceRequestNo}
-          onClose={() => {
-            setFollowupDialogOpen(false)
-            setSelectedServiceRequestId(null)
-            setSelectedServiceRequestNo(null)
-          }}
-        />
+      open={followupDialogOpen}
+      serviceRequestId={selectedServiceRequestId}
+      serviceRequestNo={selectedServiceRequestNo}
+      onClose={() => {
+        setFollowupDialogOpen(false)
+        setSelectedServiceRequestId(null)
+        setSelectedServiceRequestNo(null)
+      }}
+      onSuccess={() => {
+        setFollowupRefreshKey((prev) => prev + 1)
+      }}
+    />
       <SupplierEnquiryDetailsDialog
       open={openResponse}
       onOpenChange={setOpenResponse}
@@ -773,8 +865,8 @@ const handleEnquiryClick = async (enquiryId: number) => {
   enquiryId={selectedSupplierEnquiryId}
   enquiryNo={selectedSupplierEnquiry?.enquiry_no}
   onSuccess={() => {
-    
-  }}
+  setFollowupRefreshKey((prev) => prev + 1)
+}}
 />
 
     </motion.div>

@@ -10,7 +10,6 @@ export type SupplierCreateEnquiryPayload = {
 export type SupplierCreateEnquiryResponse = {
   id: number
   supplier_id: number
-  customer_id: number
   enquiry_no: string
   subject: string
   service_type: string

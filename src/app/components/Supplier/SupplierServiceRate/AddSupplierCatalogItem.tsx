@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { SupplierServiceTypes } from "@/services/SupplierPortalServices/SupplierServiceTypes"
 import { ServiceSubcategories } from "@/services/SupplierPortalServices/ServiceSubcategories"
 import { useRouter } from 'next/navigation'
-
+import { useAuth } from "@/app/context/AuthContext"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,7 +42,9 @@ import { Info } from "lucide-react";
 import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { SupplierCreateCatalogRateService } from "@/services/SupplierPortalServices/SupplierCreateCatalogRateService"
-
+import {
+  handleSupplierSessionExpired,
+} from "../utilities/SupplierPortalSession"
 
 const labelClass =
   "text-slate-700 text-[14px] font-medium mb-2 block"
@@ -65,6 +67,7 @@ export function AddSupplierCatalogItem({
   onSaved,
 }: AddSupplierCatalogItemProps) {
   const router = useRouter()
+  const { logout } = useAuth()
   const [open, setOpen] = useState(false)
    const [serviceType, setServiceType] = useState("")
     const [loading, setLoading] = useState(false)
@@ -410,16 +413,9 @@ const handleSaveAsDraft = async () => {
     const token = localStorage.getItem("access_token")
 
     if (!token) {
-      toast.error("Session expired. Please login again.", {
-        position: "top-right",
-        duration: 3000,
-      })
-
-      localStorage.removeItem("access_token")
-      localStorage.removeItem("refresh_token")
-      router.push("/login")
-      return
-    }
+  handleSupplierSessionExpired(logout, router)
+  return
+}
 
     const selectedService = serviceTypes.find(
       (item) => item.service_type === serviceType
@@ -466,6 +462,14 @@ onSaved?.("DRAFT")
   } catch (error: any) {
     console.error("Failed to save draft:", error)
 
+      if (
+    error?.message
+      ?.toLowerCase()
+      .includes("session expired")
+  ) {
+    handleSupplierSessionExpired(logout, router)
+    return
+  }
     toast.error(
       error?.message || "Failed to save draft. Please try again.",
       {
@@ -510,16 +514,9 @@ if (!ratesValid) {
     const token = localStorage.getItem("access_token")
 
     if (!token) {
-     toast.error("Session expired. Please login again.",{
-      position: "top-right",
-     duration: 3000,})
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-
-  router.push("/login");
-
-  return;
-    }
+  handleSupplierSessionExpired(logout, router)
+  return
+}
 
 const selectedService = serviceTypes.find(
   (item) => item.service_type === serviceType
@@ -619,6 +616,16 @@ resetForm()
         
   } catch (error: any) {
     console.error("Failed :", error)
+
+    if (
+    error?.message
+      ?.toLowerCase()
+      .includes("session expired")
+  ) {
+    handleSupplierSessionExpired(logout, router)
+    return
+  }
+
     toast.error(
   error?.message || "Failed . Please try again.",
   {
@@ -697,32 +704,34 @@ const fetchServiceTypes = async () => {
 
     const token =
       localStorage.getItem("access_token")
-
-    if (!token) {
-      toast.error(
-        "Session expired. Please login again.",{
-      position: "top-right",
-     duration: 3000,}
-      )
-      return
-    }
-
+if (!token) {
+  handleSupplierSessionExpired(logout, router)
+  return
+}
     const response =
       await SupplierServiceTypes.getAll(token)
 
     setServiceTypes(response || [])
-  } catch (error) {
+  }catch (error: any) {
+
     console.error(
       "Failed to fetch service types:",
       error
     )
-
-    toast.error(
-      "Failed to load service types",
-      {
-        position: "top-right",
-        duration: 3000,
-      }
+if (
+  error?.message
+    ?.toLowerCase()
+    .includes("session expired")
+) {
+  handleSupplierSessionExpired(logout, router)
+  return
+}
+  toast.error(
+    "Failed to load service types",
+    {
+      position: "top-right",
+      duration: 3000,
+    }
     )
   } finally {
     setServiceTypeLoading(false)

@@ -8,7 +8,7 @@ type EnquiryTab = "CUS" | "SUP"
 
 export default function EnquiriesPage() {
   const [activeTab, setActiveTab] = useState<EnquiryTab>("CUS")
-  
+  const [refreshKey, setRefreshKey] = useState(0)
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -27,15 +27,24 @@ export default function EnquiriesPage() {
           </p>
         </div>
 
-        <RaiseEnquiry />
+        <RaiseEnquiry
+  onEnquiryCreated={() => {
+    setActiveTab("SUP")
+    setRefreshKey((prev) => prev + 1)
+  }}
+/>
       </motion.div>
 
       {/* {activeTab === "CUS" && <EnquiryStats />} */}
 
-      <EnquiryTable
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+       <EnquiryTable
+  activeTab={activeTab}
+  setActiveTab={setActiveTab}
+  refreshKey={refreshKey}
+  onRefresh={() => {
+    setRefreshKey((prev) => prev + 1)
+  }}
+/>
     </div>
   )
 }
