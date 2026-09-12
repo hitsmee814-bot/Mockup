@@ -138,13 +138,13 @@ const handleNavClick = (id: string) => {
     ${position === "fixed" ? "fixed top-0 left-0" : "sticky top-0"}
     w-full z-50
     transition-all duration-300
-    rounded-b-md
+    
 
     ${isScrolled ? "backdrop-blur-xl" : ""}
   `}
                 style={{
-                    // background: isScrolled ? "#0E40C7" : "#0E40C7",
-                    background: isScrolled ? "#0E40C7" : "transparent",
+                    background: isScrolled ? "#0E40C7" : "#0E40C7",
+                    // background: isScrolled ? "#0E40C7" : "transparent",
                 }}
             >
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
