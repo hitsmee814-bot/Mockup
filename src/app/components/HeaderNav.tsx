@@ -6,8 +6,6 @@ import Image from "next/image"
 import { Menu, X, ChevronDown, LogIn, User2, Sparkles } from "lucide-react"
 import logoPrimary from "../assets/images/final logo Bonhomiee white without.png"
 import { PremiumButton } from "../utils/PremiumButton"
-import { HiOutlineBriefcase } from "react-icons/hi"
-import { SearchDialog } from "./common/SearchDialog"
 import { useAuth } from "../context/AuthContext"
 import { useRouter } from "next/navigation"
 
@@ -23,14 +21,6 @@ type NavItem = {
     children?: NavChild[]
     hot?: boolean
 }
-// const navItems: NavItem[] = [
-//     { label: "Curated Trips", id: "toppackages" },
-//     { label: "Our Offerings", id: "packages" },
-//     { label: "The Bonhomiee Way", id: "aboutus" },
-//     { label: "Contact Us", id: "faq" },
-//     { label: "AI", id: "ai", hot: true },
-
-// ]
 
 const navItems: NavItem[] = [
     { label: "Curated Trips", id: "toppackages" },
@@ -40,33 +30,6 @@ const navItems: NavItem[] = [
     { label: "AI", id: "ai", hot: true },
 ]
 
-// const navItems = [
-//   { label: "Getting Started", id: "hero-sub" },
-//   // { label: "Services", id: "hero-sub" },
-//   { label: "Packages", id: "packages" },
-//   // {
-//   //   label: "Explore",
-//   //   children: [
-//   //     { label: "Our Services", id: "services" },
-//   //   ],
-//   // },
-//   { label: "Testimonials", id: "testimonials" },
-//   // {
-//   //   label: "About",
-//   //   children: [
-//   //     { label: "Inspiration", id: "inspiration" },
-//   //     { label: "About us", id: "team" },
-//   //   ],
-//   // },
-//   { label: 'Partner', id: "partner" },
-//   // {
-//   //   label: "Support",
-//   //   children: [
-//   //     { label: "Privacy", id: "privacy" },
-//   //     { label: "FAQs", id: "faq" },
-//   //   ],
-//   // },
-// ]
 
 interface HeaderNavProps {
     enableScrollBg?: boolean
