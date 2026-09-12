@@ -1,12 +1,19 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/app/context/AuthContext"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Pencil, Trash2} from "lucide-react"
 import {  AddSupplierCatalogItem } from "./AddSupplierCatalogItem"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { EditCatalogAndRateDetails } from "./EditCatalogAndRateDetails"
+import {
+  handleSupplierSessionExpired,
+} from "../utilities/SupplierPortalSession"
+
+
 import {
   Hotel,
   Car,
@@ -123,15 +130,25 @@ const serviceTypeIcons: Record<string, any> = {
   CRUISE: Ship,
   RAIL: Train,
   BUS: Bus,
+
 }
+
+// Function to handle session expiration and logout
+
 export default function SupplierServiceRates() {
-  
+  const router = useRouter()
+const { logout } = useAuth()
+
+
   const [catalogs, setCatalogs] = useState<CatalogWithRateCountItem[]>([])
 const [loadingCatalogs, setLoadingCatalogs] = useState(false)
-  
+
+const [deleting, setDeleting] = useState(false)
+  const [hasNext, setHasNext] = useState(true)
 const [activeStatus, setActiveStatus] = useState<RateStatus>("ACTIVE")
  const [rates, setRates] = useState<CatalogRateItem[]>([])
 const [loadingRates, setLoadingRates] = useState(false)
+
   const [selectedCatalog, setSelectedCatalog] = useState<any>(null)
 const [rateDialogOpen, setRateDialogOpen] =
   useState(false)
@@ -151,12 +168,18 @@ const [catalogToDelete, setCatalogToDelete] =
 
 
 const handleViewRates = async (catalog: any) => {
+    const token = localStorage.getItem("access_token")
+
+   if (!token) {
+   handleSupplierSessionExpired(logout, router)
+  return
+}
   try {
     setSelectedCatalog(catalog)
     setRateDialogOpen(true)
 
+    setRates([])
     setLoadingRates(true)
-
     const response =
       await SupplierCatalogRates.getByCatalogId(
         catalog.id
@@ -165,16 +188,25 @@ const handleViewRates = async (catalog: any) => {
     console.log("Rates:", response)
 
     setRates(response || [])
-  } catch (error) {
-    console.error(error)
+  } catch (error: any) {
+  console.error(error)
 
-   
-    toast.error("Unable to load rates", {
-  position: "top-right",
-})
+  if (
+    error?.message
+      ?.toLowerCase()
+      .includes("session expired")
+  ) {
+    handleSupplierSessionExpired(logout, router)
+    return
+  }
 
-    setRates([])
-  } finally {
+  toast.error("Unable to load rates", {
+    position: "top-right",
+  })
+
+  setRates([])
+}
+ finally {
     setLoadingRates(false)
   }
 }
@@ -186,32 +218,41 @@ const fetchCatalogs = async () => {
 
     const token = localStorage.getItem("access_token")
 
+ //  Access token not found
     if (!token) {
-     
-      toast.error("Session expired. Please login again", {
-      position: "top-right",
-    })
+      handleSupplierSessionExpired(logout, router)
       return
     }
 
-    const response =
-      await supplierServiceList.getCatalogWithRateCount({
-        token,
-        page,
-        size: pageSize,
-        status: activeStatus,
-      })
+  const response =
+  await supplierServiceList.getCatalogWithRateCount({
+    token,
+    page,
+    size: pageSize,
+    status: activeStatus,
+  })
 
-    console.log("Catalog API Response:", response)
+const catalogItems = Array.isArray(response) ? response : []
+setCatalogs(catalogItems)
+setHasNext(catalogItems.length > 0)
 
-    setCatalogs(Array.isArray(response) ? response : [])
-  } catch (error: any) {
-    console.error("Catalog API Error:", error)
+   } catch (error: any) {
+    console.error(error)
 
-        toast.error(error?.message || "Unable to load catalog items.", {
-  position: "top-right",
-})
-   
+    // Case 2: Token exists but session expired
+    if (
+      error?.message
+        ?.toLowerCase()
+        .includes("session expired")
+    ) {
+      handleSupplierSessionExpired(logout, router)
+      return
+    }
+
+    // Other errors
+    toast.error("Unable to load catalog items", {
+      position: "top-right",
+    })
 
     setCatalogs([])
   } finally {
@@ -221,11 +262,13 @@ const fetchCatalogs = async () => {
 
 const handleCatalogSaved = (status: "ACTIVE" | "DRAFT") => {
   setPage(1)
+  setHasNext(true)
   setActiveStatus(status)
 }
 
 const handleDraftSaved = () => {
   setPage(1)
+  setHasNext(true)
   setActiveStatus("DRAFT")
 }
 
@@ -238,16 +281,15 @@ useEffect(() => {
   if (!catalogToDelete) return
 
   try {
-    const token =
+
+    setDeleting(true)
+      const token =
       localStorage.getItem("access_token")
 
-    if (!token) {
-     
-      toast.error("Session expired", {
-      position: "top-right",
-    })
+      if (!token) {
+      handleSupplierSessionExpired(logout, router)
       return
-    }
+}
 
     await supplierDeleteCatalogService.deleteCatalog(
       catalogToDelete.id,
@@ -264,11 +306,30 @@ useEffect(() => {
     await fetchCatalogs()
  
 
-  } catch (error) {
-  
-    toast.error("Delete failed", {
-  position: "top-right",
-})
+ } catch (error: any) {
+    console.error(error)
+
+    // Session expired / API returned 401
+    if (
+      error?.message
+        ?.toLowerCase()
+        .includes("session expired")
+    ) {
+      handleSupplierSessionExpired(logout, router)
+      return
+    }
+
+    // Other errors
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Unable to delete catalog item",
+      {
+        position: "top-right",
+      }
+    )
+  }finally {
+    setDeleting(false)
   }
 }
   const formatDate = (date?: string | null) => {
@@ -344,8 +405,9 @@ useEffect(() => {
       size="sm"
       variant="ghost"
       onClick={() => {
-        setActiveStatus(status)
-        setPage(1)
+         setPage(1)
+        setHasNext(true)
+         setActiveStatus(status)
       }}
       className={`
         h-9 px-4 rounded-md transition-all
@@ -400,18 +462,19 @@ useEffect(() => {
     </TableRow>
   )}
 
-  {!loadingCatalogs &&
-    catalogs.length === 0&& (
-      <TableRow>
-        <TableCell
-          colSpan={9}
-          className="text-center py-6"
-        >
-          No catalog items found.
-        </TableCell>
-      </TableRow>
-    )}
-
+{!loadingCatalogs &&
+  catalogs.length === 0 && (
+    <TableRow>
+      <TableCell
+        colSpan={showActionsColumn ? 9 : 8}
+        className="text-center py-6"
+      >
+        {page === 1
+          ? "No catalog items found."
+          : "No more catalog items available."}
+      </TableCell>
+    </TableRow>
+  )}
   {!loadingCatalogs &&
     catalogs.map((catalog) => (
       <TableRow key={catalog.id}
@@ -454,9 +517,9 @@ useEffect(() => {
   })()}
 </TableCell>
 
-        <TableCell className="text-left">{catalog.city}</TableCell>
+        <TableCell className="text-left"> {catalog.city || "-"}</TableCell>
 
-        <TableCell className="text-left">{catalog.country}</TableCell>
+        <TableCell className="text-left"> {catalog.country || "-"}  </TableCell>
 
         <TableCell className="text-left">{catalog.validity}</TableCell>
        <TableCell className="w-[100px] text-left">
@@ -473,7 +536,8 @@ useEffect(() => {
   <button
     type="button"
     onClick={() => handleViewRates(catalog)}
-    className="text-[#00AFEF] hover:underline font-medium"
+    disabled={loadingRates}
+    className="text-[#00AFEF] hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
     title="Click to view rate details"
   >
     {catalog.rates_available} Rates
@@ -487,6 +551,7 @@ useEffect(() => {
     {catalog.status !== "DELETED" && (
       <EditCatalogAndRateDetails
         catalogId={catalog.id}
+        onUpdated={fetchCatalogs}
       />
     )}
 
@@ -533,6 +598,14 @@ useEffect(() => {
               <span className="text-sm text-muted-foreground">
                 Page {page}
               </span>
+             <Button
+              variant="outline"
+              size="sm"
+              disabled={loadingCatalogs || !hasNext}
+              onClick={() => setPage((prev) => prev + 1)}
+            >
+              Next
+            </Button>
 
             
             </div>
@@ -709,20 +782,19 @@ useEffect(() => {
 
   <div className="flex justify-center gap-4 pt-2">
     <Button
-      variant="outline"
-      className="min-w-[110px]"
-      onClick={() => setDeleteDialogOpen(false)}
-    >
-      Cancel
-    </Button>
+  variant="outline"
+  onClick={() => setDeleteDialogOpen(false)}
+  disabled={deleting}
+>
+  Cancel
+</Button>
 
-    <Button
-      variant="destructive"
-      className="min-w-[110px]"
-      onClick={handleDelete}
-    >
-      Delete
-    </Button>
+<Button
+  onClick={handleDelete}
+  disabled={deleting}
+>
+  {deleting ? "Deleting..." : "Delete"}
+</Button>
   </div>
 
 </DialogContent>

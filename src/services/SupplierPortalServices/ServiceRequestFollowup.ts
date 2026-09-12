@@ -11,13 +11,13 @@ export type ServiceRequestFollowup = {
   supplier_id: number
   followup_date: string
   remarks: string | null
-  next_followup_date: string | null
   created_by: number
   created_at: string
   updated_by: number | null
   updated_at: string
+  responded_by_user_id: number | null
+  stage: string | null
 }
-
 export const ServiceRequestFollowup = {
   addFollowup: (
     token: string,

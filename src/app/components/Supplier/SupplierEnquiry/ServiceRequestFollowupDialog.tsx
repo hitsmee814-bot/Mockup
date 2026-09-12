@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { format } from "date-fns"
-
+import { useAuth } from "@/app/context/AuthContext"
+import { useRouter } from "next/navigation"
 import { Calendar } from "@/components/ui/calendar"
+import { ErrorMessage } from "../../signup/supplier/SupplierUtils"
 import {
   ServiceRequestFollowup
 } from "@/services/SupplierPortalServices/ServiceRequestFollowup"
@@ -28,6 +30,7 @@ type ServiceRequestFollowupDialogProps = {
   serviceRequestId: number | null
   serviceRequestNo: string | null
   onClose: () => void
+  onSuccess?: () => void
 }
 
 export function ServiceRequestFollowupDialog({
@@ -35,19 +38,24 @@ export function ServiceRequestFollowupDialog({
   serviceRequestId,
   serviceRequestNo,
   onClose,
+  onSuccess,
 }: ServiceRequestFollowupDialogProps) {
+
+  const router = useRouter()
+const { logout } = useAuth()
+const sessionHandled = useRef(false)
  const [remarks, setRemarks] = useState("")
-const [nextFollowupDate, setNextFollowupDate] = useState("")
+
 const [selectedDate, setSelectedDate] =
   useState<Date | undefined>()
 const [remarksError, setRemarksError] = useState("")
 const [dateError, setDateError] = useState("")
 const [saving, setSaving] = useState(false)
+const [calendarOpen, setCalendarOpen] = useState(false)
 
 useEffect(() => {
   if (open) {
     setRemarks("")
-    setNextFollowupDate("")
     setSelectedDate(undefined)
     setRemarksError("")
     setDateError("")
@@ -66,6 +74,13 @@ if (!remarks.trim()) {
   setRemarksError("Please enter follow-up remarks")
   return
 }
+
+if (remarks.trim().length < 5) {
+  setRemarksError(
+    "Please enter more details for the follow-up"
+  )
+  return
+}
   
 if (!selectedDate) {
   setDateError("Please select the next follow-up date")
@@ -79,12 +94,24 @@ if (!selectedDate) {
     const token = localStorage.getItem("access_token")
 
     if (!token) {
-      toast.error("Session expired. Please login again.", {
+  if (!sessionHandled.current) {
+    sessionHandled.current = true
+
+    logout()
+
+    toast.error(
+      "Your session has expired. Please log in again.",
+      {
         position: "top-right",
         duration: 3000,
-      })
-      return
-    }
+      }
+    )
+
+    router.replace("/auth")
+  }
+
+  return
+}
 
     const now = new Date()
 
@@ -109,26 +136,49 @@ await ServiceRequestFollowup.addFollowup(
       position: "top-right",
       duration: 3000,
     })
-
+    onSuccess?.()
     setRemarks("")
-    setNextFollowupDate("")
     setSelectedDate(undefined)
     onClose()
   } catch (error: any) {
-    console.error(
-      "Failed to save follow-up:",
-      error
-    )
+  console.error(
+    "Failed to save follow-up:",
+    error
+  )
 
-    toast.error(
-      error?.message ||
-        "Failed to save follow-up.",
-      {
-        position: "top-right",
-        duration: 3000,
-      }
-    )
-  } finally {
+  if (
+    error?.message
+      ?.toLowerCase()
+      .includes("session expired")
+  ) {
+    if (!sessionHandled.current) {
+      sessionHandled.current = true
+
+      logout()
+
+      toast.error(
+        "Your session has expired. Please log in again.",
+        {
+          position: "top-right",
+          duration: 3000,
+        }
+      )
+
+      router.replace("/auth")
+    }
+
+    return
+  }
+
+  toast.error(
+    error?.message ||
+      "Failed to save follow-up.",
+    {
+      position: "top-right",
+      duration: 3000,
+    }
+  )
+} finally {
     setSaving(false)
   }
 }
@@ -188,11 +238,7 @@ await ServiceRequestFollowup.addFollowup(
               "
             />
 
-            {remarksError && (
-            <p className="mt-1 text-xs text-red-500">
-              {remarksError}
-            </p>
-          )}
+            <ErrorMessage message={remarksError} />
           </div>
 
           {/* Next Follow-up Date */}
@@ -200,7 +246,10 @@ await ServiceRequestFollowup.addFollowup(
             <label className="mb-2 block text-sm font-medium text-slate-700">
             Next Follow-up Date <span className="text-red-500">*</span>
             </label>
-            <Popover>
+           <Popover
+  open={calendarOpen}
+  onOpenChange={setCalendarOpen}
+>
   <PopoverTrigger asChild>
     <Button
   type="button"
@@ -239,20 +288,18 @@ await ServiceRequestFollowup.addFollowup(
     align="start"
   >
     <Calendar
-      mode="single"
-      selected={selectedDate}
-      onSelect={(date) => {
-        setSelectedDate(date)
-        setDateError("")
-      }}
+  mode="single"
+  selected={selectedDate}
+  disabled={{ before: new Date() }}
+  onSelect={(date) => {
+  setSelectedDate(date)
+  setDateError("")
+  setCalendarOpen(false)
+}}
     />
   </PopoverContent>
 </Popover>
-      {dateError && (
-        <p className="mt-1 text-xs text-red-500">
-          {dateError}
-        </p>
-      )}
+      <ErrorMessage message={dateError} />
           </div>
 
         </div>

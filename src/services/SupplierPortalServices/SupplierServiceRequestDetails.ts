@@ -6,6 +6,7 @@ export type ServiceRequestDetails = {
   enquiry_no: string
   service_request_no: string
   subject: string
+  next_followup: string | null
   service_type: string
   destination: string
   travel_date: string
