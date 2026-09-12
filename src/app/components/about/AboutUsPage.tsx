@@ -2,6 +2,8 @@ import AboutClosing from "./AboutClosing"
 import AboutCraft from "./AboutCraft"
 import AboutHero from "./AboutHero"
 import AboutTeam from "./AboutTeam"
+import AboutUnderstanding from "./AboutUnderstanding"
+import AboutVision from "./AboutVision"
 import AscendusSection from "./AscendusSection"
 import FounderNote from "./FounderNote"
 import VisionSection from "./VisionSection"
@@ -11,13 +13,15 @@ export default function AboutUsPage() {
     return (
         <main>
             <AboutHero />
-            <WhyDifferent />
+            <AboutUnderstanding/>
+            {/* <WhyDifferent /> */}
             <FounderNote />
             <AboutTeam />
-            <AboutCraft />
-            <AscendusSection />
-            <VisionSection />
-            <AboutClosing />
+            <AboutVision/>
+            {/* <AboutCraft /> */}
+            {/* <AscendusSection /> */}
+            {/* <VisionSection /> */}
+            {/* <AboutClosing /> */}
         </main>
     )
 }

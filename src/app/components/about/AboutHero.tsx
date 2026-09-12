@@ -1,214 +1,154 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { ArrowDown, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-const fadeUp = {
+const fadeUp: Variants = {
     hidden: {
         opacity: 0,
-        y: 28,
+        y: 24,
     },
     visible: {
         opacity: 1,
         y: 0,
         transition: {
             duration: 0.8,
-            ease: [0.16, 1, 0.3, 1] as const,
+            ease: [0.16, 1, 0.3, 1],
         },
     },
 }
 
 export default function AboutHero() {
-        const router = useRouter()
+    const router = useRouter()
 
     return (
-        <section className="relative min-h-[100svh] overflow-hidden bg-white">
-<motion.button
-    initial={{ opacity: 0, x: -10 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.5, delay: 0.2 }}
-    onClick={() => router.back()}
-    className="
-        absolute
-        left-6
-        top-7
-        z-30
-        flex
-        items-center
-        gap-2
-        text-sm
-        font-medium
-        text-black/40
-        transition-colors
-        duration-300
-        hover:text-[#0E40C7]
-        sm:left-8
-        lg:left-10
-    "
->
-    <ArrowLeft
-        className="h-4 w-4"
-        strokeWidth={1.7}
-    />
+        <section className="relative min-h-screen overflow-hidden bg-white text-[#1B120B]">
 
-    <span>Back</span>
-</motion.button>
+            {/* Back */}
+            <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                onClick={() => router.back()}
+                className="
+                    absolute left-6 top-7 z-20
+                    flex items-center gap-2
+                    text-sm font-medium text-[#1B120B]/50
+                    transition-colors hover:text-[#0E40C7]
+                    sm:left-10 lg:left-14
+                "
+            >
+                <ArrowLeft size={16} strokeWidth={1.6} />
+                <span>Back</span>
+            </motion.button>
+
             <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
 
-                <div
-                    className="
-                        grid
-                        min-h-[100svh]
-                        grid-cols-1
-                        items-center
-                        gap-12
-                        py-28
-                        lg:grid-cols-[1.05fr_0.95fr]
-                        lg:gap-20
-                        lg:py-20
-                    "
-                >
+                <div className="
+                    grid min-h-screen items-center
+                    gap-14 py-28
+                    lg:grid-cols-[1.05fr_0.95fr]
+                    lg:gap-20 lg:py-20
+                ">
 
+                    {/* Content */}
                     <motion.div
                         initial="hidden"
                         animate="visible"
                         variants={fadeUp}
                         className="max-w-2xl"
                     >
-                        <p
-                            className="
-                                mb-6
-                                text-xs
-                                font-semibold
-                                uppercase
-                                tracking-[0.24em]
-                                text-[#0E40C7]
-                            "
+
+                        {/* Label */}
+                        {/* About Intro */}
+                        <motion.div
+                            variants={fadeUp}
+                            className="relative mb-10"
                         >
-                            About Bonhomiee
-                        </p>
+                            <p
+                                className="
+                                    relative
+                                    text-sm font-semibold
+                                    uppercase tracking-[0.18em]
+                                    text-[#0E40C7]
+                                    sm:text-base
+                                "
+                            >
+                                About Bonhomiee
+                            </p>
 
+                            <div className="mt-5 h-[2px] w-20 bg-[#FBAB18]" />
+                        </motion.div>
 
-
-                        <h1
-                            className="
-                                text-5xl
-                                font-semibold
-                                leading-[0.96]
-                                tracking-[-0.045em]
-                                text-black
-                                sm:text-6xl
-                                lg:text-7xl
-                                xl:text-[82px]
-                            "
-                        >
+                        {/* Heading */}
+                        <h1 className="
+                            text-5xl font-semibold
+                            leading-[0.94] tracking-[-0.05em]
+                            text-[#1B120B]
+                            sm:text-6xl
+                            lg:text-7xl
+                            xl:text-[78px]
+                        ">
                             We begin with
                             <br />
-                            a conversation.
+                            <span className="relative inline-block">
+                                a conversation.
+
+                                <span className="
+                                    absolute -bottom-3 left-0
+                                    h-1 w-2/3 rounded-full
+                                    bg-[#0E40C7]
+                                    sm:-bottom-4
+                                " />
+                            </span>
                         </h1>
 
-
-                        {/* Opening copy */}
-
-                        <div
-                            className="
-                                mt-9
-                                space-y-5
-                                text-base
-                                leading-[1.8]
-                                text-black/55
-                                sm:text-lg
-                            "
-                        >
-
-                            <p>
+                        {/* Intro */}
+                        <div className="
+                            mt-10 space-y-6
+                            text-base leading-[1.8]
+                            text-[#1B120B]/65
+                            sm:text-lg
+                        ">
+                            <p className="font-medium text-[#1B120B]/80">
                                 Most travel companies begin with a destination.
+                                <br className="hidden sm:block" />
                                 We don&apos;t.
                             </p>
 
                             <p>
-                                The most meaningful journeys aren&apos;t defined
-                                by where you go, but by why you&apos;re going —
-                                a celebration, a pause, a reunion, a fresh start,
-                                a long-promised adventure.
+                                Every trip carries a reason before it carries a
+                                route — a celebration, a pause, a reunion, a
+                                long-promised adventure.
                             </p>
 
                             <p>
-                                Every trip carries a story before it begins.
+                                So our first question is never &quot;where.&quot;
+                                It&apos;s &quot;tell us about this trip.&quot;
                             </p>
-
                         </div>
+
+                        {/* Closing */}
                         <motion.div
                             variants={fadeUp}
                             className="
-                                mt-9
-                                border-l-2
-                                border-[#0E40C7]
-                                pl-5
-                                sm:pl-6
+                                mt-10 border-l-2 border-[#0E40C7]
+                                pl-5 sm:pl-6
                             "
                         >
-
-                            <p
-                                className="
-                                    text-xs
-                                    font-medium
-                                    uppercase
-                                    tracking-[0.18em]
-                                    text-black/35
-                                "
-                            >
-                                So our first question is never
+                            <p className="
+                                text-base font-medium leading-[1.75]
+                                text-[#1B120B]/70 sm:text-lg
+                            ">
+                                From there, we build the journey around who you
+                                are and what you need this one to become.
                             </p>
-
-                            <p
-                                className="
-                                    mt-2
-                                    text-base
-                                    text-black/45
-                                    line-through
-                                    decoration-black/20
-                                    sm:text-lg
-                                "
-                            >
-                                &quot;Where would you like to go?&quot;
-                            </p>
-
-                            <p
-                                className="
-                                    mt-4
-                                    text-2xl
-                                    font-medium
-                                    tracking-tight
-                                    text-black
-                                    sm:text-3xl
-                                "
-                            >
-                                &quot;Tell us about this trip.&quot;
-                            </p>
-
                         </motion.div>
-
-                        <p
-                            className="
-                                mt-8
-                                max-w-xl
-                                text-sm
-                                leading-relaxed
-                                text-black/45
-                                sm:text-base
-                            "
-                        >
-                            From there we design a journey around who you are,
-                            what you love, and what you need this experience to
-                            become — every stay, every recommendation, every
-                            detail chosen with intent.
-                        </p>
 
                     </motion.div>
 
-
+                    {/* Image */}
                     <motion.div
                         initial={{
                             opacity: 0,
@@ -226,113 +166,44 @@ export default function AboutHero() {
                             ease: [0.16, 1, 0.3, 1],
                         }}
                         className="
-                            relative
-                            h-[55vh]
-                            min-h-[430px]
-                            overflow-hidden
-                            rounded-[2rem]
-                            lg:h-[72vh]
+                            relative h-[55vh] min-h-[430px]
+                            overflow-hidden rounded-[2rem]
+                            lg:h-[70vh]
                         "
                     >
-
                         <img
                             src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1400&q=85"
                             alt="A journey beginning"
                             className="
-                                absolute
-                                inset-0
-                                h-full
-                                w-full
+                                absolute inset-0
+                                h-full w-full
                                 object-cover
+                                transition-transform duration-1000
+                                hover:scale-[1.025]
                             "
                         />
 
+                        {/* Minimal image detail */}
+                        <div className="
+                            absolute bottom-0 left-0 right-0
+                            h-32
+                            bg-gradient-to-t
+                            from-black/30 to-transparent
+                        " />
 
-                        <div
-                            className="
-                                pointer-events-none
-                                absolute
-                                inset-0
-                                bg-gradient-to-t
-                                from-black/20
-                                via-transparent
-                                to-transparent
-                            "
-                        />
-
-
-                        <div
-                            className="
-                                absolute
-                                bottom-6
-                                left-6
-                                right-6
-                                sm:bottom-8
-                                sm:left-8
-                                sm:right-8
-                            "
-                        >
-                            <p
-                                className="
-                                    max-w-xs
-                                    text-sm
-                                    leading-relaxed
-                                    text-white/80
-                                "
-                            >
-                                Every trip carries a story
-                                before it begins.
-                            </p>
-                        </div>
-
+                        <p className="
+                            absolute bottom-7 left-7
+                            max-w-xs text-sm font-medium
+                            leading-relaxed text-white/90
+                            sm:left-8 sm:bottom-8
+                        ">
+                            Every trip carries a reason
+                            before it carries a route.
+                        </p>
                     </motion.div>
 
                 </div>
-
             </div>
-
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                className="
-                    absolute
-                    bottom-7
-                    left-1/2
-                    flex
-                    -translate-x-1/2
-                    flex-col
-                    items-center
-                    gap-2
-                    text-black/30
-                "
-            >
-
-                <span
-                    className="
-                        text-[10px]
-                        uppercase
-                        tracking-[0.25em]
-                    "
-                >
-                    Discover
-                </span>
-
-                <motion.div
-                    animate={{
-                        y: [0, 5, 0],
-                    }}
-                    transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                    }}
-                >
-                    <ArrowDown className="h-4 w-4" />
-                </motion.div>
-
-            </motion.div>
-
         </section>
     )
 }

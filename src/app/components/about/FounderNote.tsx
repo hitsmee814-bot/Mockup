@@ -1,291 +1,194 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
+import { ArrowUpRight } from "lucide-react"
 
-const fadeUp = {
+const fadeUp: Variants = {
     hidden: {
         opacity: 0,
-        y: 30,
+        y: 24,
     },
     visible: {
         opacity: 1,
         y: 0,
         transition: {
             duration: 0.8,
-            ease: [0.16, 1, 0.3, 1] as const,
+            ease: [0.16, 1, 0.3, 1],
         },
     },
 }
 
 export default function FounderNote() {
     return (
-        <section className="relative overflow-hidden bg-[#F6F8F7] py-24 sm:py-32 lg:py-40">
-
+        <section className="bg-white py-18 text-[#1B120B] sm:py-18 lg:py-18">
             <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
 
-                <div
-                    className="
-                        grid
-                        grid-cols-1
-                        items-start
-                        gap-14
-                        lg:grid-cols-[0.7fr_1.3fr]
-                        lg:gap-24
-                    "
-                >
+                <div className="grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
+
+                    {/* Content */}
                     <motion.div
                         initial="hidden"
                         whileInView="visible"
-                        viewport={{
-                            once: true,
-                            margin: "-100px",
+                        viewport={{ once: true }}
+                        variants={{
+                            visible: {
+                                transition: {
+                                    staggerChildren: 0.12,
+                                },
+                            },
                         }}
-                        variants={fadeUp}
-                        className="lg:sticky lg:top-24"
-                    >
-                        <p
-                            className="
-                                text-xs
-                                font-semibold
-                                uppercase
-                                tracking-[0.25em]
-                                text-[#0E40C7]
-                            "
-                        >
-                            A note from the founder
-                        </p>
-
-                        <div className="mt-8 hidden h-px w-20 bg-black/15 lg:block" />
-
-                        <p
-                            className="
-                                mt-6
-                                max-w-xs
-                                text-sm
-                                leading-relaxed
-                                text-black/40
-                            "
-                        >
-                            Why I believe travel needs to
-                            become more human.
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{
-                            once: true,
-                            margin: "-100px",
-                        }}
-                        variants={fadeUp}
                         className="max-w-3xl"
                     >
 
-                        {/* Opening statement */}
-
-                        <h2
-                            className="
-                                max-w-3xl
-                                text-4xl
-                                font-medium
-                                leading-[1.05]
-                                tracking-[-0.04em]
-                                text-black
-                                sm:text-5xl
-                                lg:text-6xl
-                            "
+                        {/* Label */}
+                        {/* Founder Intro */}
+                        <motion.div
+                            variants={fadeUp}
+                            className="relative mb-10"
                         >
-                            The age of being processed is ending.
-                            <br />
-                            <span className="text-black/35">
-                                The age of being understood is beginning.
+                            <span
+                                className="
+                                    absolute -left-3 -top-10
+                                    font-serif text-[100px]
+                                    leading-none
+                                    text-[#0E40C7]/10
+                                    sm:-left-5 sm:-top-14
+                                    sm:text-[130px]
+                                "
+                            >
+                                “
                             </span>
-                        </h2>
 
-
-                        {/* Founder portrait */}
-
-                        <div className="mt-12 sm:mt-16">
-                            <div
+                            <p
                                 className="
                                     relative
-                                    h-[280px]
-                                    w-full
-                                    overflow-hidden
-                                    rounded-[1.75rem]
-                                    bg-black/5
-                                    sm:h-[360px]
-                                    lg:hidden
+                                    text-sm font-semibold
+                                    uppercase tracking-[0.18em]
+                                    text-[#0E40C7]
+                                    sm:text-base
                                 "
                             >
-                                <img
-                                    src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=1200&q=85"
-                                    alt="Founder"
-                                    className="
-                                        h-full
-                                        w-full
-                                        object-cover
-                                    "
-                                />
-                            </div>
-                        </div>
+                                A note from our founder
+                            </p>
 
-
-                        <div
-                            className="
-                                mt-10
-                                space-y-7
-                                text-base
-                                leading-[1.9]
-                                text-black/60
-                                sm:mt-14
-                                sm:text-lg
-                            "
+                            <div className="mt-5 h-[2px] w-20 bg-[#FBAB18]" />
+                        </motion.div>
+                        {/* Heading */}
+                        <motion.h2
+                            variants={fadeUp}
+                            className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] text-[#1B120B] sm:text-5xl lg:text-[58px]"
                         >
+                            A belief in technology
+                            <br />
+                            <span className="text-[#0E40C7]">
+                                that serves people.
+                            </span>
+                        </motion.h2>
 
-                            <p>
-                                I spent twenty-five years building and
-                                running technology inside large
-                                organisations — nearly two decades with
-                                Ericsson, IBM and Wipro in India, then five
-                                years in Europe leading digital
-                                transformation across a set of global
-                                companies, with a year at IIM Lucknow
-                                somewhere in between.
-                            </p>
-
-                            <p>
-                                The work taught me how complex systems are
-                                actually made to perform — and, just as
-                                often, why they fail the people they&apos;re
-                                meant to serve.
-                            </p>
-
-                            <p>
-                                Travel was where I felt that failure most
-                                personally.
-                            </p>
-
-                            <p>
-                                The industry had spent a decade optimising
-                                the transaction — faster search, sharper
-                                pricing, endless comparison — and quietly
-                                optimised away the traveller.
-                            </p>
-
-                            <p>
-                                More options produced less certainty.
-                                More information, more fatigue. You could
-                                now book a trip in minutes and still arrive
-                                having understood nothing about where you
-                                were going.
-                            </p>
-
-                        </div>
-
-                        <div
-                            className="
-                                my-12
-                                border-l-2
-                                border-[#0E40C7]
-                                pl-6
-                                sm:my-16
-                                sm:pl-8
-                            "
+                        {/* Story */}
+                        <motion.div
+                            variants={fadeUp}
+                            className="mt-10 space-y-6 text-base leading-[1.85] text-[#1B120B]/70 sm:text-lg"
                         >
-                            <p
-                                className="
-                                    text-2xl
-                                    font-medium
-                                    leading-[1.25]
-                                    tracking-tight
-                                    text-black
-                                    sm:text-3xl
-                                    lg:text-4xl
-                                "
-                            >
-                                The efficiency was real;
-                                the experience had thinned.
+                            <p>
+                                I spent twenty-five years building technology
+                                inside large organisations — Ericsson, IBM,
+                                Wipro, then a spell leading digital
+                                transformation across Europe. It taught me how
+                                complex systems work, and just as often, why
+                                they fail the people they&apos;re meant to serve.
                             </p>
-                        </div>
 
-                        <div
-                            className="
-                                space-y-7
-                                text-base
-                                leading-[1.9]
-                                text-black/60
-                                sm:text-lg
-                            "
+                            <p>
+                                Travel was where I felt that failure most. A
+                                decade of the industry optimising search and
+                                price had quietly optimised away the traveller.
+                                You could book a trip in minutes and still
+                                understand nothing about where you were going.
+                            </p>
+                        </motion.div>
+
+                        {/* Highlight */}
+                        <motion.div
+                            variants={fadeUp}
+                            className="mt-10 border-l-2 border-[#0E40C7] pl-6"
                         >
-
-                            <p>
-                                What I kept returning to was a simple
-                                conviction: technology should carry the
-                                load a journey doesn&apos;t need a human
-                                for — so that human judgment can be spent
-                                where it actually matters, on understanding
-                                a person and designing for them.
+                            <p className="text-xl font-medium leading-[1.4] tracking-tight text-[#1B120B] sm:text-2xl">
+                                You could book a trip in minutes and still
+                                understand nothing about where you were going.
                             </p>
+                        </motion.div>
 
-                            <p>
-                                That belief is the whole architecture of
-                                Bonhomiee.
-                            </p>
+                        {/* Closing paragraph */}
+                        <motion.p
+                            variants={fadeUp}
+                            className="mt-10 text-base leading-[1.85] text-[#1B120B]/70 sm:text-lg"
+                        >
+                            So in 2023 I came home to Kolkata to build something
+                            else: a small team that would rather do the work
+                            well than do it at volume and Ascendus, built to
+                            make that depth scale without ever becoming the
+                            thing you notice.
+                        </motion.p>
 
-                            <p>
-                                In late 2023 I left London and came home to
-                                Kolkata to build it: a small team that would
-                                rather do the work well than do it at volume,
-                                and an intelligence layer, Ascendus, built
-                                to make that depth scale without ever
-                                becoming the thing you notice.
-                            </p>
+                        {/* Signature */}
+                        <motion.div
+                            variants={fadeUp}
+                            className="mt-10"
+                        >
+                            <div className="mb-4 h-px w-12 bg-[#FBAB18]" />
 
-                        </div>
-
-
-                        <div className="mt-12 sm:mt-16">
-
-                            <div
-                                className="
-                                    mb-5
-                                    h-px
-                                    w-16
-                                    bg-black/15
-                                "
-                            />
-
-                            <p
-                                className="
-                                    text-lg
-                                    font-medium
-                                    tracking-tight
-                                    text-black
-                                "
-                            >
+                            <p className="text-base font-semibold text-[#1B120B]">
                                 — Sudip Pal
                             </p>
 
-                            <p
-                                className="
-                                    mt-1
-                                    text-sm
-                                    text-black/40
-                                "
-                            >
+                            <p className="mt-1 text-sm text-[#1B120B]/45">
                                 Founder, Bonhomiee
                             </p>
-
-                        </div>
+                        </motion.div>
 
                     </motion.div>
 
+                    {/* Founder Image */}
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            x: 30,
+                        }}
+                        whileInView={{
+                            opacity: 1,
+                            x: 0,
+                        }}
+                        viewport={{ once: true }}
+                        transition={{
+                            duration: 1,
+                            ease: [0.16, 1, 0.3, 1],
+                        }}
+                        className="relative h-[520px] overflow-hidden rounded-[2rem] sm:h-[620px]"
+                    >
+                        <img
+                            src="/images/founder.jpg"
+                            alt="Sudip Pal, Founder of Bonhomiee"
+                            className="h-full w-full object-cover transition-transform duration-1000 hover:scale-[1.025]"
+                        />
+
+                        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
+
+                        <div className="absolute bottom-7 left-7 flex items-center gap-3 text-sm font-medium text-white/90 sm:bottom-8 sm:left-8">
+                            <span className="h-px w-8 bg-white/70" />
+                            Sudip Pal
+                        </div>
+
+                        <div className="absolute right-7 top-7 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[#0E40C7] backdrop-blur-sm sm:right-8 sm:top-8">
+                            <ArrowUpRight
+                                size={17}
+                                strokeWidth={1.6}
+                            />
+                        </div>
+                    </motion.div>
+
                 </div>
-
             </div>
-
         </section>
     )
 }
