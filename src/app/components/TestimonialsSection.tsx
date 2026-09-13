@@ -659,16 +659,16 @@ export default function Testimonials() {
                     <div className="mt-9 flex items-center gap-6">
                         <div className="flex-1">
                             <div className="relative h-[2px] w-full overflow-hidden rounded-full bg-[#E7EBF1]">
-                                <motion.div className="absolute left-0 top-0 h-full bg-[#FBAB18]" animate={{ width: `${progressWidth}%` }} transition={{ duration: 0.4 }} />
+                                <motion.div className="absolute left-0 top-0 h-full bg-[#0E40C7]" animate={{ width: `${progressWidth}%` }} transition={{ duration: 0.4 }} />
                             </div>
                         </div>
 
                         <div className="flex shrink-0 gap-2">
-                            <button type="button" aria-label="Previous testimonial" onClick={prev} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#FBAB18] hover:bg-[#FBAB18] hover:text-white">
+                            <button type="button" aria-label="Previous testimonial" onClick={prev} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1B120B] bg-white text-[#1B120B] transition-all duration-300 hover:border-[#0E40C7] hover:bg-white hover:text-[#0E40C7]">
                                 <ChevronLeft size={18} />
                             </button>
 
-                            <button type="button" aria-label="Next testimonial" onClick={next} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#FBAB18] hover:bg-[#FBAB18] hover:text-white">
+                            <button type="button" aria-label="Next testimonial" onClick={next} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1B120B] bg-white text-[#1B120B] transition-all duration-300 hover:border-[#0E40C7] hover:bg-white hover:text-[#0E40C7]">
                                 <ChevronRight size={18} />
                             </button>
                         </div>
