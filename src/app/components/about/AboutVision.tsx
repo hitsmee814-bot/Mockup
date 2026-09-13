@@ -68,7 +68,7 @@ export default function AboutVision() {
                         "
                     >
                         The travel industry spent a decade
-                        <span className="text-[#0E40C7]">
+                        <span className="text-[#FBAB18]">
                             {" "}solving the wrong problem.
                         </span>
                     </motion.h2>

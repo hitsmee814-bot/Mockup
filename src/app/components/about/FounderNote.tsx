@@ -82,7 +82,7 @@ export default function FounderNote() {
                         >
                             A belief in technology
                             <br />
-                            <span className="text-[#0E40C7]">
+                            <span className="text-[#FBAB18]">
                                 that serves people.
                             </span>
                         </motion.h2>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react"
 import Link from "next/link"
@@ -51,64 +51,99 @@ const testimonials = [
 ]
 
 const visibleDesktop = 3
-const clones = testimonials.slice(-visibleDesktop)
-const endClones = testimonials.slice(0, visibleDesktop)
-const cards = [...clones, ...testimonials, ...endClones]
+
+const desktopClones = testimonials.slice(-visibleDesktop)
+const desktopEndClones = testimonials.slice(0, visibleDesktop)
+const desktopCards = [...desktopClones, ...testimonials, ...desktopEndClones]
+
+const mobileClones = testimonials.slice(-1)
+const mobileEndClones = testimonials.slice(0, 1)
+const mobileCards = [...mobileClones, ...testimonials, ...mobileEndClones]
 
 export default function Testimonials() {
-    const [index, setIndex] = useState(visibleDesktop)
-    const [flipped, setFlipped] = useState<number | null>(null)
-    const [paused, setPaused] = useState(false)
-    const [animating, setAnimating] = useState(false)
+    const [desktopIndex, setDesktopIndex] = useState(visibleDesktop)
+    const [mobileIndex, setMobileIndex] = useState(1)
+    const [desktopFlipped, setDesktopFlipped] = useState<number | null>(null)
+    const [mobileFlipped, setMobileFlipped] = useState<number | null>(null)
+    const [desktopAnimating, setDesktopAnimating] = useState(false)
+    const [mobileAnimating, setMobileAnimating] = useState(false)
 
-    const next = () => {
-        if (animating) return
-        setFlipped(null)
-        setAnimating(true)
-        setIndex((prev) => prev + 1)
+    const nextDesktop = () => {
+        if (desktopAnimating) return
+        setDesktopFlipped(null)
+        setDesktopAnimating(true)
+        setDesktopIndex((prev) => prev + 1)
     }
 
-    const prev = () => {
-        if (animating) return
-        setFlipped(null)
-        setAnimating(true)
-        setIndex((prev) => prev - 1)
+    const prevDesktop = () => {
+        if (desktopAnimating) return
+        setDesktopFlipped(null)
+        setDesktopAnimating(true)
+        setDesktopIndex((prev) => prev - 1)
     }
 
-    const handleAnimationEnd = () => {
-        if (index >= testimonials.length + visibleDesktop) {
-            setIndex(visibleDesktop)
+    const handleDesktopAnimationEnd = () => {
+        if (desktopIndex >= testimonials.length + visibleDesktop) {
+            setDesktopIndex(visibleDesktop)
         }
 
-        if (index < visibleDesktop) {
-            setIndex(testimonials.length + visibleDesktop - 1)
+        if (desktopIndex < visibleDesktop) {
+            setDesktopIndex(testimonials.length + visibleDesktop - 1)
         }
 
-        setAnimating(false)
+        setDesktopAnimating(false)
     }
 
-    useEffect(() => {
-        if (paused || flipped !== null || animating) return
+    const nextMobile = () => {
+        if (mobileAnimating) return
+        setMobileFlipped(null)
+        setMobileAnimating(true)
+        setMobileIndex((prev) => prev + 1)
+    }
 
-        const timer = setInterval(next, 7500)
-        return () => clearInterval(timer)
-    }, [paused, flipped, animating])
+    const prevMobile = () => {
+        if (mobileAnimating) return
+        setMobileFlipped(null)
+        setMobileAnimating(true)
+        setMobileIndex((prev) => prev - 1)
+    }
 
-    const realIndex =
-        ((index - visibleDesktop) % testimonials.length + testimonials.length) %
-        testimonials.length
+    const handleMobileAnimationEnd = () => {
+        if (mobileIndex >= testimonials.length + 1) {
+            setMobileIndex(1)
+        }
 
-    const progress = ((realIndex + 1) / testimonials.length) * 100
+        if (mobileIndex < 1) {
+            setMobileIndex(testimonials.length)
+        }
+
+        setMobileAnimating(false)
+    }
+
+    const desktopRealIndex = ((desktopIndex - visibleDesktop) % testimonials.length + testimonials.length) % testimonials.length
+    const mobileRealIndex = ((mobileIndex - 1) % testimonials.length + testimonials.length) % testimonials.length
+
+    const desktopProgress = ((desktopRealIndex + 1) / testimonials.length) * 100
+    const mobileProgress = ((mobileRealIndex + 1) / testimonials.length) * 100
 
     return (
-        <section className="relative overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
-            <div className="relative mx-auto max-w-6xl px-6 sm:px-8">
-
+        <section className="relative overflow-hidden bg-white py-20 sm:py-28 lg:py-32">
+            <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
                 {/* Heading */}
                 <div className="mx-auto max-w-4xl text-center">
-                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} className="relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative z-10"
+                    >
                         <div className="relative mx-auto w-fit">
-                            {/* <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap text-[60px] font-bold uppercase tracking-[0.08em] text-muted/35 sm:text-[100px] lg:text-[145px]">
+                            {/* Background Word */}
+                            {/* <span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap text-[60px] font-bold uppercase tracking-[0.08em] text-muted/35 sm:text-[100px] lg:text-[145px]"
+                            >
                                 TESTIMONIALS
                             </span> */}
 
@@ -118,64 +153,94 @@ export default function Testimonials() {
                         </div>
                     </motion.div>
 
-                    <motion.p initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.6, delay: 0.1 }} className="mx-auto mt-12 max-w-2xl text-sm leading-relaxed text-[#536174] sm:text-base">
+                    <motion.p
+                        initial={{ opacity: 0, y: 15 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="mx-auto mt-8 max-w-2xl text-sm leading-relaxed text-[#536174] sm:mt-12 sm:text-base"
+                    >
                         Real journeys. Real words. Shared by the people who travelled with us.
                     </motion.p>
                 </div>
 
-                {/* Carousel */}
-                <div className="relative mt-16" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+                {/* Desktop / Tablet Carousel */}
+                <div className="relative mt-12 hidden md:block lg:mt-16">
                     <div className="overflow-hidden">
                         <motion.div
                             className="flex"
-                            animate={{ x: `-${index * (100 / 3)}%` }}
-                            transition={animating ? { duration: 0.6, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
-                            onAnimationComplete={handleAnimationEnd}
+                            animate={{ x: `-${desktopIndex * (100 / 3)}%` }}
+                            transition={desktopAnimating ? { duration: 0.6, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
+                            onAnimationComplete={handleDesktopAnimationEnd}
                         >
-                            {cards.map((item, i) => {
-                                const isFlipped = flipped === i
+                            {desktopCards.map((item, i) => {
+                                const isFlipped = desktopFlipped === i
 
                                 return (
-                                    <div key={`${item.name}-${i}`} className="w-full shrink-0 px-2 sm:w-1/2 lg:w-1/3">
-                                        <div className="relative h-[440px] cursor-pointer [perspective:1200px]" onClick={() => setFlipped(isFlipped ? null : i)}>
-                                            <motion.div className="relative h-full w-full [transform-style:preserve-3d]" animate={{ rotateY: isFlipped ? 180 : 0 }} transition={{ duration: 0.4 }}>
-
+                                    <div key={`${item.name}-desktop-${i}`} className="w-full shrink-0 px-2 sm:w-1/2 lg:w-1/3">
+                                        <div
+                                            className="relative h-[440px] cursor-pointer [perspective:1200px]"
+                                            onClick={() => setDesktopFlipped(isFlipped ? null : i)}
+                                        >
+                                            <motion.div
+                                                className="relative h-full w-full [transform-style:preserve-3d]"
+                                                animate={{ rotateY: isFlipped ? 180 : 0 }}
+                                                transition={{ duration: 0.4 }}
+                                            >
                                                 {/* Front */}
                                                 <div className="absolute inset-0 flex h-full w-full flex-col rounded-2xl border border-[#E7EBF1] bg-[#FAFBFC] p-8 shadow-[0_12px_40px_rgba(16,33,63,0.06)] [backface-visibility:hidden] sm:p-9">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0E40C7]/10">
                                                             <Quote size={17} className="text-[#0E40C7]" />
                                                         </div>
-                                                        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#9AA4B2]">Tap to read</span>
+
+                                                        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#9AA4B2]">
+                                                            Tap to read
+                                                        </span>
                                                     </div>
 
                                                     <div className="mt-7">
-                                                        <h3 className="text-lg font-semibold tracking-tight text-[#10213F] sm:text-xl">{item.name}</h3>
-                                                        <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-[#7A8494] sm:text-[13px]">{item.descriptor}</p>
+                                                        <h3 className="text-lg font-semibold tracking-tight text-[#10213F] sm:text-xl">
+                                                            {item.name}
+                                                        </h3>
+
+                                                        <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-[#7A8494] sm:text-[13px]">
+                                                            {item.descriptor}
+                                                        </p>
                                                     </div>
 
                                                     <div className="mt-auto">
                                                         <div className="mb-5 h-[2px] w-10 bg-[#FBAB18]" />
-                                                        <p className="text-xl font-semibold leading-[1.35] tracking-tight text-[#FBAB18] sm:text-[22px]">{item.hook}</p>
+
+                                                        <p className="text-xl font-semibold leading-[1.35] tracking-tight text-[#FBAB18] sm:text-[22px]">
+                                                            {item.hook}
+                                                        </p>
                                                     </div>
                                                 </div>
 
                                                 {/* Back */}
                                                 <div className="absolute inset-0 flex h-full w-full flex-col rounded-2xl border border-[#E7EBF1] bg-[#FAFBFC] p-8 shadow-[0_12px_40px_rgba(16,33,63,0.06)] [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-9">
-                                                    <p className="text-base font-semibold leading-snug text-[#FBAB18] sm:text-lg">{item.hook}</p>
+                                                    <p className="text-base font-semibold leading-snug text-[#FBAB18] sm:text-lg">
+                                                        {item.hook}
+                                                    </p>
+
                                                     <div className="mt-5 h-px w-full bg-[#E7EBF1]" />
 
                                                     <div className="mt-7 flex-1 overflow-y-auto">
                                                         {item.review.split("\n\n").map((text, i) => (
-                                                            <p key={i} className="mb-4 text-[15px] leading-[1.75] text-[#344054] last:mb-0 sm:text-base">{text}</p>
+                                                            <p key={i} className="mb-4 text-[15px] leading-[1.75] text-[#344054] last:mb-0 sm:text-base">
+                                                                {text}
+                                                            </p>
                                                         ))}
                                                     </div>
 
+                                                    {/* Source intentionally hidden */}
                                                     {/* <div className="mt-5 border-t border-[#E7EBF1] pt-4">
-                                                        <p className="text-[10px] leading-relaxed text-[#8993A3] sm:text-[11px]">{item.source}</p>
+                                                        <p className="text-[10px] leading-relaxed text-[#8993A3] sm:text-[11px]">
+                                                            {item.source}
+                                                        </p>
                                                     </div> */}
                                                 </div>
-
                                             </motion.div>
                                         </div>
                                     </div>
@@ -184,31 +249,175 @@ export default function Testimonials() {
                         </motion.div>
                     </div>
 
-                {/* Controls */}
-                <div className="mt-9 flex items-center gap-6">
-                    <div className="flex-1">
-                        <div className="relative h-[2px] w-full overflow-hidden rounded-full bg-[#E7EBF1]">
-                            <motion.div className="absolute left-0 top-0 h-full bg-[#757C86]" animate={{ width: `${progress}%` }} transition={{ duration: 0.4 }} />
+                    {/* Desktop Controls */}
+                    <div className="mt-9 flex items-center gap-6">
+                        <div className="flex-1">
+                            <div className="relative h-[2px] w-full overflow-hidden rounded-full bg-[#E7EBF1]">
+                                <motion.div
+                                    className="absolute left-0 top-0 h-full bg-[#757C86]"
+                                    animate={{ width: `${desktopProgress}%` }}
+                                    transition={{ duration: 0.4 }}
+                                />
+                            </div>
+                        </div>
+
+                        <Link
+                            href="/testimonials"
+                            className="group flex shrink-0 items-center gap-2 text-sm font-semibold text-[#10213F] transition-colors duration-300 hover:text-[#0E40C7]"
+                        >
+                            Read More
+                            <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                        </Link>
+
+                        <div className="flex shrink-0 gap-2">
+                            <button
+                                type="button"
+                                aria-label="Previous testimonial"
+                                onClick={prevDesktop}
+                                disabled={desktopAnimating}
+                                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#0E40C7] hover:bg-white hover:text-[#0E40C7] disabled:pointer-events-none disabled:opacity-40"
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+
+                            <button
+                                type="button"
+                                aria-label="Next testimonial"
+                                onClick={nextDesktop}
+                                disabled={desktopAnimating}
+                                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#0E40C7] hover:bg-white hover:text-[#0E40C7] disabled:pointer-events-none disabled:opacity-40"
+                            >
+                                <ChevronRight size={18} />
+                            </button>
                         </div>
                     </div>
+                </div>
 
-                    <Link href="/testimonials" className="group flex shrink-0 items-center gap-2 text-sm font-semibold text-[#10213F] transition-colors duration-300 hover:text-[#0E40C7]">
-                        Read More
-                        <span className="transition-transform duration-300 group-hover:translate-x-1">
-                            →
-                        </span>
-                    </Link>
+                {/* Mobile Carousel */}
+                <div className="relative mt-10 md:hidden">
+                    <div className="overflow-hidden">
+                        <motion.div
+                            className="flex"
+                            animate={{ x: `-${mobileIndex * 100}%` }}
+                            transition={mobileAnimating ? { duration: 0.5, ease: [0.16, 1, 0.3, 1] } : { duration: 0 }}
+                            onAnimationComplete={handleMobileAnimationEnd}
+                        >
+                            {mobileCards.map((item, i) => {
+                                const isFlipped = mobileFlipped === i
 
-                    <div className="flex shrink-0 gap-2">
-                        <button type="button" aria-label="Previous testimonial" onClick={prev} disabled={animating} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#0E40C7] hover:bg-white hover:text-[#0E40C7] disabled:pointer-events-none disabled:opacity-40">
-                            <ChevronLeft size={18} />
+                                return (
+                                    <div key={`${item.name}-mobile-${i}`} className="w-full shrink-0 px-1">
+                                        <div
+                                            className="relative h-[400px] cursor-pointer [perspective:1200px]"
+                                            onClick={() => setMobileFlipped(isFlipped ? null : i)}
+                                        >
+                                            <motion.div
+                                                className="relative h-full w-full [transform-style:preserve-3d]"
+                                                animate={{ rotateY: isFlipped ? 180 : 0 }}
+                                                transition={{ duration: 0.4 }}
+                                            >
+                                                {/* Front */}
+                                                <div className="absolute inset-0 flex h-full w-full flex-col rounded-2xl border border-[#E7EBF1] bg-[#FAFBFC] p-6 shadow-[0_12px_40px_rgba(16,33,63,0.06)] [backface-visibility:hidden]">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0E40C7]/10">
+                                                            <Quote size={16} className="text-[#0E40C7]" />
+                                                        </div>
+
+                                                        <span className="text-[8px] font-medium uppercase tracking-[0.16em] text-[#9AA4B2]">
+                                                            Tap to read
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="mt-6">
+                                                        <h3 className="text-lg font-semibold leading-tight tracking-tight text-[#10213F]">
+                                                            {item.name}
+                                                        </h3>
+
+                                                        <p className="mt-2 line-clamp-5 text-[11px] leading-relaxed text-[#7A8494]">
+                                                            {item.descriptor}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="mt-auto">
+                                                        <div className="mb-4 h-[2px] w-9 bg-[#FBAB18]" />
+
+                                                        <p className="text-lg font-semibold leading-[1.4] tracking-tight text-[#FBAB18]">
+                                                            {item.hook}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Back */}
+                                                <div className="absolute inset-0 flex h-full w-full flex-col rounded-2xl border border-[#E7EBF1] bg-[#FAFBFC] p-6 shadow-[0_12px_40px_rgba(16,33,63,0.06)] [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                                                    <p className="text-base font-semibold leading-snug text-[#FBAB18]">
+                                                        {item.hook}
+                                                    </p>
+
+                                                    <div className="mt-4 h-px w-full bg-[#E7EBF1]" />
+
+                                                    <div className="mt-5 flex-1 overflow-y-auto pr-1">
+                                                        {item.review.split("\n\n").map((text, i) => (
+                                                            <p key={i} className="mb-4 text-sm leading-[1.65] text-[#344054] last:mb-0">
+                                                                {text}
+                                                            </p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </motion.div>
+                    </div>
+
+                    {/* Mobile Controls */}
+                    <div className="mt-6 flex items-center gap-4">
+                        <button
+                            type="button"
+                            aria-label="Previous testimonial"
+                            onClick={prevMobile}
+                            disabled={mobileAnimating}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#0E40C7] hover:text-[#0E40C7] disabled:pointer-events-none disabled:opacity-40"
+                        >
+                            <ChevronLeft size={17} />
                         </button>
 
-                        <button type="button" aria-label="Next testimonial" onClick={next} disabled={animating} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#0E40C7] hover:bg-white hover:text-[#0E40C7] disabled:pointer-events-none disabled:opacity-40">
-                            <ChevronRight size={18} />
+                        <div className="flex-1">
+                            <div className="relative h-[2px] w-full overflow-hidden rounded-full bg-[#E7EBF1]">
+                                <motion.div
+                                    className="absolute left-0 top-0 h-full bg-[#757C86]"
+                                    animate={{ width: `${mobileProgress}%` }}
+                                    transition={{ duration: 0.4 }}
+                                />
+                            </div>
+                        </div>
+
+                        <span className="shrink-0 text-[10px] font-medium tracking-[0.12em] text-[#9AA4B2]">
+                            {mobileRealIndex + 1} / {testimonials.length}
+                        </span>
+
+                        <button
+                            type="button"
+                            aria-label="Next testimonial"
+                            onClick={nextMobile}
+                            disabled={mobileAnimating}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#DDE2E9] bg-white text-[#10213F] transition-all duration-300 hover:border-[#0E40C7] hover:text-[#0E40C7] disabled:pointer-events-none disabled:opacity-40"
+                        >
+                            <ChevronRight size={17} />
                         </button>
                     </div>
-                </div>
+
+                    {/* Mobile Read More */}
+                    <div className="mt-5 flex justify-center">
+                        <Link
+                            href="/testimonials"
+                            className="group flex items-center gap-2 text-xs font-semibold text-[#10213F] transition-colors duration-300 hover:text-[#0E40C7]"
+                        >
+                            Read More
+                            <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </section>

@@ -123,7 +123,7 @@ export default function AboutUnderstanding() {
                             We&apos;re not selling a place.
                             <br />
 
-                            <span className="text-[#0E40C7]">
+                            <span className="text-[#FBAB18]">
                                 We&apos;re trying to understand a person.
                             </span>
                         </motion.h2>

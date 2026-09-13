@@ -99,7 +99,7 @@ export default function AboutTeam() {
                     <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl lg:text-[58px]">
                         A small team,
                         <br />
-                        <span className="text-[#0E40C7]">
+                        <span className="text-[#FBAB18]">
                             for the trips that matter.
                         </span>
                     </h2>
