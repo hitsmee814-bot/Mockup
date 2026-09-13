@@ -108,8 +108,8 @@ export default function HeroSection() {
                     {/* MOBILE BACKGROUND IMAGE */}
                     <div className="pointer-events-none absolute inset-0 lg:hidden">
                         <img src={mobileBackgroundImage} alt="" className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-[#071A38]/75" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#071A38]/85 via-[#071A38]/70 to-[#071A38]/90" />
+                        <div className="absolute inset-0 bg-[#071A38]/45" />
+                        {/* <div className="absolute inset-0 bg-gradient-to-b from-[#071A38]/85 via-[#071A38]/70 to-[#071A38]/90" /> */}
                     </div>
 
                     {/* DESKTOP DECORATIVE CIRCLE */}
@@ -142,7 +142,7 @@ export default function HeroSection() {
                             <motion.p variants={wordVariant} className="mx-auto mt-7 max-w-lg text-base font-medium leading-relaxed text-white/90 sm:text-lg md:text-xl lg:font-normal lg:text-[#536174]">
                                 Because the best trips start with
                                 <br className="hidden sm:block" />
-                                <span className="font-bold text-white lg:font-medium lg:text-[#10213F]">knowing the traveler.</span>
+                                <span className="font-bold text-white lg:font-medium lg:text-[#10213F]"> knowing the traveler.</span>
                             </motion.p>
 
                             <motion.div variants={wordVariant} className="mt-9 flex justify-center">
