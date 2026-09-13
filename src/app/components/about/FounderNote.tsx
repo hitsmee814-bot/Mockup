@@ -1,7 +1,9 @@
 "use client"
 
 import { motion, type Variants } from "framer-motion"
-import { ArrowUpRight } from "lucide-react"
+import { ArrowUpRight, Linkedin } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
 const fadeUp: Variants = {
     hidden: {
@@ -166,10 +168,12 @@ export default function FounderNote() {
                         }}
                         className="relative h-[520px] overflow-hidden rounded-[2rem] sm:h-[620px]"
                     >
-                        <img
-                            src="/images/founder.jpg"
-                            alt="Sudip Pal, Founder of Bonhomiee"
-                            className="h-full w-full object-cover transition-transform duration-1000 hover:scale-[1.025]"
+                        <Image
+                        src="/images/Sudip Founder Note.jpeg"
+                        alt="Sudip Pal, Founder of Bonhomiee"
+                        width={800}
+                        height={800}
+                        className="h-full w-full object-cover transition-transform duration-1000 hover:scale-[1.025]"
                         />
 
                         <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
@@ -179,12 +183,45 @@ export default function FounderNote() {
                             Sudip Pal
                         </div>
 
-                        <div className="absolute right-7 top-7 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[#0E40C7] backdrop-blur-sm sm:right-8 sm:top-8">
-                            <ArrowUpRight
-                                size={17}
-                                strokeWidth={1.6}
-                            />
-                        </div>
+<Link
+  href="https://www.linkedin.com/in/sudippalbonhomiee"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="LinkedIn"
+  className="absolute right-7 top-7 sm:right-8 sm:top-8"
+>
+  <motion.div
+    className="group flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white/90 text-[#0E40C7] backdrop-blur-sm"
+    whileHover={{ scale: 1.08 }}
+    transition={{ duration: 0.25, ease: "easeOut" }}
+  >
+    {/* LinkedIn Icon */}
+    <motion.div
+      className="absolute"
+      initial={{ opacity: 1, scale: 1, rotate: 0 }}
+      whileHover={{ opacity: 0, scale: 0.5, rotate: -45 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
+    >
+      <Linkedin
+        size={18}
+        strokeWidth={1.8}
+      />
+    </motion.div>
+
+    {/* Arrow */}
+    <motion.div
+      className="absolute"
+      initial={{ opacity: 0, scale: 0.5, rotate: 45 }}
+      whileHover={{ opacity: 1, scale: 1, rotate: 0 }}
+      transition={{ duration: 0.25, delay: 0.05, ease: "easeOut" }}
+    >
+      <ArrowUpRight
+        size={17}
+        strokeWidth={1.6}
+      />
+    </motion.div>
+  </motion.div>
+</Link>
                     </motion.div>
 
                 </div>

@@ -484,6 +484,17 @@ export default function TopPackages() {
             <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </motion.div>
+                        <motion.div
+                    initial={{ opacity: 0, scaleX: 0 }}
+                    whileInView={{ opacity: 1, scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{
+                        duration: 1,
+                        delay: 0.4,
+                        ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="mx-auto mt-16 h-px max-w-xs origin-center bg-gradient-to-r from-transparent via-[#0E40C7]/20 to-transparent"
+                />
       </div>
     </section>
   )
