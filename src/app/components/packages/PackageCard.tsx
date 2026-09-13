@@ -82,7 +82,7 @@ export function PackageCard({ pkg }: PackageCardProps) {
         <div className="h-px bg-gray-100" />
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-base font-extrabold leading-tight" style={{ color: "#3FB8FF" }}>
+            <p className="text-base font-extrabold leading-tight" style={{ color: "#0E40C7" }}>
               ₹{tour.base_price.toLocaleString()}
             </p>
             <p className="text-[10px] text-gray-400">per person</p>

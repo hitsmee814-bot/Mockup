@@ -402,16 +402,16 @@ export default function FAQ() {
     {/* Heading + Background Word */}
     <div className="relative mx-auto w-fit">
       {/* Background word */}
-      <span
+      {/* <span
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-1/2 -z-0 -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap text-[64px] font-bold uppercase tracking-[0.08em] text-muted/30 sm:text-[105px] lg:text-[150px]"
       >
         YOUR QUESTIONS
-      </span>
+      </span> */}
 
       {/* Heading */}
       <h2 className="relative z-10 text-3xl font-bold tracking-tight text-[#10213F] sm:text-4xl lg:text-5xl">
-        Frequently Asked Questions
+        Frequently Asked <span className="text-[#FBAB18]">Questions.</span> 
       </h2>
     </div>
 

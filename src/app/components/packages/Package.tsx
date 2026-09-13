@@ -96,7 +96,7 @@ export function Package() {
                 <div className="text-center space-y-3">
                     <motion.div
                         className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-1.5 rounded-full border"
-                        style={{ background: "#3FB8FF18", color: "#3FB8FF", borderColor: "#3FB8FF40" }}
+                        style={{ background: "#CAD8FF", color: "#0E40C7", borderColor: "#0E40C7" }}
                         initial={{ opacity: 0, y: -10, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
@@ -109,7 +109,7 @@ export function Package() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
                     >
-                        Find Your Perfect <span style={{ color: "#3FB8FF" }}>Getaway</span>
+                        Find Your Perfect <span style={{ color: "#FBAB18" }}>Getaway</span>
                     </motion.h1>
                     <motion.p
                         className="text-gray-400 text-xs sm:text-sm max-w-md mx-auto leading-relaxed"

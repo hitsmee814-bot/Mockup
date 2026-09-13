@@ -107,18 +107,17 @@ export function AboutUs() {
                     >
                         <div className="relative mx-auto w-fit">
                             {/* Background Word */}
-                            <span
+                            {/* <span
                                 aria-hidden="true"
                                 className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap text-[64px] font-black uppercase tracking-[0.08em] text-muted/40 sm:text-[105px] lg:text-[150px]"
                             >
                                 CHOOSE US
-                            </span>
-
+                            </span> */}
                             {/* Heading */}
                             <h2 className="relative z-10 text-4xl font-bold leading-[1.08] tracking-tight text-[#10213F] sm:text-5xl md:text-6xl">
                                 We Don’t Plan.
                                 {/* <br /> */}
-                                <span className="text-[#10213F]">
+                                <span className="text-[#FBAB18]">
                                     We Listen.
                                 </span>
                             </h2>

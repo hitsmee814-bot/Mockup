@@ -397,18 +397,18 @@ export default function TopPackages() {
         >
           <div className="relative mx-auto w-fit">
             {/* Background Word */}
-            <span
+            {/* <span
               aria-hidden="true"
               className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 select-none whitespace-nowrap text-[64px] font-black uppercase tracking-[0.08em] text-muted/35 sm:text-[105px] lg:text-[150px]"
             >
               DESTINATION
-            </span>
+            </span> */}
 
             {/* Heading */}
             <h2 className="relative z-10 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               Featured{" "}
-              <span className="text-[#10213F]">
-                Destinations
+              <span className="text-[#FBAB18]">
+                Destinations.
               </span>
             </h2>
           </div>
@@ -476,7 +476,7 @@ export default function TopPackages() {
           className="mt-10 flex justify-center sm:mt-12"
         >
           <Link
-            href="/packages"
+            href="/itinerary/packages"
             className="group inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
           >
             Explore all packages

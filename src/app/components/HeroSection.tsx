@@ -151,7 +151,7 @@ export default function HeroSection() {
                                         animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
                                         exit={{ y: -45, opacity: 0, filter: "blur(10px)" }}
                                         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                                        className="absolute text-4xl font-bold text-[#0E40C7] sm:text-5xl md:text-6xl xl:text-7xl"
+                                        className="absolute text-4xl font-bold text-[#FBAB18] sm:text-5xl md:text-6xl xl:text-7xl"
                                     >
                                         {words[index]}
                                     </motion.span>
