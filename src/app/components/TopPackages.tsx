@@ -1,108 +1,47 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence, PanInfo } from "framer-motion"
 import { ArrowUpRight, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { tourService } from "@/services/ItineraryService"
 
 interface Pkg {
   id: string
   name: string
   location: string
   image: string
-  price: string
-  originalPrice: string
+  price: number
   duration: string
-  rating: number
-  tag?: string
 }
 
-const packages: Pkg[] = [
-  {
-    id: "3",
-    name: "Golden Triangle",
-    location: "Delhi · Agra · Jaipur",
-    image: "https://images.unsplash.com/photo-1548013146-72479768bada?w=1000&q=85",
-    price: "₹25,000",
-    originalPrice: "₹32,000",
-    duration: "4D / 3N",
-    rating: 4.6,
-    tag: "Bestseller",
-  },
-  {
-    id: "5",
-    name: "Kerala Backwaters",
-    location: "Alleppey, India",
-    image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1000&q=85",
-    price: "₹30,000",
-    originalPrice: "₹38,000",
-    duration: "4D / 3N",
-    rating: 4.8,
-    tag: "Honeymoon",
-  },
-  {
-    id: "9",
-    name: "Ladakh Adventure",
-    location: "Leh · Nubra Valley",
-    image: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=1000&q=85",
-    price: "₹42,000",
-    originalPrice: "₹50,000",
-    duration: "6D / 5N",
-    rating: 4.9,
-  },
-  {
-    id: "4",
-    name: "Goa Beach Weekend",
-    location: "Goa, India",
-    image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=1000&q=85",
-    price: "₹12,000",
-    originalPrice: "₹16,000",
-    duration: "3D / 2N",
-    rating: 4.4,
-  },
-  {
-    id: "7",
-    name: "Varanasi Spiritual",
-    location: "Varanasi, India",
-    image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=1000&q=85",
-    price: "₹15,000",
-    originalPrice: "₹19,000",
-    duration: "3D / 2N",
-    rating: 4.5,
-  },
-  {
-    id: "11",
-    name: "Rajasthan Heritage",
-    location: "Jaipur · Udaipur",
-    image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1000&q=85",
-    price: "₹35,000",
-    originalPrice: "₹42,000",
-    duration: "5D / 4N",
-    rating: 4.7,
-  },
+const FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1548013146-72479768bada?w=1000&q=85",
+  "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1000&q=85",
+  "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1000&q=85",
 ]
 
-interface PackageCardProps {
-  pkg: Pkg
-  className?: string
+function formatPrice(price: number) {
+  return `₹${price.toLocaleString("en-IN")}`
 }
 
-function PackageCard({ pkg, className = "" }: PackageCardProps) {
+function getDuration(days: number, nights: number) {
+  if (days && nights) return `${days}D / ${nights}N`
+  if (days) return `${days}D`
+  if (nights) return `${nights}N`
+  return "Flexible duration"
+}
+
+function PackageCard({ pkg, className = "" }: { pkg: Pkg; className?: string }) {
   return (
     <Link href={`/itinerary/packages/${pkg.id}`} className={`group relative block overflow-hidden rounded-2xl ${className}`}>
       <img src={pkg.image} alt={pkg.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/0" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/0" />
 
       <span className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-sm transition-transform duration-300 group-hover:rotate-45">
         <ArrowUpRight className="h-4 w-4" />
       </span>
-
-      {pkg.tag && (
-        <span className="absolute left-4 top-4 z-10 rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-md">
-          {pkg.tag}
-        </span>
-      )}
 
       <div className="absolute inset-x-0 bottom-0 p-5 text-white">
         <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-white/70">
@@ -114,20 +53,14 @@ function PackageCard({ pkg, className = "" }: PackageCardProps) {
           {pkg.name}
         </h3>
 
-        <div className="mt-2 flex items-center justify-between gap-3">
+        <div className="mt-3 flex items-center justify-between gap-3">
           <span className="text-xs text-white/70">
             {pkg.duration}
           </span>
 
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-[11px] text-white/45 line-through">
-              {pkg.originalPrice}
-            </span>
-
-            <span className="text-sm font-bold">
-              {pkg.price}
-            </span>
-          </div>
+          <span className="text-sm font-bold">
+            {formatPrice(pkg.price)}
+          </span>
         </div>
       </div>
     </Link>
@@ -135,7 +68,93 @@ function PackageCard({ pkg, className = "" }: PackageCardProps) {
 }
 
 export default function TopPackages() {
+  const [packages, setPackages] = useState<Pkg[]>([])
   const [activePackage, setActivePackage] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let mounted = true
+    const imageUrls: string[] = []
+
+    const loadPackages = async () => {
+      try {
+        const tours = await tourService.getAll()
+
+        if (!mounted || !tours.length) {
+          setLoading(false)
+          return
+        }
+
+const mapped: Pkg[] = []
+
+for (let i = 0; i < tours.length; i++) {
+  const tourData = tours[i] as any
+  const tour = tourData.tour
+  const availability = tourData.availability ?? []
+  const images = tourData.images ?? []
+
+  if (!tour) continue
+
+  const coverImage = images.find((image: any) => image.is_cover === true)
+
+  let image = ""
+
+  if (coverImage?.image_url) {
+    image = await tourService.getImageBlob(coverImage.image_url)
+
+    if (image) {
+      imageUrls.push(image)
+    }
+  }
+
+  mapped.push({
+    id: String(tour.id),
+    name: tour.title,
+    location: tour.destination || tour.origin_city || "India",
+    image: image || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length],
+    price: availability[0]?.price ?? tour.base_price ?? 0,
+    duration: getDuration(tour.duration_days, tour.duration_nights),
+  })
+}
+
+        if (!mounted) return
+
+        // Backend currently returns 3 packages.
+        // Duplicate the first 2 to create a 5-card layout.
+        const displayPackages = [...mapped]
+
+        if (mapped.length > 0 && displayPackages.length < 5) {
+          let duplicateIndex = 0
+
+          while (displayPackages.length < 5) {
+            const source = mapped[duplicateIndex % mapped.length]
+
+            displayPackages.push({
+              ...source,
+              id: `${source.id}-duplicate-${displayPackages.length}`,
+            })
+
+            duplicateIndex++
+          }
+        }
+
+        setPackages(displayPackages.slice(0, 5))
+      } catch (error) {
+        console.error("Failed to load top packages:", error)
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadPackages()
+
+    return () => {
+      mounted = false
+      imageUrls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [])
 
   const nextPackage = () => {
     setActivePackage((prev) => (prev + 1) % packages.length)
@@ -155,10 +174,30 @@ export default function TopPackages() {
     }
   }
 
+  if (loading) {
+    return (
+      <section id="toppackages" className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto h-10 w-64 animate-pulse rounded-lg bg-muted" />
+          <div className="mx-auto mt-8 h-5 max-w-xl animate-pulse rounded bg-muted" />
+
+          <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="h-[300px] animate-pulse rounded-2xl bg-muted lg:h-[330px]" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (!packages.length) {
+    return null
+  }
+
   return (
     <section id="toppackages" className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Heading */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="relative z-10 mx-auto text-center">
           <div className="relative mx-auto w-fit">
             <h2 className="relative z-10 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
@@ -170,7 +209,6 @@ export default function TopPackages() {
           </div>
         </motion.div>
 
-        {/* Subtitle */}
         <motion.p initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }} className="mx-auto mb-10 mt-8 max-w-xl text-center text-sm leading-relaxed text-muted-foreground sm:mb-12 sm:mt-12 sm:text-base">
           Handpicked travel experiences across India. Discover unforgettable places, curated packages, and journeys made for your next getaway.
         </motion.p>
@@ -186,21 +224,18 @@ export default function TopPackages() {
               </AnimatePresence>
             </div>
 
-            {/* Previous */}
             <button onClick={previousPackage} aria-label="Previous destination" className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#0E40C7] shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-white">
               <ChevronLeft className="h-5 w-5" />
             </button>
 
-            {/* Next */}
             <button onClick={nextPackage} aria-label="Next destination" className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#0E40C7] shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-white">
               <ChevronRight className="h-5 w-5" />
             </button>
           </motion.div>
 
-          {/* Dots */}
           <div className="mt-5 flex items-center justify-center gap-2">
             {packages.map((pkg, index) => (
-              <button key={pkg.id} onClick={() => setActivePackage(index)} aria-label={`Go to ${pkg.name}`} className="flex h-5 items-center justify-center">
+              <button key={`${pkg.id}-${index}`} onClick={() => setActivePackage(index)} aria-label={`Go to ${pkg.name}`} className="flex h-5 items-center justify-center">
                 <span className={`h-1.5 rounded-full transition-all duration-300 ${index === activePackage ? "w-7 bg-[#FBAB18]" : "w-1.5 bg-[#0E40C7]/20"}`} />
               </button>
             ))}
@@ -213,22 +248,19 @@ export default function TopPackages() {
 
         {/* DESKTOP / TABLET DESTINATION GRID */}
         <motion.div initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="hidden grid-cols-1 gap-3 sm:grid sm:grid-cols-2 md:grid lg:grid-cols-3">
-          {/* Column 1 */}
           <div className="grid grid-rows-2 gap-3 lg:h-[680px]">
             <PackageCard pkg={packages[0]} className="h-[300px] sm:h-[340px] lg:h-full" />
             <PackageCard pkg={packages[1]} className="h-[300px] sm:h-[340px] lg:h-full" />
           </div>
 
-          {/* Column 2 */}
           <div className="grid gap-3 lg:h-[680px] lg:grid-rows-[450px_218px]">
-            <PackageCard pkg={packages[2]} className="h-[300px] sm:h-[340px] lg:h-full" />
-            <PackageCard pkg={packages[3]} className="h-[300px] sm:h-[340px] lg:h-full" />
+            <PackageCard pkg={packages[2 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
+            <PackageCard pkg={packages[3 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
           </div>
 
-          {/* Column 3 */}
           <div className="grid grid-rows-2 gap-3 lg:h-[680px]">
-            <PackageCard pkg={packages[4]} className="h-[300px] sm:h-[340px] lg:h-full" />
-            <PackageCard pkg={packages[5]} className="h-[300px] sm:h-[340px] lg:h-full" />
+            <PackageCard pkg={packages[4 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
+            <PackageCard pkg={packages[1 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
           </div>
         </motion.div>
 
@@ -240,7 +272,6 @@ export default function TopPackages() {
           </Link>
         </motion.div>
 
-        {/* Divider */}
         <motion.div initial={{ opacity: 0, scaleX: 0 }} whileInView={{ opacity: 1, scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }} className="mx-auto mt-16 h-px max-w-xs origin-center bg-gradient-to-r from-transparent via-[#0E40C7]/20 to-transparent" />
       </div>
     </section>
