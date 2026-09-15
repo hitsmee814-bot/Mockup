@@ -4,6 +4,8 @@ import { motion, type Variants } from "framer-motion"
 import { ArrowUpRight, Linkedin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import logoPrimary from "../../assets/images/Sudip Founder Note.jpeg"
+
 
 const fadeUp: Variants = {
     hidden: {
@@ -169,7 +171,7 @@ export default function FounderNote() {
                         className="relative h-[520px] overflow-hidden rounded-[2rem] sm:h-[620px]"
                     >
                         <Image
-                        src="/images/Sudip Founder Note.jpeg"
+                        src={logoPrimary}
                         alt="Sudip Pal, Founder of Bonhomiee"
                         width={800}
                         height={800}
