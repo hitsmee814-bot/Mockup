@@ -1,8 +1,12 @@
 "use client"
-
 import { motion, type Variants } from "framer-motion"
 import Image from "next/image"
 import { useState } from "react"
+
+import sudipImage from "../../assets/images/Team CEO.jpeg"
+import sanyaImage from "../../assets/images/Team Designer.jpeg"
+import antaraImage from "../../assets/images/Antara.jpeg"
+import asmitImage from "../../assets/images/Asmit.jpeg"
 
 const members = [
     {
@@ -10,7 +14,7 @@ const members = [
         position: "THE QUESTION",
         role: "Founder",
         description: "Keeps asking the one question everything else is built on: what is this trip for?",
-        image: "/images/Team CEO.jpeg",
+        image: sudipImage,
         imageClass: "object-[center_15%]",
     },
     {
@@ -18,7 +22,7 @@ const members = [
         position: "THE VOICE",
         role: "Brand & Story",
         description: "Guards how we sound, so nothing here could belong to any other travel company.",
-        image: "/images/Team Designer.jpeg",
+        image: sanyaImage,
         imageClass: "object-[80%_10%]",
     },
     {
@@ -26,7 +30,7 @@ const members = [
         position: "THE BUILD",
         role: "Supplier & Client Platform",
         description: "They build what the promise runs on. Every screen you'll use, and every connection behind it.",
-        image: "/images/Antara.jpeg",
+        image: antaraImage,
         imageClass: "object-[center_15%]",
     },
     {
@@ -34,7 +38,7 @@ const members = [
         position: "THE BUILD",
         role: "Agency Platform & Integrations",
         description: "They build what the promise runs on. Every screen you'll use, and every connection behind it.",
-        image: "/images/Asmit.jpeg",
+        image: asmitImage,
         imageClass: "object-[center_15%]",
     },
 ]
