@@ -1,9 +1,9 @@
 "use client"
 
 import { motion, type Variants } from "framer-motion"
-import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { useEffect, useState } from "react"
 import logoPrimary from "../../assets/images/final logo Bonhomiee.png"
 
 const fadeUp: Variants = {
@@ -11,51 +11,73 @@ const fadeUp: Variants = {
     visible: {
         opacity: 1,
         y: 0,
-        transition: {
-            duration: 0.8,
-            ease: [0.16, 1, 0.3, 1],
-        },
+        transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
     },
 }
 
 export default function AboutHero() {
     const router = useRouter()
+    const [showHeader, setShowHeader] = useState(true)
+
+    useEffect(() => {
+        let lastScrollY = window.scrollY
+
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY
+
+            if (currentScrollY <= 20) {
+                setShowHeader(true)
+            } else if (currentScrollY > lastScrollY + 2) {
+                setShowHeader(false)
+            } else if (currentScrollY < lastScrollY - 2) {
+                setShowHeader(true)
+            }
+
+            lastScrollY = currentScrollY
+        }
+
+        window.addEventListener("scroll", handleScroll, { passive: true })
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll)
+        }
+    }, [])
 
     return (
-        <section className="relative min-h-screen overflow-hidden bg-white text-[#1B120B]">
-            {/* Back */}
-            <motion.button
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-                onClick={() => router.back()}
-                className="absolute left-6 top-7 z-20 flex items-center gap-2 text-sm font-medium text-[#1B120B]/50 transition-colors hover:text-[#0E40C7] sm:left-10 lg:left-14"
+        <section className="relative overflow-hidden bg-white text-[#1B120B]">
+
+            {/* Smart Header */}
+            <motion.header
+                animate={{ y: showHeader ? 0 : "-100%" }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-50"
             >
-                <ArrowLeft size={16} strokeWidth={1.6} />
-                <span>Back</span>
-            </motion.button>
+                <div className="mx-auto flex max-w-7xl items-center px-5 py-5 sm:px-10 sm:py-6 lg:px-16 lg:py-7">
+                    <motion.button
+                        type="button"
+                        onClick={() => router.back()}
+                        aria-label="Go back"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="cursor-pointer"
+                    >
+                        <Image
+                            src={logoPrimary}
+                            alt="Bonhomiee"
+                            width={300}
+                            height={90}
+                            className="h-auto w-[150px] object-contain sm:w-[175px] lg:w-[190px]"
+                            priority
+                        />
+                    </motion.button>
+                </div>
+            </motion.header>
 
-            <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
-                {/* Header Logo */}
-                <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="flex items-center pt-24 lg:pt-20"
-                >
-                    <Image
-                        src={logoPrimary}
-                        alt="Bonhomiee"
-                        width={150}
-                        height={45}
-                        className="h-auto w-[135px] object-contain"
-                        priority
-                    />
-                </motion.div>
+            {/* Main Content */}
+            <div className="mx-auto max-w-7xl px-5 sm:px-10 lg:px-16">
+                <div className="grid items-start gap-8 pb-14 sm:gap-10 sm:pb-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
 
-                {/* Hero Content */}
-                <div className="grid min-h-[calc(100vh-120px)] items-center gap-14 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:pt-12">
-                    {/* Content */}
+                    {/* Left Content */}
                     <motion.div
                         initial="hidden"
                         animate="visible"
@@ -63,28 +85,31 @@ export default function AboutHero() {
                         className="max-w-2xl"
                     >
                         {/* Label */}
-                        <motion.div variants={fadeUp} className="relative mb-10">
-                            <p className="relative text-sm font-semibold uppercase tracking-[0.18em] text-[#0E40C7] sm:text-base">
+                        <div className="mb-6 inline-flex flex-col items-start">
+                            <span className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0E40C7] sm:text-base">
                                 About Bonhomiee
-                            </p>
-                            <div className="mt-5 h-[2px] w-20 bg-[#FBAB18]" />
-                        </motion.div>
+                            </span>
+
+                            <span className="mt-2 h-[2px] w-12 rounded-full bg-[#FBAB18]" />
+                        </div>
 
                         {/* Heading */}
-                        <h1 className="text-5xl font-semibold leading-[0.94] tracking-[-0.05em] text-[#1B120B] sm:text-6xl lg:text-7xl xl:text-[78px]">
+                        <h1 className="max-w-2xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-[5rem]">
                             We begin with
                             <br />
-                            <span className="relative inline-block">
-                                a <span className="text-[#FBAB18]">conversation.</span>
+                            a{" "}
+                            <span className="text-[#FBAB18]">
+                                conversation.
                             </span>
                         </h1>
 
                         {/* Intro */}
-                        <div className="mt-10 space-y-6 text-base leading-[1.8] text-[#1B120B]/65 sm:text-lg">
-                            <p className="font-medium text-[#1B120B]/80">
+                        <div className="mt-7 max-w-xl space-y-4 text-base leading-7 text-[#1B120B]/70 sm:mt-8 sm:text-lg sm:leading-8">
+                            <p>
                                 Most travel companies begin with a destination.
-                                <br className="hidden sm:block" />
-                                We don&apos;t.
+                                <span className="font-semibold text-[#1B120B]">
+                                    {" "}We don't.
+                                </span>
                             </p>
 
                             <p>
@@ -94,47 +119,57 @@ export default function AboutHero() {
                             </p>
 
                             <p>
-                                So our first question is never &quot;where.&quot;
-                                It&apos;s &quot;tell us about this trip.&quot;
+                                So our first question is never{" "}
+                                <span className="font-semibold text-[#1B120B]">
+                                    "where."
+                                </span>{" "}
+                                It’s{" "}
+                                <span className="font-semibold text-[#0E40C7]">
+                                    "tell us about this trip."
+                                </span>
                             </p>
                         </div>
 
-                        {/* Closing */}
-                        <motion.div
-                            variants={fadeUp}
-                            className="mt-10 border-l-2 border-[#0E40C7] pl-5 sm:pl-6"
-                        >
-                            <p className="text-base font-medium leading-[1.75] text-[#1B120B]/70 sm:text-lg">
-                                From there, we build the journey around who you
-                                are and what you need this one to become.
+                        {/* Closing Statement */}
+                        <div className="mt-7 border-l-2 border-[#0E40C7] pl-5 sm:mt-8 sm:pl-6">
+                            <p className="max-w-xl text-lg font-medium leading-8 text-[#1B120B] sm:text-xl sm:leading-9">
+                                “From there, we build the journey around who you
+                                are and what you need this one to become.”
                             </p>
-                        </motion.div>
+                        </div>
                     </motion.div>
 
-                    {/* Image */}
+                    {/* Right Image - Desktop Only */}
                     <motion.div
-                        initial={{ opacity: 0, x: 35, scale: 0.98 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{
-                            duration: 1,
+                            duration: 0.9,
                             delay: 0.15,
                             ease: [0.16, 1, 0.3, 1],
                         }}
-                        className="relative h-[55vh] min-h-[430px] overflow-hidden rounded-[2rem] lg:h-[70vh]"
+                        className="relative hidden h-[64vh] min-h-[380px] overflow-hidden rounded-[1.75rem] lg:block"
                     >
-                        <img
+                        <Image
                             src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1400&q=85"
-                            alt="A journey beginning"
-                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 hover:scale-[1.025]"
+                            alt="A peaceful travel landscape"
+                            fill
+                            sizes="42vw"
+                            className="object-cover transition-transform duration-1000 hover:scale-[1.025]"
+                            priority
                         />
 
-                        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/30 to-transparent" />
+                        {/* Bottom Gradient */}
+                        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/35 to-transparent" />
 
-                        <p className="absolute bottom-7 left-7 max-w-xs text-sm font-medium leading-relaxed text-white/90 sm:bottom-8 sm:left-8">
-                            Every trip carries a reason
-                            before it carries a route.
-                        </p>
+                        {/* Caption */}
+                        <div className="absolute bottom-6 left-6 right-6">
+                            <p className="text-sm font-medium tracking-wide text-white/90 sm:text-base">
+                                Every journey starts with understanding.
+                            </p>
+                        </div>
                     </motion.div>
+
                 </div>
             </div>
         </section>
