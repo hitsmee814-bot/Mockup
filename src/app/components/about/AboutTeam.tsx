@@ -5,8 +5,8 @@ import { useState } from "react"
 
 import sudipImage from "../../assets/images/Team CEO.jpeg"
 import sanyaImage from "../../assets/images/Team Designer.jpeg"
-import antaraImage from "../../assets/images/Antara.jpeg"
-import asmitImage from "../../assets/images/Asmit.jpeg"
+import antaraImage from "../../assets/images/AntaraImg.jpeg"
+import asmitImage from "../../assets/images/AsmitImg.jpeg"
 
 const members = [
     {
@@ -90,14 +90,19 @@ export default function AboutTeam() {
                                 onMouseEnter={() => setActiveCard(index)}
                                 onMouseLeave={() => setActiveCard(null)}
                                 onClick={() => setActiveCard(isActive ? null : index)}
-                                className="group relative min-h-[280px] cursor-pointer overflow-hidden rounded-[1.75rem] border border-[#1B120B]/10 bg-[#FAFAF9] transition-all duration-500 hover:border-[#0E40C7]/20 sm:min-h-[300px] lg:min-h-[340px]"
-                            >
+className="group relative min-h-[350px] cursor-pointer overflow-hidden rounded-[1.75rem] border border-[#1B120B]/10 bg-[#FAFAF9] transition-all duration-500 hover:border-[#0E40C7]/20 sm:min-h-[400px] lg:min-h-[450px]"                            >
 
                                 {/* Image */}
-                                <motion.div className="absolute inset-0 z-10" animate={{ scale: isActive ? 1.035 : 1 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}>
-                                    <Image src={member.image} alt={`${member.name} - ${member.role}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 50vw" className={`object-cover ${member.imageClass || ""}`} />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                                </motion.div>
+                                <motion.div className="absolute inset-0 z-10" animate={{ scale: isActive ? 1.015 : 1 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}>
+    <Image
+        src={member.image}
+        alt={`${member.name} - ${member.role}`}
+        fill
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 50vw"
+        className={`object-cover ${member.imageClass || ""}`}
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+</motion.div>
                                 {/* Default Member Info */}
                                 <motion.div className="absolute bottom-7 left-7 right-7 z-20" animate={{ opacity: isActive ? 0 : 1, y: isActive ? 15 : 0 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
                                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">{member.position}</p>
