@@ -1,10 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Search,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MessageCircleQuestion,
   Map,
   CreditCard,
@@ -183,10 +185,13 @@ const faqs: FaqItem[] = [
   },
 ]
 
+const ITEMS_PER_PAGE = 5
+
 export default function FAQ() {
   const [activeCategory, setActiveCategory] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [openId, setOpenId] = useState<number | null>(1)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const filteredFaqs = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -203,10 +208,26 @@ export default function FAQ() {
     })
   }, [activeCategory, searchQuery])
 
+  const totalPages = Math.ceil(filteredFaqs.length / ITEMS_PER_PAGE)
+
+  const paginatedFaqs = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredFaqs.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [filteredFaqs, currentPage])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeCategory, searchQuery])
+
   const clearFilters = () => {
     setSearchQuery("")
     setActiveCategory("all")
     setOpenId(1)
+    setCurrentPage(1)
+  }
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
   }
 
   return (
@@ -245,7 +266,19 @@ export default function FAQ() {
               const isActive = activeCategory === category.value
 
               return (
-                <button key={category.value} id={`faqCategory${category.label}`} type="button" role="tab" aria-selected={isActive} onClick={() => { setActiveCategory(category.value); setOpenId(null) }} className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${isActive ? "border-[#0E40C7] bg-[#0E40C7] text-white shadow-md shadow-[#0E40C7]/15" : "border-slate-200 bg-white text-[#536174] hover:border-[#0E40C7]/30 hover:bg-[#0E40C7]/5 hover:text-[#0E40C7]"}`}>
+                <button
+                  key={category.value}
+                  id={`faqCategory${category.label}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => {
+                    setActiveCategory(category.value)
+                    setOpenId(null)
+                    setCurrentPage(1)
+                  }}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${isActive ? "border-[#0E40C7] bg-[#0E40C7] text-white shadow-md shadow-[#0E40C7]/15" : "border-slate-200 bg-white text-[#536174] hover:border-[#0E40C7]/30 hover:bg-[#0E40C7]/5 hover:text-[#0E40C7]"}`}
+                >
                   <Icon aria-hidden="true" className="h-4 w-4" />
                   {category.label}
                 </button>
@@ -257,18 +290,36 @@ export default function FAQ() {
         {/* FAQ List */}
         <div className="mx-auto mt-12 max-w-4xl">
           <AnimatePresence mode="popLayout">
-            {filteredFaqs.map((faq, index) => {
+            {paginatedFaqs.map((faq, index) => {
               const isOpen = openId === faq.id
 
               return (
-                <motion.article key={faq.id} layout initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25, delay: index * 0.025 }} className="mb-3">
+                <motion.article
+                  key={faq.id}
+                  layout
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25, delay: index * 0.025 }}
+                  className="mb-3"
+                >
                   <div className={`overflow-hidden rounded-2xl border transition-all duration-300 ${isOpen ? "border-[#0E40C7]/20 bg-[#F7F9FD] shadow-[0_10px_35px_rgba(16,33,63,0.06)]" : "border-slate-200 bg-white hover:border-[#0E40C7]/20"}`}>
 
                     {/* Question */}
-                    <button id={`faqQuestion${faq.id}`} type="button" aria-expanded={isOpen} aria-controls={`faqAnswer${faq.id}`} onClick={() => setOpenId(isOpen ? null : faq.id)} className="flex w-full items-center justify-between gap-6 px-5 py-5 text-left sm:px-7 sm:py-6">
+                    <button
+                      id={`faqQuestion${faq.id}`}
+                      type="button"
+                      aria-expanded={isOpen}
+                      aria-controls={`faqAnswer${faq.id}`}
+                      onClick={() => setOpenId(isOpen ? null : faq.id)}
+                      className="flex w-full items-center justify-between gap-6 px-5 py-5 text-left sm:px-7 sm:py-6"
+                    >
                       <div className="flex min-w-0 items-start gap-4">
-                        <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isOpen ? "bg-[#0E40C7] text-white" : "bg-[#0E40C7]/8 text-[#0E40C7]"}`} aria-hidden="true">
-                          {String(index + 1).padStart(2, "0")}
+                        <span
+                          className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isOpen ? "bg-[#0E40C7] text-white" : "bg-[#0E40C7]/8 text-[#0E40C7]"}`}
+                          aria-hidden="true"
+                        >
+                          {String((currentPage - 1) * ITEMS_PER_PAGE + index + 1).padStart(2, "0")}
                         </span>
 
                         <h3 className="text-base font-semibold leading-6 text-[#10213F] sm:text-lg">
@@ -276,7 +327,10 @@ export default function FAQ() {
                         </h3>
                       </div>
 
-                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${isOpen ? "rotate-180 bg-[#0E40C7] text-white" : "bg-slate-100 text-[#536174]"}`} aria-hidden="true">
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${isOpen ? "rotate-180 bg-[#0E40C7] text-white" : "bg-slate-100 text-[#536174]"}`}
+                        aria-hidden="true"
+                      >
                         <ChevronDown className="h-4 w-4" />
                       </span>
                     </button>
@@ -284,8 +338,19 @@ export default function FAQ() {
                     {/* Answer */}
                     <AnimatePresence initial={false}>
                       {isOpen && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-                          <div id={`faqAnswer${faq.id}`} role="region" aria-labelledby={`faqQuestion${faq.id}`} className="px-5 pb-6 pl-16 pr-6 sm:px-7 sm:pb-7 sm:pl-[76px]">
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="overflow-hidden"
+                        >
+                          <div
+                            id={`faqAnswer${faq.id}`}
+                            role="region"
+                            aria-labelledby={`faqQuestion${faq.id}`}
+                            className="px-5 pb-6 pl-16 pr-6 sm:px-7 sm:pb-7 sm:pl-[76px]"
+                          >
                             <p className="max-w-3xl text-sm leading-7 text-[#536174] sm:text-base">
                               {faq.answer}
                             </p>
@@ -315,11 +380,70 @@ export default function FAQ() {
                 Try a different search term or choose another FAQ category.
               </p>
 
-              <button id="faqClearFiltersBtn" type="button" onClick={clearFilters} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0E40C7] hover:text-[#FBAB18] hover:underline">
+              <button
+                id="faqClearFiltersBtn"
+                type="button"
+                onClick={clearFilters}
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0E40C7] hover:text-[#FBAB18] hover:underline"
+              >
                 Clear filters
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </button>
             </motion.div>
+          )}
+
+          {/* Pagination */}
+          {filteredFaqs.length > ITEMS_PER_PAGE && (
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                aria-label="Previous FAQ page"
+                disabled={currentPage === 1}
+                onClick={() => goToPage(currentPage - 1)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[#536174] transition-all duration-200 hover:border-[#0E40C7]/30 hover:bg-[#0E40C7]/5 hover:text-[#0E40C7] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-slate-200 disabled:hover:bg-white disabled:hover:text-[#536174]"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: totalPages }, (_, index) => {
+                  const page = index + 1
+                  const isActive = currentPage === page
+
+                  return (
+                    <button
+                      key={page}
+                      type="button"
+                      aria-label={`Go to FAQ page ${page}`}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => goToPage(page)}
+                      className={`flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm font-semibold transition-all duration-200 ${isActive ? "bg-[#0E40C7] text-white shadow-md shadow-[#0E40C7]/15" : "border border-slate-200 bg-white text-[#536174] hover:border-[#0E40C7]/30 hover:bg-[#0E40C7]/5 hover:text-[#0E40C7]"}`}
+                    >
+                      {page}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <button
+                type="button"
+                aria-label="Next FAQ page"
+                disabled={currentPage === totalPages}
+                onClick={() => goToPage(currentPage + 1)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[#536174] transition-all duration-200 hover:border-[#0E40C7]/30 hover:bg-[#0E40C7]/5 hover:text-[#0E40C7] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-slate-200 disabled:hover:bg-white disabled:hover:text-[#536174]"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Page Counter */}
+          {filteredFaqs.length > ITEMS_PER_PAGE && (
+            <p className="mt-3 text-center text-xs text-[#9AA3AF]">
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+              {Math.min(currentPage * ITEMS_PER_PAGE, filteredFaqs.length)} of{" "}
+              {filteredFaqs.length} questions
+            </p>
           )}
         </div>
 
