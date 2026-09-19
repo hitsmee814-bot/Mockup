@@ -4,7 +4,7 @@ import { motion, type Variants } from "framer-motion"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { useEffect, useState } from "react"
-import logoPrimary from "../../assets/images/final logo Bonhomiee.png"
+import logoPrimary from "../../assets/images/final logo Bonhomiee in yellow without.png"
 
 const fadeUp: Variants = {
     hidden: { opacity: 0, y: 24 },
@@ -94,7 +94,7 @@ export default function AboutHero() {
                         </div>
 
                         {/* Heading */}
-<h1 className="max-w-lg text-4xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[2.75rem] lg:text-[3.5rem]">
+<h1 className="max-w-lg text-3xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[2rem] lg:text-[3rem]">
                                 We begin with
                             <br />
                             a{" "}
@@ -148,7 +148,7 @@ export default function AboutHero() {
                             delay: 0.15,
                             ease: [0.16, 1, 0.3, 1],
                         }}
-                        className="relative hidden h-[64vh] min-h-[380px] overflow-hidden rounded-[1.75rem] lg:block"
+                        className="relative hidden h-[52vh] w-[30vw] min-h-[380px] overflow-hidden rounded-[1.75rem] lg:block"
                     >
                         <Image
                             src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1400&q=85"

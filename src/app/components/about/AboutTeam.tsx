@@ -67,7 +67,7 @@ export default function AboutTeam() {
                         <div className="mt-3 h-[2px] w-14 bg-[#FBAB18]" />
                     </div>
 
-                    <h2 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2.75rem] lg:text-[3.5rem]">
+                    <h2 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2rem] lg:text-[3rem]">
                         A small team,
                         <br />
                         <span className="text-[#FBAB18]">for the trips that matter.</span>
@@ -84,7 +84,7 @@ export default function AboutTeam() {
     whileInView="visible"
     viewport={{ once: true, margin: "-80px" }}
     variants={container}
-    className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-16 lg:gap-6"
+    className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-6 lg:gap-6"
 >
     {members.map((member, index) => {
         const isActive = activeCard === index

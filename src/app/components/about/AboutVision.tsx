@@ -54,7 +54,7 @@ export default function AboutVision() {
                 </motion.div> */}
 
                 {/* Divider */}
-                <motion.div initial={{ scaleX: 0, opacity: 0 }} whileInView={{ scaleX: 1, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} className="my-10 h-px origin-left bg-[#1B120B]/10 sm:my-12" />
+                <motion.div initial={{ scaleX: 0, opacity: 0 }} whileInView={{ scaleX: 1, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} className="my-5 h-px origin-left bg-[#1B120B]/10 sm:my-5" />
 
                 {/* The Next Chapter */}
                 <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="max-w-5xl">

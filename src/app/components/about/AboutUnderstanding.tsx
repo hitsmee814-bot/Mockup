@@ -33,7 +33,7 @@ export default function AboutUnderstanding() {
                             duration: 1,
                             ease: [0.16, 1, 0.3, 1],
                         }}
-                        className="relative hidden h-[62vh] min-h-[420px] overflow-hidden rounded-[1.75rem] lg:block"
+                        className="relative hidden h-[64vh] w-[30vw] min-h-[380px] overflow-hidden rounded-[1.75rem] lg:block"
                     >
                         <img
                             src="https://images.pexels.com/photos/14018097/pexels-photo-14018097.jpeg"
@@ -80,7 +80,7 @@ export default function AboutUnderstanding() {
                         {/* Heading */}
                         <motion.h2
                             variants={fadeUp}
-className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2.75rem] lg:text-[3.5rem]"                        >
+className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2rem] lg:text-[3rem]"                        >
                             We&apos;re not selling a place.
                             <br />
                             <span className="text-[#FBAB18]">
@@ -107,10 +107,6 @@ className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120
                                 traveller.
                             </p>
                         </motion.div>
-                    </motion.div>
-                </div>
-
-                {/* Closing Statement */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -120,7 +116,7 @@ className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120
                         delay: 0.15,
                         ease: [0.16, 1, 0.3, 1],
                     }}
-                    className="mt-10 border-t border-[#1B120B]/10 pt-8 sm:mt-12 sm:pt-10"
+                    className="mt-2 border-t border-[#1B120B]/10 pt-0 sm:mt-2 sm:pt-0"
                 >
                     <p className="max-w-3xl text-2xl font-medium leading-[1.3] tracking-[-0.025em] text-[#1B120B] sm:text-3xl">
                         Because the best journeys don&apos;t just take you
@@ -130,6 +126,9 @@ className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120
                         </span>
                     </p>
                 </motion.div>
+                    </motion.div>
+                </div>
+
 
             </div>
         </section>

@@ -6,6 +6,10 @@ import { ArrowUp, ArrowDown, MapPin, RotateCcw } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
+// Temporary fallback image. Replace this with the real testimonial images later.
+const DUMMY_TESTIMONIAL_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1000' viewBox='0 0 800 1000'%3E%3Crect width='800' height='1000' fill='%23F5F6F8'/%3E%3Ccircle cx='400' cy='390' r='125' fill='%23DDE2E9'/%3E%3Cpath d='M170 820c35-170 125-245 230-245s195 75 230 245' fill='%23DDE2E9'/%3E%3C/svg%3E"
+
 type Testimonial = {
   name: string
   descriptor: string
@@ -22,47 +26,52 @@ const testimonials: Testimonial[] = [
   {
     name: "Dr. P.K. Jha",
     descriptor: "Senior Consultant, Cardiology, at a leading Kolkata hospital",
-    hook: "He handed over the whole trip. And found the one thing nobody had thought to look for.",
+    hook: "He mentioned a name once, in passing. We found the man and arranged for them to meet in London.",
     review:
       "I had burnt my fingers many times in the past with other tour organizers. He took the charge of my whole trip upon himself with a positive attitude. Icing on the cake was the Loire Valley trip which I had no clue about beforehand.",
     quote: "Sudip babu, only you could do this.",
     whatWeDid:
-      "What we did: Managed the complete trip end-to-end and added the Loire Valley experience around his interests.",
+      "What we added: a meeting with the scientist who invented a medical device he had used for thirty-five years. And a day in the Loire Valley he never asked for.",
     source: "Unsolicited written testimonial · Paris & London, 2025",
     location: "Paris & London",
     image: "",
   },
   {
     name: "Aniruddha Ghosh Roy",
-    descriptor: "Zonal Sales Head, Indian pharmaceutical company",
-    hook: "Two first-time travellers, five countries of trains, every connection timed from Kolkata. It held.",
+    descriptor:
+      "Zonal Business Head, Indian pharmaceutical company · First-time Europe traveller, with his wife · 16 days, five cities, July 2026",
+    hook: "I was blindfolded the whole trip. I just followed you.",
     review:
       "We are first-time travellers, but the way you guided us from time to time and did the follow-up, we had no issues at all. All arrangements were flawless. We enjoyed every bit of it.",
     whatWeDid:
-      "What we did: Planned the multi-city rail journey, timed the connections and stayed involved throughout the trip.",
+      "What we solved: five countries and every rail connection — Basel to Vienna via Zurich, Salzburg, Hallstatt, Rome — timed and re-checked from Kolkata, for two people who had never travelled abroad.",
     source: "Bonhomiee Travel Circle · July 2026",
     location: "Europe",
     image: "",
   },
   {
     name: "Rahul Kar",
-    descriptor: "Leadership team at a global industrial company",
-    hook: "A leadership offsite that felt effortless from the outside.",
-    review: "",
-    whatWeDid: "",
+    descriptor:
+      "National Business Head, Mining at a global industrial company · Leadership offsite, Mussoorie, March 2026",
+    hook: "Understanding the unique needs first. Then flawless execution, down to the smallest detail.",
+    review:
+      "The offsite at Mussoorie coordinated by Bonhomiee was one of the most memorable and cherished experiences for the team. Starting from understanding the unique needs, to coordinating activities with flawless execution with attention to the minutest details — from logistics, to choosing the right accommodation, to planning the sightseeing and the bonfire evening — it made for one of the most fun-filled and energising offsites. What stood out was the untiring effort from the Bonhomiee team to create lifetime memories.",
+    whatWeDid:
+      "What we solved: the hotel refused us a restaurant for the team lunch. We found Neelam, the oldest in Mussoorie, met the owner, built a menu around the team, and printed a card for the table. The refusal became the day everyone remembers",
     source: "",
     location: "Mussoorie",
     image: "",
   },
   {
     name: "Joydeep Moitra",
-    descriptor: "Retired Army veteran",
-    hook: "Meticulous planning, local support always in touch, value for money. His words. He travelled with us again five months later.",
+    descriptor:
+      "Retired Army veteran, and Ex-COO – NISA (East)  · Thailand, August 2025 — and Kumaon again, January 2026",
+    hook: "Meticulous planning, local support always in touch, value for money. He travelled with us again five months later.",
     review:
-      "Just wished to express my gratitude to Bonhomiee for organising an unforgettable experience at Pattaya and Bangkok. The planning was meticulous and the events organised with optimum utilisation of available time. The local support group was constantly in touch. The tour was affordable and, in the end, value for money.",
+      "Just wished to express my gratitude to Bonhomiee for organising an unforgettable experience at Pattaya and Bangkok. The planning was meticulous and the events organised with optimum utilisation of available time. The local support group was constantly in touch. The tour was affordable and, in the end, value for money.”",
     quote: "Thanks for the wonderful time, Sudip. Would cherish it.",
     whatWeDid:
-      "What we did: Built the itinerary around time, local support and practical value — then earned a second journey together.",
+      "What we did: built the days around the time actually available rather than the itinerary we could fit — and kept a local team reachable throughout, so nothing needed chasing from India.",
     source: "Bonhomiee Travel Circle · 19 August 2025",
     location: "Thailand",
     image: "",
@@ -70,8 +79,14 @@ const testimonials: Testimonial[] = [
   {
     name: "Mr. L.S. Shankar",
     descriptor: "Retired PSU director",
-    hook: "Three generations on some of India's hardest roads. His words for it, afterwards:",
-    review: "A luxurious nature trail.",
+    hook: "Now, as the heat hits us, we can chill with the thoughts of Arunachal!",
+    review: `Arunachal  - Luxurious Nature Trail.
+
+Happy to experience a curated and cool escape, courtesy Bonhomiee, to West Arunachal during beginning of May. 
+The common challenges on these trips are scarcity of luxury accommodation and the rigorous road journey. We are indebted to Team Bonhomiee that we could avail the best available luxury accommodation at Tezpur, Dirang and Tawang. The support of two well maintained Innova Crysta, with experienced tour driver partners, for six of us totally cut out the travel stress.
+Our last stop Shergaon is an upcoming tourist hot spot. The topography and breathtaking natural beauty provides the ideal spot for adventure activities. Thanks to the contacts provided by Bonhomiee, we could locally organize &  experience a guided trek, river side picnic and a walk through wide spread orchards. The last night ended with warm bonfire and a platter of fresh Trout. 
+Now as the heat hits us we can chill with the thoughts of Arunachal.
+`,
     whatWeDid: "",
     source: "Said to Sudip in person · Confirm before publishing",
     location: "Arunachal Pradesh",
@@ -82,7 +97,7 @@ const testimonials: Testimonial[] = [
     descriptor: "Senior executives at a large global IT company",
     hook: "A group departure that didn't feel like one.",
     review:
-      "It was a wonderful trip, no doubt. Very good hotels, very good food, extremely good sightseeing, and very comfortable bus journeys. And very thought-through planning. Felt like personalised.",
+      "It was a wonderful trip, no doubt. Very good hotels, very good food, extremely good sightseeing, and very comfortable bus journeys. And very thought-through planning. Felt like personalised. — Ananya    ·    It was all the effort from Sudip to make our experience a memorable one. — Ayan",
     quote:
       "It was all the effort from Sudip to make our experience a memorable one.",
     whatWeDid:
@@ -176,10 +191,10 @@ export default function Testimonials() {
             {/* PREVIOUS PEEK */}
             {previousCard && (
               <div className="absolute left-1/2 top-0 h-[48px] w-[calc(100%-24px)] -translate-x-1/2 overflow-hidden rounded-[18px] border border-[#E5E8ED] bg-[#F5F6F8] opacity-35">
-                {previousCard.image && (
+                {previousCard && (
                   <>
                     <Image
-                      src={previousCard.image}
+                      src={previousCard.image || DUMMY_TESTIMONIAL_IMAGE}
                       alt=""
                       fill
                       sizes="100vw"
@@ -194,10 +209,10 @@ export default function Testimonials() {
             {/* NEXT PEEK */}
             {nextCard && (
               <div className="absolute bottom-0 left-1/2 h-[48px] w-[calc(100%-24px)] -translate-x-1/2 overflow-hidden rounded-[18px] border border-[#E5E8ED] bg-[#F5F6F8] opacity-35">
-                {nextCard.image && (
+                {nextCard && (
                   <>
                     <Image
-                      src={nextCard.image}
+                      src={nextCard.image || DUMMY_TESTIMONIAL_IMAGE}
                       alt=""
                       fill
                       sizes="100vw"
@@ -223,10 +238,10 @@ export default function Testimonials() {
               <div
                 className="absolute inset-0 overflow-hidden rounded-[22px] border border-[#E5E8ED] bg-white shadow-[0_15px_40px_rgba(16,33,63,0.10)] [backface-visibility:hidden]"
               >
-                {current.image ? (
+                {(current.image || DUMMY_TESTIMONIAL_IMAGE) ? (
                   <>
                     <Image
-                      src={current.image}
+                      src={current.image || DUMMY_TESTIMONIAL_IMAGE}
                       alt={current.name}
                       fill
                       sizes="(max-width: 640px) 100vw, 500px"
@@ -389,10 +404,10 @@ export default function Testimonials() {
         <div
           className="mx-auto mt-9 hidden max-w-5xl sm:mt-11 lg:mt-12 lg:block"
         >
-          <div className="grid items-center gap-9 lg:grid-cols-[56px_370px_1fr]">
+          <div className="grid items-start gap-9 lg:grid-cols-[56px_370px_1fr]">
 
             {/* CONTROLS */}
-            <div className="flex flex-col items-center justify-center gap-3">
+            <div className="flex h-[520px] flex-col items-center justify-center gap-3">
 
               <button
                 type="button"
@@ -432,10 +447,10 @@ export default function Testimonials() {
                   transition={{ duration: 0.4 }}
                   className="absolute left-1/2 top-0 z-0 h-[70px] w-[calc(100%-20px)] -translate-x-1/2 overflow-hidden rounded-[20px] border border-[#E5E8ED] bg-[#F5F6F8]"
                 >
-                  {previousCard.image && (
+                  {previousCard && (
                     <>
                       <Image
-                        src={previousCard.image}
+                        src={previousCard.image || DUMMY_TESTIMONIAL_IMAGE}
                         alt=""
                         fill
                         sizes="370px"
@@ -457,10 +472,10 @@ export default function Testimonials() {
                   transition={{ duration: 0.4 }}
                   className="absolute bottom-0 left-1/2 z-0 h-[70px] w-[calc(100%-20px)] -translate-x-1/2 overflow-hidden rounded-[20px] border border-[#E5E8ED] bg-[#F5F6F8]"
                 >
-                  {nextCard.image && (
+                  {nextCard && (
                     <>
                       <Image
-                        src={nextCard.image}
+                        src={nextCard.image || DUMMY_TESTIMONIAL_IMAGE}
                         alt=""
                         fill
                         sizes="370px"
@@ -495,10 +510,10 @@ export default function Testimonials() {
                   }}
                   className="absolute inset-x-0 top-[28px] z-10 h-[450px] overflow-hidden rounded-[22px] border border-[#E5E8ED] bg-[#F5F6F8] shadow-[0_15px_40px_rgba(16,33,63,0.10)]"
                 >
-                  {current.image ? (
+                  {(current.image || DUMMY_TESTIMONIAL_IMAGE) ? (
                     <>
                       <Image
-                        src={current.image}
+                        src={current.image || DUMMY_TESTIMONIAL_IMAGE}
                         alt={current.name}
                         fill
                         sizes="370px"
@@ -604,11 +619,11 @@ export default function Testimonials() {
                     )}
 
                     {/* SOURCE */}
-                    {current.source && (
+                    {/* {current.source && (
                       <p className="mt-3 text-[10px] leading-5 text-[#9AA2AE]">
                         Source: {current.source}
                       </p>
-                    )}
+                    )} */}
 
                   </div>
 
@@ -655,7 +670,7 @@ export default function Testimonials() {
                 <p>{testimonial.whatWeDid}</p>
               )}
 
-              <p>{testimonial.source}</p>
+              {/* <p>{testimonial.source}</p> */}
               <p>{testimonial.location}</p>
             </article>
           ))}

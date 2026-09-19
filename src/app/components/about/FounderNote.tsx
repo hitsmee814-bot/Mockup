@@ -28,7 +28,7 @@ export default function FounderNote() {
                         </motion.div>
 
                         {/* Heading */}
-                        <motion.h2 variants={fadeUp} className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2.75rem] lg:text-[3.5rem]">
+                        <motion.h2 variants={fadeUp} className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2rem] lg:text-[3rem]">
                             A belief in technology
                             <br />
                             <span className="text-[#FBAB18]">that serves people.</span>
@@ -81,7 +81,7 @@ export default function FounderNote() {
                     </motion.div>
 
                     {/* Desktop Founder Image */}
-                    <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} className="relative hidden h-[64vh] min-h-[420px] overflow-hidden rounded-[1.75rem] lg:block">
+                    <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }} className="relative hidden h-[86vh] min-h-[420px] overflow-hidden rounded-[1.75rem] lg:block">
                         <Image src={desktopFounderImage} alt="Sudip Pal, Founder of Bonhomiee" fill sizes="42vw" className="object-cover transition-transform duration-1000 hover:scale-[1.025]" priority />
 
                         <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
