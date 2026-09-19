@@ -82,7 +82,7 @@ export default function PremiumFooter() {
                 href="/itinerary/packages"
                 className="group flex w-fit items-center gap-2 border-b border-white/30 pb-1.5 text-xs font-medium text-white transition-colors hover:border-[#FBAB18] hover:text-[#FBAB18] sm:text-sm"
               >
-                Explore journeys
+                Our Offerings
 
                 <ArrowUpRight
                   size={15}
@@ -143,7 +143,7 @@ export default function PremiumFooter() {
             </motion.div>
 
             {/* EXPLORE */}
-            <motion.div variants={item}>
+            {/* <motion.div variants={item}>
               <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#3FB8FF]">
                 Explore
               </h3>
@@ -175,10 +175,10 @@ export default function PremiumFooter() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </motion.div> */}
 
             {/* COMPANY */}
-            <motion.div variants={item}>
+            {/* <motion.div variants={item}>
               <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#3FB8FF]">
                 Company
               </h3>
@@ -197,7 +197,7 @@ export default function PremiumFooter() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </motion.div> */}
 
             {/* CONTACT */}
             <motion.div variants={item}>
@@ -235,7 +235,7 @@ export default function PremiumFooter() {
                   />
 
                   <span className="break-all">
-                    bookings@bonhomiee.com
+                    hello@bonhomiee.com
                   </span>
                 </div>
 
@@ -254,7 +254,7 @@ export default function PremiumFooter() {
             </p>
 
             <p className="text-white/35">
-              Thoughtful journeys. Seamlessly planned.
+              Travel That Understands You
             </p>
           </motion.div>
 

@@ -319,11 +319,11 @@ export default function Testimonials() {
                   )}
 
                   {/* SOURCE */}
-                  {current.source && (
+                  {/* {current.source && (
                     <p className="mt-4 text-[10px] leading-5 text-[#9AA2AE]">
                       Source: {current.source}
                     </p>
-                  )}
+                  )} */}
 
                   <div className="mt-auto pt-5 text-center">
                     <span className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.16em] text-[#7A8494]">

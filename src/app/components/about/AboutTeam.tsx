@@ -29,7 +29,7 @@ const members = [
         name: "Antara Roy",
         position: "THE BUILD",
         role: "Supplier & Client Platform",
-        description: "They build what the promise runs on. Every screen you'll use, and every connection behind it.",
+        description: "Builds the side you'll actually touch — and the supplier systems behind it that you never will.",
         image: antaraImage,
         imageClass: "object-[center_15%]",
     },
@@ -37,7 +37,7 @@ const members = [
         name: "Asmit Paria",
         position: "THE BUILD",
         role: "Agency Platform & Integrations",
-        description: "They build what the promise runs on. Every screen you'll use, and every connection behind it.",
+        description: "Builds the connections: the agency platform, and the systems that have to talk to each other before a trip can happen.",
         image: asmitImage,
         imageClass: "object-[center_15%]",
     },
@@ -57,7 +57,7 @@ export default function AboutTeam() {
     const [activeCard, setActiveCard] = useState<number | null>(null)
 
     return (
-        <section className="bg-white py-14 text-[#1B120B] sm:py-16 lg:py-18">
+        <section className="bg-white pt-14 text-[#1B120B] sm:pt-16 lg:pt-18">
             <div className="mx-auto max-w-7xl px-5 sm:px-10 lg:px-16">
 
                 {/* Intro */}
@@ -67,7 +67,7 @@ export default function AboutTeam() {
                         <div className="mt-3 h-[2px] w-14 bg-[#FBAB18]" />
                     </div>
 
-                    <h2 className="text-4xl font-semibold leading-[1.04] tracking-[-0.04em] sm:text-5xl lg:text-[4.1rem]">
+                    <h2 className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2.75rem] lg:text-[3.5rem]">
                         A small team,
                         <br />
                         <span className="text-[#FBAB18]">for the trips that matter.</span>
@@ -78,63 +78,104 @@ export default function AboutTeam() {
                     </p>
                 </motion.div>
 
-                {/* Team Cards */}
-                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={container} className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-16 lg:gap-6">
-                    {members.map((member, index) => {
-                        const isActive = activeCard === index
+{/* Team Cards */}
+<motion.div
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, margin: "-80px" }}
+    variants={container}
+    className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-16 lg:gap-6"
+>
+    {members.map((member, index) => {
+        const isActive = activeCard === index
 
-                        return (
-                            <motion.div
-                                key={`${member.name}-${member.position}`}
-                                variants={fadeUp}
-                                onMouseEnter={() => setActiveCard(index)}
-                                onMouseLeave={() => setActiveCard(null)}
-                                onClick={() => setActiveCard(isActive ? null : index)}
-className="group relative min-h-[350px] cursor-pointer overflow-hidden rounded-[1.75rem] border border-[#1B120B]/10 bg-[#FAFAF9] transition-all duration-500 hover:border-[#0E40C7]/20 sm:min-h-[400px] lg:min-h-[450px]"                            >
+        return (
+            <motion.div
+                key={`${member.name}-${member.position}`}
+                variants={fadeUp}
+                onMouseEnter={() => setActiveCard(index)}
+                onMouseLeave={() => setActiveCard(null)}
+                onClick={() => setActiveCard(isActive ? null : index)}
+                className="group relative min-h-[350px] cursor-pointer overflow-hidden rounded-[1.75rem] border border-[#1B120B]/10 bg-[#FAFAF9] transition-all duration-500 hover:border-[#0E40C7]/20 sm:min-h-[400px] lg:min-h-[450px]"
+            >
+                {/* Image */}
+                <motion.div
+                    className="absolute inset-0 z-10"
+                    animate={{
+                        scale: isActive ? 1.015 : 1,
+                    }}
+                    transition={{
+                        duration: 0.7,
+                        ease: [0.16, 1, 0.3, 1],
+                    }}
+                >
+                    <Image
+                        src={member.image}
+                        alt={`${member.name} - ${member.role}`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 50vw"
+                        className={`object-cover ${member.imageClass || ""}`}
+                    />
 
-                                {/* Image */}
-                                <motion.div className="absolute inset-0 z-10" animate={{ scale: isActive ? 1.015 : 1 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}>
-    <Image
-        src={member.image}
-        alt={`${member.name} - ${member.role}`}
-        fill
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 50vw"
-        className={`object-cover ${member.imageClass || ""}`}
-    />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-</motion.div>
-                                {/* Default Member Info */}
-                                <motion.div className="absolute bottom-7 left-7 right-7 z-20" animate={{ opacity: isActive ? 0 : 1, y: isActive ? 15 : 0 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}>
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">{member.position}</p>
+                    {/* Image Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-                                    <h3 className="max-w-[320px] text-2xl font-semibold leading-[1.12] tracking-[-0.035em] text-white">
-                                        {member.name} - {member.role}
-                                    </h3>
-                                </motion.div>
-
-                                {/* Hover Content */}
-                                <motion.div className="absolute inset-0 z-20 flex items-end" initial={false} animate={{ opacity: isActive ? 1 : 0 }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
-
-                                    {/* Bottom Fade */}
-                                    <motion.div className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-black/90 via-black/55 to-transparent" animate={{ y: isActive ? 0 : 20 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} />
-
-                                    {/* Hover Text */}
-                                    <motion.div className="relative z-10 w-full p-7" initial={{ opacity: 0, y: 20 }} animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 20 }} transition={{ duration: 0.45, delay: isActive ? 0.08 : 0, ease: [0.16, 1, 0.3, 1] }}>
-                                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#FBAB18]">{member.position}</p>
-
-                                        <h3 className="mb-3 max-w-[340px] text-2xl font-semibold leading-[1.12] tracking-[-0.035em] text-white">
-                                            {member.name} - {member.role}
-                                        </h3>
-
-                                        <p className="max-w-[380px] text-sm leading-[1.7] text-white/75">
-                                            {member.description}
-                                        </p>
-                                    </motion.div>
-                                </motion.div>
-                            </motion.div>
-                        )
-                    })}
+                    {/* Hover Darker Gradient */}
+                    <motion.div
+                        className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent"
+                        animate={{
+                            opacity: isActive ? 1 : 0,
+                        }}
+                        transition={{
+                            duration: 0.45,
+                            ease: [0.16, 1, 0.3, 1],
+                        }}
+                    />
                 </motion.div>
+
+                {/* Position + Name */}
+                <motion.div
+                    className="absolute bottom-7 left-7 right-7 z-20"
+                    animate={{
+                        opacity: isActive ? 0 : 1,
+                        y: isActive ? 12 : 0,
+                    }}
+                    transition={{
+                        duration: 0.35,
+                        ease: [0.16, 1, 0.3, 1],
+                    }}
+                >
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
+                        {member.position}
+                    </p>
+
+                    <h3 className="max-w-[320px] text-2xl font-semibold leading-[1.12] tracking-[-0.035em] text-white">
+                        {member.name} - {member.role}
+                    </h3>
+                </motion.div>
+
+                {/* Description */}
+                <motion.div
+                    className="absolute inset-x-0 bottom-0 z-20 p-7"
+                    initial={false}
+                    animate={{
+                        opacity: isActive ? 1 : 0,
+                        y: isActive ? 0 : 18,
+                    }}
+                    transition={{
+                        duration: 0.4,
+                        delay: isActive ? 0.05 : 0,
+                        ease: [0.16, 1, 0.3, 1],
+                    }}
+                >
+                    <p className="max-w-[380px] text-sm leading-[1.7] text-white/80">
+                        {member.description}
+                    </p>
+                </motion.div>
+            </motion.div>
+        )
+    })}
+</motion.div>
 
                 {/* Ground + Intelligence */}
                 <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} variants={container} className="mt-12 overflow-hidden border-y border-[#1B120B]/10 bg-[#FAFAF9] sm:mt-14">
@@ -174,16 +215,6 @@ className="group relative min-h-[350px] cursor-pointer overflow-hidden rounded-[
                     </div>
                 </motion.div>
 
-                {/* Closing */}
-                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mt-10 max-w-4xl">
-                    <p className="text-2xl font-medium leading-[1.3] tracking-[-0.025em] sm:text-3xl lg:text-4xl">
-                        The people behind Bonhomiee are united by the belief that thoughtful travel starts with paying attention.
-                    </p>
-
-                    <p className="mt-5 max-w-3xl text-base leading-7 text-[#1B120B]/65 sm:text-lg sm:leading-8">
-                        Around them work the designers, engineers and on-ground teams who make this possible in every destination we send you to. We&apos;ll introduce you to the people on your trip — we&apos;d rather do that in a conversation than on a page.
-                    </p>
-                </motion.div>
 
             </div>
         </section>

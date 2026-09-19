@@ -71,7 +71,7 @@ export default function AboutUnderstanding() {
                             className="mb-6"
                         >
                             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0E40C7] sm:text-base">
-                                The Bonhomiee difference
+                                The difference
                             </p>
 
                             <div className="mt-3 h-[2px] w-14 bg-[#FBAB18]" />
@@ -80,8 +80,7 @@ export default function AboutUnderstanding() {
                         {/* Heading */}
                         <motion.h2
                             variants={fadeUp}
-                            className="text-4xl font-semibold leading-[1.04] tracking-[-0.04em] text-[#1B120B] sm:text-5xl lg:text-[4.1rem]"
-                        >
+className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2.75rem] lg:text-[3.5rem]"                        >
                             We&apos;re not selling a place.
                             <br />
                             <span className="text-[#FBAB18]">
@@ -102,38 +101,12 @@ export default function AboutUnderstanding() {
                                 and your dates.
                             </p>
 
-                            <p className="font-medium text-[#1B120B]/85">
+                            <p className="font-medium text-[#1B120B]/70">
                                 Being understood shouldn&apos;t be a privilege.
                                 We think it should be the baseline, for every
                                 traveller.
                             </p>
                         </motion.div>
-
-                        {/* Ascendus */}
-                        <motion.div
-                            variants={fadeUp}
-                            className="mt-7 border-l-2 border-[#0E40C7] pl-5 sm:mt-8 sm:pl-6"
-                        >
-                            <div className="mb-2 flex items-center gap-2">
-                                <span className="text-sm font-semibold text-[#0E40C7]">
-                                    Ascendus
-                                </span>
-
-                                <ArrowUpRight
-                                    size={15}
-                                    strokeWidth={1.7}
-                                    className="text-[#0E40C7]"
-                                />
-                            </div>
-
-                            <p className="max-w-xl text-sm leading-7 text-[#1B120B]/60 sm:text-base sm:leading-8">
-                                Behind the conversation is Ascendus, our
-                                intelligence layer quietly doing the work that
-                                lets a small team give the attention a large
-                                one usually can&apos;t.
-                            </p>
-                        </motion.div>
-
                     </motion.div>
                 </div>
 

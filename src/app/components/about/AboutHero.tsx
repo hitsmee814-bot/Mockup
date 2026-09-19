@@ -94,8 +94,8 @@ export default function AboutHero() {
                         </div>
 
                         {/* Heading */}
-                        <h1 className="max-w-2xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-[5rem]">
-                            We begin with
+<h1 className="max-w-lg text-4xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[2.75rem] lg:text-[3.5rem]">
+                                We begin with
                             <br />
                             a{" "}
                             <span className="text-[#FBAB18]">

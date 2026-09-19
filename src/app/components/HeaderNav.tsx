@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
     { label: "Journeys", id: "toppackages", icon: MapPinned },
     { label: "Our Offerings", id: "packages", icon: BriefcaseBusiness },
     { label: "The Bonhomiee Way", id: "about", icon: Compass },
-    { label: "Contact Us", id: "faq", icon: Headphones },
+    { label: "Tell us about this trip", id: "faq", icon: Headphones },
     { label: "AI", id: "ai", hot: true, icon: Sparkles },
 ]
 

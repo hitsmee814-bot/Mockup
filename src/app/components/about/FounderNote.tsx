@@ -28,44 +28,33 @@ export default function FounderNote() {
                         </motion.div>
 
                         {/* Heading */}
-                        <motion.h2 variants={fadeUp} className="text-4xl font-semibold leading-[1.04] tracking-[-0.04em] text-[#1B120B] sm:text-5xl lg:text-[4.1rem]">
+                        <motion.h2 variants={fadeUp} className="text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-[#1B120B] sm:text-[2.75rem] lg:text-[3.5rem]">
                             A belief in technology
                             <br />
                             <span className="text-[#FBAB18]">that serves people.</span>
                         </motion.h2>
 
-                        {/* Story */}
-                        <motion.div variants={fadeUp} className="mt-7 max-w-xl space-y-4 text-base leading-7 text-[#1B120B]/70 sm:mt-8 sm:text-lg sm:leading-8">
-                            <p>
-                                I spent twenty-five years building technology inside large organisations — Wipro, IBM, Ericsson, and finally leading digital transformation across Europe. It taught me how complex systems work, and just as often, why they fail the people they&apos;re meant to serve.
-                            </p>
+{/* Story */}
+<motion.div
+    variants={fadeUp}
+    className="mt-7 max-w-xl space-y-4 text-base leading-7 text-[#1B120B]/70 sm:mt-8 sm:text-lg sm:leading-8"
+>
+    <p>
+        I spent twenty-five years building technology inside large organisations — Wipro, IBM, Ericsson, and finally leading digital transformation across Europe. It taught me how complex systems work, and just as often, why they fail the people they&apos;re meant to serve.
+    </p>
 
-                            <p>
-                                Travel was where I felt that failure most. A decade of the industry optimising search and price had quietly optimised away the traveller.
-                            </p>
-                        </motion.div>
+    <p>
+        Travel was where I felt that failure most. A decade of optimising search and price had quietly optimised away the traveller — you could book a trip in minutes and understand nothing about where you were going.
+    </p>
 
-                        {/* Highlight */}
-                        <motion.div variants={fadeUp} className="mt-7 border-l-2 border-[#0E40C7] pl-5 sm:mt-8 sm:pl-6">
-                            <p className="max-w-xl text-xl font-medium leading-[1.4] tracking-tight text-[#1B120B] sm:text-2xl">
-                                You could book a trip in minutes and still understand nothing about where you were going.
-                            </p>
-                        </motion.div>
+    <p>
+        The trips I care most about came from people who knew me first. Neighbours, friends, families in my own building. They didn&apos;t come to me for a price — they came because they wanted someone to take their trip seriously. So in 2024 I came home to Kolkata and built around that.
+    </p>
 
-                        {/* Personal Story */}
-                        <motion.p variants={fadeUp} className="mt-7 max-w-xl text-base leading-7 text-[#1B120B]/70 sm:mt-8 sm:text-lg sm:leading-8">
-                            The trips I care most about have mostly come from people who knew me first — neighbours, friends, families in my own building. They didn&apos;t come to me for a price. They came because they wanted someone to take their trip seriously.
-                        </motion.p>
-
-                        {/* Bonhomiee Story */}
-                        <motion.p variants={fadeUp} className="mt-4 max-w-xl text-base leading-7 text-[#1B120B]/70 sm:text-lg sm:leading-8">
-                            So in 2024 I came home to Kolkata and started something else: a small team that would rather do the work well than do it at volume, and Ascendus, built to make that depth scale without ever becoming the thing you notice.
-                        </motion.p>
-
-                        {/* Final Thought */}
-                        <motion.p variants={fadeUp} className="mt-4 max-w-xl text-base leading-7 text-[#1B120B]/70 sm:text-lg sm:leading-8">
-                            Every itinerary that leaves here still passes through me. One day that will stop being true — and when it does, it will be because Ascendus learned to carry what I know, not because we decided it mattered less.
-                        </motion.p>
+    <p>
+        Every itinerary that leaves here still passes through me. One day that will stop being true — and when it does, it will be because Ascendus learned to carry what I know, not because we decided it mattered less.
+    </p>
+</motion.div>
 
                         {/* Signature + Mobile Founder Image */}
                         <motion.div variants={fadeUp} className="mt-7 sm:mt-8">
@@ -96,11 +85,6 @@ export default function FounderNote() {
                         <Image src={desktopFounderImage} alt="Sudip Pal, Founder of Bonhomiee" fill sizes="42vw" className="object-cover transition-transform duration-1000 hover:scale-[1.025]" priority />
 
                         <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
-
-                        <div className="absolute bottom-7 left-7 flex items-center gap-3 text-sm font-medium text-white/90 sm:bottom-8 sm:left-8">
-                            <span className="h-px w-8 bg-white/70" />
-                            Sudip Pal
-                        </div>
 
                         <Link href="https://www.linkedin.com/in/sudippalbonhomiee" target="_blank" rel="noopener noreferrer" aria-label="Sudip Pal on LinkedIn" className="absolute right-7 top-7 sm:right-8 sm:top-8">
                             <motion.div className="group relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white/90 text-[#0E40C7] backdrop-blur-sm" whileHover={{ scale: 1.08 }} transition={{ duration: 0.25, ease: "easeOut" }}>
