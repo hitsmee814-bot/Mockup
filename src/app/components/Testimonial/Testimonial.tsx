@@ -1,9 +1,11 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { ArrowUpRight, Quote } from "lucide-react"
 import Image from "next/image"
-import logoPrimary from "..//../assets/images/final logo Bonhomiee.png"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import logoPrimary from "../../assets/images/final logo Bonhomiee in yellow without.png"
 
 const testimonials = [
   {
@@ -105,65 +107,109 @@ const testimonials = [
   },
 ]
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0 },
+const fadeUp: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 30,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+  },
 }
 
 export default function Testimonial() {
+  const router = useRouter()
+  const [showHeader, setShowHeader] = useState(true)
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+
+      if (currentScrollY <= 20) {
+        setShowHeader(true)
+      } else if (currentScrollY > lastScrollY + 2) {
+        setShowHeader(false)
+      } else if (currentScrollY < lastScrollY - 2) {
+        setShowHeader(true)
+      }
+
+      lastScrollY = currentScrollY
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [])
+
   return (
     <main className="overflow-hidden bg-white text-[#1B120B]">
 
-        {/* Hero */}
-        <section className="px-6 pb-20 pt-16 md:px-12 lg:px-20 lg:pb-12 lg:pt-20">
+      {/* Smart Header */}
+<motion.header
+  animate={{ y: showHeader ? 0 : "-100%" }}
+  transition={{
+    duration: 0.35,
+    ease: [0.16, 1, 0.3, 1],
+  }}
+  className="relative z-50 bg-white"
+>
+  <div className="px-6 md:px-12 lg:px-20">
+    <div className="mx-auto flex max-w-7xl items-center py-5 sm:py-6 lg:py-7">
+      <motion.button
+        type="button"
+        onClick={() => router.back()}
+        aria-label="Go back"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+        className="cursor-pointer"
+      >
+        <Image
+          src={logoPrimary}
+          alt="Bonhomiee"
+          width={300}
+          height={90}
+          className="h-auto w-[150px] object-contain sm:w-[175px] lg:w-[190px]"
+          priority
+        />
+      </motion.button>
+    </div>
+  </div>
+</motion.header>
+
+      {/* Hero */}
+      <section className="px-6 pb-8 pt-8 md:px-12 lg:px-20 lg:pb-8 lg:pt-8">
         <div className="mx-auto max-w-7xl">
 
-            {/* Brand */}
-            <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16 flex items-center gap-3"
-            >
-            <Image
-                src={logoPrimary}
-                alt="Bonhomiee"
-                width={150}
-                height={45}
-                className="h-auto w-[135px] object-contain"
-                priority
-            />
-
-            <span className="h-5 w-px bg-[#D4D6DA]" />
-
-            <span className="text-sm font-medium tracking-wide text-[#757C86]">
-                Travel Stories
-            </span>
-            </motion.div>
-
-            <motion.div
+          <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             transition={{ duration: 0.8 }}
             className="max-w-4xl"
-            >
-<h1 className="text-5xl font-semibold leading-[0.95] tracking-[-0.045em] sm:text-6xl lg:text-8xl">
-  Journeys, told by
-  <br />
-  <span className="text-[#FBAB18]">the people</span>{" "}
-  <span className="text-[#FBAB18]">who lived them.</span>
-</h1>
+          >
+            <h1 className="text-5xl font-semibold leading-[0.95] tracking-[-0.045em] sm:text-6xl lg:text-8xl">
+              Journeys, told by
+              <br />
+              <span className="text-[#FBAB18]">the people</span>{" "}
+              <span className="text-[#FBAB18]">who lived them.</span>
+            </h1>
+
             <p className="mt-8 max-w-2xl text-base leading-7 text-[#757C86] md:text-lg">
-                Twelve real experiences from people who travelled with
-                Bonhomiee — in their own words.
+              Twelve real experiences from people who travelled with
+              Bonhomiee — in their own words.
             </p>
-            </motion.div>
+          </motion.div>
+
         </div>
-        </section>
+      </section>
 
       {/* Featured */}
-      <section className="bg-[#EEF3FF] px-6 py-20 md:px-12 lg:px-20 lg:py-28">
+      <section className="bg-[#EEF3FF] px-6 py-8 md:px-12 lg:px-20 lg:py-8">
         <div className="mx-auto max-w-7xl">
 
           <div className="mb-12 flex items-end justify-between">
@@ -195,10 +241,9 @@ export default function Testimonial() {
                     strokeWidth={1.5}
                     className="text-[#0E40C7]"
                   />
-
                 </div>
 
-                <p className="mt-8 text-2xl font-semibold leading-tight tracking-[-0.025em] md:text-3xl text-[#FBAB18]">
+                <p className="mt-8 text-2xl font-semibold leading-tight tracking-[-0.025em] text-[#FBAB18] md:text-3xl">
                   {item.hook}
                 </p>
 
@@ -216,7 +261,9 @@ export default function Testimonial() {
 
                 <div className="mt-10">
                   <p className="font-semibold">{item.name}</p>
-                  <p className="mt-1 text-sm text-[#757C86]">{item.role}</p>
+                  <p className="mt-1 text-sm text-[#757C86]">
+                    {item.role}
+                  </p>
                   <p className="mt-2 text-xs uppercase tracking-[0.15em] text-[#B2B8BD]">
                     {item.trip}
                   </p>
@@ -236,9 +283,6 @@ export default function Testimonial() {
           >
             <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
               <div>
-                <div className="mb-6 flex items-center gap-3">
-                </div>
-
                 <h3 className="max-w-xl text-3xl font-medium leading-tight tracking-[-0.025em] md:text-5xl">
                   {testimonials[2].hook}
                 </h3>
@@ -291,10 +335,12 @@ export default function Testimonial() {
                 whileInView="visible"
                 viewport={{ once: true, margin: "-60px" }}
                 variants={fadeUp}
-                transition={{ duration: 0.6, delay: (index % 3) * 0.08 }}
+                transition={{
+                  duration: 0.6,
+                  delay: (index % 3) * 0.08,
+                }}
                 className="group flex min-h-[390px] flex-col rounded-[1.75rem] border border-[#D4D6DA] bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:border-[#0E40C7]/30 hover:shadow-[0_18px_45px_rgba(14,64,199,0.08)]"
               >
-
                 <div className="mt-2 flex-1">
                   <p className="text-xl font-semibold leading-snug tracking-[-0.02em] text-[#FBAB18]">
                     {item.hook}
@@ -331,45 +377,46 @@ export default function Testimonial() {
       </section>
 
       {/* CTA */}
-    {/* CTA */}
-<section className="px-6 pb-20 md:px-12 lg:px-20 lg:pb-28">
-  <motion.div
-    initial={{ opacity: 0, y: 25 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.8 }}
-    className="mx-auto max-w-7xl rounded-[2rem] bg-[#04257E] px-8 py-16 text-white md:px-14 md:py-20"
-  >
-    <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-      <div className="max-w-2xl">
-        <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-[#3FB8FF]">
-          Your journey starts here
-        </p>
+      <section className="px-6 pb-20 md:px-12 lg:px-20 lg:pb-28">
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="mx-auto max-w-7xl rounded-[2rem] bg-[#04257E] px-8 py-16 text-white md:px-14 md:py-20"
+        >
+          <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-[#FBAB18]">
+                Your journey starts here
+              </p>
 
-        <h2 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-6xl">
-          Ready to create
-          <br />
-          your own story?
-        </h2>
+              <h2 className="text-4xl font-semibold leading-tight tracking-[-0.03em] md:text-6xl">
+                Ready to create
+                <br />
+                your own story?
+              </h2>
 
-        <p className="mt-5 max-w-lg text-sm leading-6 text-white/60 md:text-base">
-          Explore our journeys and find the one that feels like yours.
-        </p>
-      </div>
+              <p className="mt-5 max-w-lg text-sm leading-6 text-white/60 md:text-base">
+                Explore our journeys and find the one that feels like yours.
+              </p>
+            </div>
 
-      <a
-        href="/itinerary/packages"
-        className="group flex w-fit shrink-0 items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#04257E] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
-      >
-        Explore journeys
-        <ArrowUpRight
-          size={17}
-          className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
-        />
-      </a>
-    </div>
-  </motion.div>
-</section>
+            <a
+              href="/itinerary/packages"
+              className="group flex w-fit shrink-0 items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#04257E] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              Explore journeys
+
+              <ArrowUpRight
+                size={17}
+                className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
+              />
+            </a>
+          </div>
+        </motion.div>
+      </section>
+
     </main>
   )
 }

@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ArrowUp, ArrowDown, MapPin, RotateCcw } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-
 // Temporary fallback image. Replace this with the real testimonial images later.
 const DUMMY_TESTIMONIAL_IMAGE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1000' viewBox='0 0 800 1000'%3E%3Crect width='800' height='1000' fill='%23F5F6F8'/%3E%3Ccircle cx='400' cy='390' r='125' fill='%23DDE2E9'/%3E%3Cpath d='M170 820c35-170 125-245 230-245s195 75 230 245' fill='%23DDE2E9'/%3E%3C/svg%3E"
@@ -19,8 +18,15 @@ type Testimonial = {
   whatWeDid: string
   source: string
   location: string
-  image?: string
+  image?: any
 }
+
+import pkJhaImage from "../assets/images/testimonials/PK Jha/PK Jha 2.jpeg"
+import aniruddhaImage from "../assets/images/testimonials/Aniruddha Roy/Aniruddha.jpeg"
+import rahulKarImage from "../assets/images/testimonials/Rahul Kar/Rahul Kar.jpeg"
+import joydeepImage from "../assets/images/testimonials/Joydeep/Joydeep.jpeg"
+import shankerImage from "../assets/images/testimonials/Shankar/LS Shankar.jpeg"
+import ananyaImage from "../assets/images/testimonials/Ananya/Ananya.jpeg"
 
 const testimonials: Testimonial[] = [
   {
@@ -34,7 +40,7 @@ const testimonials: Testimonial[] = [
       "What we added: a meeting with the scientist who invented a medical device he had used for thirty-five years. And a day in the Loire Valley he never asked for.",
     source: "Unsolicited written testimonial · Paris & London, 2025",
     location: "Paris & London",
-    image: "",
+    image: pkJhaImage,
   },
   {
     name: "Aniruddha Ghosh Roy",
@@ -47,7 +53,7 @@ const testimonials: Testimonial[] = [
       "What we solved: five countries and every rail connection — Basel to Vienna via Zurich, Salzburg, Hallstatt, Rome — timed and re-checked from Kolkata, for two people who had never travelled abroad.",
     source: "Bonhomiee Travel Circle · July 2026",
     location: "Europe",
-    image: "",
+    image: aniruddhaImage,
   },
   {
     name: "Rahul Kar",
@@ -60,7 +66,7 @@ const testimonials: Testimonial[] = [
       "What we solved: the hotel refused us a restaurant for the team lunch. We found Neelam, the oldest in Mussoorie, met the owner, built a menu around the team, and printed a card for the table. The refusal became the day everyone remembers",
     source: "",
     location: "Mussoorie",
-    image: "",
+    image: rahulKarImage,
   },
   {
     name: "Joydeep Moitra",
@@ -74,7 +80,7 @@ const testimonials: Testimonial[] = [
       "What we did: built the days around the time actually available rather than the itinerary we could fit — and kept a local team reachable throughout, so nothing needed chasing from India.",
     source: "Bonhomiee Travel Circle · 19 August 2025",
     location: "Thailand",
-    image: "",
+    image: joydeepImage,
   },
   {
     name: "Mr. L.S. Shankar",
@@ -90,7 +96,7 @@ Now as the heat hits us we can chill with the thoughts of Arunachal.
     whatWeDid: "",
     source: "Said to Sudip in person · Confirm before publishing",
     location: "Arunachal Pradesh",
-    image: "",
+    image: shankerImage,
   },
   {
     name: "Ananya Choudhury & Ayan Choudhury",
@@ -104,7 +110,7 @@ Now as the heat hits us we can chill with the thoughts of Arunachal.
       "What we did: Designed the group journey with personalised planning across hotels, food, sightseeing and transfers.",
     source: "Bonhomiee Travel Circle and the Vietnam group",
     location: "Vietnam",
-    image: "",
+    image: ananyaImage,
   },
 ]
 
