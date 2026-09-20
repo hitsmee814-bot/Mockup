@@ -30,7 +30,7 @@ const DAYS_OPTIONS = ["1-3", "4-6", "7-9", "10+"];
 
 const pill = (active: boolean) =>
   active
-    ? { background: "#3FB8FF", color: "#fff", borderColor: "#3FB8FF" }
+    ? { background: "#0E40C7", color: "#fff", borderColor: "#0E40C7" }
     : { background: "#f9fafb", color: "#6b7280", borderColor: "#e5e7eb" };
 
 export function FilterDrawer({ open, onClose, destinations, onApply, currentFilters }: FilterDrawerProps) {
@@ -95,7 +95,7 @@ export function FilterDrawer({ open, onClose, destinations, onApply, currentFilt
             <div className="flex-1 overflow-y-auto p-5 space-y-7">
               {/* Destination */}
               <div>
-                <label className={labelClass}><MapPin className="size-3.5" style={{ color: "#3FB8FF" }} /> Destination</label>
+                <label className={labelClass}><MapPin className="size-3.5" style={{ color: "#0E40C7" }} /> Destination</label>
                 <div className="flex flex-wrap gap-2">
                   {destinations.map((d) => (
                     <button key={d} onClick={() => setDest((prev) => (prev === d ? null : d))} className={pillClass} style={pill(dest === d)}>
@@ -107,7 +107,7 @@ export function FilterDrawer({ open, onClose, destinations, onApply, currentFilt
 
               {/* Price */}
               <div>
-                <label className={labelClass}><DollarSign className="size-3.5" style={{ color: "#3FB8FF" }} /> Max Price (INR)</label>
+                <label className={labelClass}><DollarSign className="size-3.5" style={{ color: "#0E40C7" }} /> Max Price (INR)</label>
                 <input
                   type="range"
                   min={5000}
@@ -116,18 +116,18 @@ export function FilterDrawer({ open, onClose, destinations, onApply, currentFilt
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(Number(e.target.value))}
                   className="w-full"
-                  style={{ accentColor: "#3FB8FF" }}
+                  style={{ accentColor: "#0E40C7" }}
                 />
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>₹5,000</span>
-                  <span className="font-bold" style={{ color: "#3FB8FF" }}>₹{maxPrice.toLocaleString()}</span>
+                  <span className="font-bold" style={{ color: "#0E40C7" }}>₹{maxPrice.toLocaleString()}</span>
                   <span>₹2,00,000</span>
                 </div>
               </div>
 
               {/* Days */}
               <div>
-                <label className={labelClass}><Calendar className="size-3.5" style={{ color: "#3FB8FF" }} /> Duration (Days)</label>
+                <label className={labelClass}><Calendar className="size-3.5" style={{ color: "#0E40C7" }} /> Duration (Days)</label>
                 <div className="flex flex-wrap gap-2">
                   {DAYS_OPTIONS.map((d) => (
                     <button key={d} onClick={() => setDaysRange((prev) => (prev === d ? null : d))} className={pillClass} style={pill(daysRange === d)}>
@@ -142,7 +142,7 @@ export function FilterDrawer({ open, onClose, destinations, onApply, currentFilt
               <button onClick={reset} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer">
                 Reset All
               </button>
-              <button onClick={apply} className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-colors cursor-pointer" style={{ background: "#3FB8FF" }}>
+              <button onClick={apply} className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-colors cursor-pointer" style={{ background: "#0E40C7" }}>
                 Apply Filters
               </button>
             </div>

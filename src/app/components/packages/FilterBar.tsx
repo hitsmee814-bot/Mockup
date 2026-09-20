@@ -36,8 +36,8 @@ export function FilterBar({
                         value={search}
                         onChange={(e) => onSearch(e.target.value)}
                         placeholder="Search tours, destinations..."
-                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-2xl border border-gray-200 bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-[#3FB8FF] placeholder:text-gray-400 transition-all shadow-sm text-gray-700"
-                        style={{ "--tw-ring-color": "#3FB8FF33" } as React.CSSProperties}
+                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-2xl border border-gray-200 bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-[#0E40C7] placeholder:text-gray-400 transition-all shadow-sm text-gray-700"
+                        style={{ "--tw-ring-color": "#0E40C733" } as React.CSSProperties}
                     />
                 </div>
 

@@ -23,7 +23,7 @@ export function ItineraryStepper({ itinerary, tourId }: ItineraryStepperProps) {
       <div className="absolute left-[18px] top-0 bottom-0 w-px bg-gray-100 z-0" />
       <motion.div
         className="absolute left-[18px] top-0 w-px z-[1]"
-        style={{ background: "linear-gradient(180deg, #3FB8FF 0%, #FBAB18 100%)" }}
+        style={{ background: "linear-gradient(180deg, #0E40C7 0%, #FBAB18 100%)" }}
         initial={{ height: 0 }}
         animate={{ height: "100%" }}
         transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
@@ -46,9 +46,9 @@ export function ItineraryStepper({ itinerary, tourId }: ItineraryStepperProps) {
                     onClick={() => toggle(day.day_number)}
                     className="relative size-9 rounded-full text-xs font-extrabold flex items-center justify-center cursor-pointer z-10 border-2 transition-colors"
                     style={{
-                      background: isOpen ? "#3FB8FF" : "#fff",
-                      color: isOpen ? "#fff" : "#3FB8FF",
-                      borderColor: "#3FB8FF",
+                      background: isOpen ? "#0E40C7" : "#fff",
+                      color: isOpen ? "#fff" : "#0E40C7",
+                      borderColor: "#0E40C7",
                     }}
                     whileHover={{ scale: 1.15 }}
                     whileTap={{ scale: 0.95 }}
@@ -57,7 +57,7 @@ export function ItineraryStepper({ itinerary, tourId }: ItineraryStepperProps) {
                     {isOpen && (
                       <motion.span
                         className="absolute inset-0 rounded-full"
-                        style={{ border: "2px solid #3FB8FF" }}
+                        style={{ border: "2px solid #0E40C7" }}
                         initial={{ scale: 1, opacity: 0.6 }}
                         animate={{ scale: 1.6, opacity: 0 }}
                         transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
@@ -72,7 +72,7 @@ export function ItineraryStepper({ itinerary, tourId }: ItineraryStepperProps) {
                     onClick={() => toggle(day.day_number)}
                     className="rounded-2xl border overflow-hidden cursor-pointer transition-shadow"
                     style={{
-                      borderColor: isOpen ? "#3FB8FF40" : "#f3f4f6",
+                      borderColor: isOpen ? "#0E40C740" : "#f3f4f6",
                       boxShadow: isOpen
                         ? "0 8px 32px 0 rgba(63,184,255,0.12), 0 1.5px 6px 0 rgba(63,184,255,0.06)"
                         : "0 1px 4px 0 rgba(0,0,0,0.03)",
@@ -139,7 +139,7 @@ export function ItineraryStepper({ itinerary, tourId }: ItineraryStepperProps) {
                                       style={
                                         act.type === "included"
                                           ? { borderColor: "#FBAB1830", background: "#FBAB1806" }
-                                          : { borderColor: "#3FB8FF30", background: "#3FB8FF06" }
+                                          : { borderColor: "#0E40C730", background: "#0E40C706" }
                                       }
                                       initial={{ opacity: 0, x: -8 }}
                                       animate={{ opacity: 1, x: 0 }}
@@ -152,8 +152,8 @@ export function ItineraryStepper({ itinerary, tourId }: ItineraryStepperProps) {
                                               <Sparkles className="size-3" style={{ color: "#FBAB18" }} />
                                             </div>
                                           ) : (
-                                            <div className="size-6 rounded-md flex items-center justify-center shrink-0" style={{ background: "#3FB8FF20" }}>
-                                              <MapPin className="size-3" style={{ color: "#3FB8FF" }} />
+                                            <div className="size-6 rounded-md flex items-center justify-center shrink-0" style={{ background: "#0E40C720" }}>
+                                              <MapPin className="size-3" style={{ color: "#0E40C7" }} />
                                             </div>
                                           )}
                                           <p className="text-xs font-bold text-gray-800 truncate">{act.name}</p>
@@ -163,7 +163,7 @@ export function ItineraryStepper({ itinerary, tourId }: ItineraryStepperProps) {
                                           style={
                                             act.type === "included"
                                               ? { background: "#FBAB1820", color: "#B8780F" }
-                                              : { background: "#3FB8FF20", color: "#3FB8FF" }
+                                              : { background: "#0E40C720", color: "#0E40C7" }
                                           }
                                         >
                                           {act.type}

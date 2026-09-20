@@ -94,15 +94,20 @@ export function Package() {
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="text-center space-y-3">
-                    <motion.div
-                        className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-1.5 rounded-full border"
-                        style={{ background: "#CAD8FF", color: "#0E40C7", borderColor: "#0E40C7" }}
-                        initial={{ opacity: 0, y: -10, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-                    >
-                        <Compass className="size-3.5" /> Explore Our Tours
-                    </motion.div>
+           <motion.div
+    className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold"
+    style={{
+        backgroundColor: "#EEF3FF",
+        color: "#0E40C7",
+        borderColor: "#CAD8FF",
+    }}
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+>
+    <Compass className="size-3.5" />
+    Explore Our Tours
+</motion.div>
                     <motion.h1
                         className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-gray-800"
                         initial={{ opacity: 0, y: 16 }}

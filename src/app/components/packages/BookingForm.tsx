@@ -110,9 +110,9 @@ export function BookingForm({ pkg }: BookingFormProps) {
       {/* Breadcrumb */}
       <div className="max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2">
         <nav className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Link href="/itinerary/packages" className="transition-colors hover:text-[#3FB8FF]">Tours</Link>
+          <Link href="/itinerary/packages" className="transition-colors hover:text-[#0E40C7]">Tours</Link>
           <ChevronRight className="size-3 shrink-0" />
-          <Link href={detailHref} className="transition-colors hover:text-[#3FB8FF] truncate max-w-[140px]">{tour.title}</Link>
+          <Link href={detailHref} className="transition-colors hover:text-[#0E40C7] truncate max-w-[140px]">{tour.title}</Link>
           <ChevronRight className="size-3 shrink-0" />
           <span className="text-gray-800 font-semibold">Booking</span>
         </nav>
@@ -126,11 +126,11 @@ export function BookingForm({ pkg }: BookingFormProps) {
             <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -40 }} className="space-y-6 sm:space-y-8">
               {/* Header */}
               <motion.div {...fadeUp} transition={{ delay: 0.05 }}>
-                <Link href={detailHref} className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#3FB8FF] transition-colors mb-3">
+                <Link href={detailHref} className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#0E40C7] transition-colors mb-3">
                   <ArrowLeft className="size-3" /> Back to tour details
                 </Link>
                 <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800">
-                  Complete Your <span style={{ color: "#3FB8FF" }}>Booking</span>
+                  Complete Your <span style={{ color: "#0E40C7" }}>Booking</span>
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-400 mt-1">Fill in your details to reserve {tour.title}</p>
               </motion.div>
@@ -158,20 +158,20 @@ export function BookingForm({ pkg }: BookingFormProps) {
                     {/* Personal Details */}
                     <motion.div className="rounded-2xl border border-gray-100 p-4 sm:p-5 space-y-4" style={{ boxShadow: "0 2px 12px 0 rgba(63,184,255,0.04)" }} {...fadeUp} transition={{ delay: 0.15 }}>
                       <h2 className="font-bold text-sm flex items-center gap-2 text-gray-800">
-                        <User className="size-4" style={{ color: "#3FB8FF" }} /> Personal Details
+                        <User className="size-4" style={{ color: "#0E40C7" }} /> Personal Details
                       </h2>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className={labelClass}><User className="size-3" /> Full Name *</label>
-                          <input value={form.fullName} onChange={e => update("fullName", e.target.value)} placeholder="John Doe" className={inputClass} style={{ "--tw-ring-color": "#3FB8FF33" } as React.CSSProperties} required />
+                          <input value={form.fullName} onChange={e => update("fullName", e.target.value)} placeholder="John Doe" className={inputClass} style={{ "--tw-ring-color": "#0E40C733" } as React.CSSProperties} required />
                         </div>
                         <div>
                           <label className={labelClass}><Mail className="size-3" /> Email Address *</label>
-                          <input type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="john@example.com" className={inputClass} style={{ "--tw-ring-color": "#3FB8FF33" } as React.CSSProperties} required />
+                          <input type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="john@example.com" className={inputClass} style={{ "--tw-ring-color": "#0E40C733" } as React.CSSProperties} required />
                         </div>
                         <div>
                           <label className={labelClass}><Phone className="size-3" /> Phone Number *</label>
-                          <input type="tel" value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="+91 98765 43210" className={inputClass} style={{ "--tw-ring-color": "#3FB8FF33" } as React.CSSProperties} required />
+                          <input type="tel" value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="+91 98765 43210" className={inputClass} style={{ "--tw-ring-color": "#0E40C733" } as React.CSSProperties} required />
                         </div>
                         <div>
                           <label className={labelClass}><Users className="size-3" /> Number of Travellers</label>
@@ -227,7 +227,7 @@ export function BookingForm({ pkg }: BookingFormProps) {
                     {availability.filter(a => a.status === "available").length > 0 && (
                       <motion.div className="rounded-2xl border border-gray-100 p-4 sm:p-5 space-y-4" style={{ boxShadow: "0 2px 12px 0 rgba(63,184,255,0.04)" }} {...fadeUp} transition={{ delay: 0.2 }}>
                         <h2 className="font-bold text-sm flex items-center gap-2 text-gray-800">
-                          <CalendarDays className="size-4" style={{ color: "#3FB8FF" }} /> Select Travel Date
+                          <CalendarDays className="size-4" style={{ color: "#0E40C7" }} /> Select Travel Date
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {availability.filter(a => a.status === "available").map(slot => (
@@ -237,7 +237,7 @@ export function BookingForm({ pkg }: BookingFormProps) {
                               onClick={() => update("selectedSlot", slot.id)}
                               className="p-3 rounded-xl border text-left transition-all cursor-pointer"
                               style={form.selectedSlot === slot.id
-                                ? { borderColor: "#3FB8FF", background: "#3FB8FF08" }
+                                ? { borderColor: "#0E40C7", background: "#0E40C708" }
                                 : { borderColor: "#e5e7eb" }
                               }
                             >
@@ -254,14 +254,14 @@ export function BookingForm({ pkg }: BookingFormProps) {
                     {/* Special Requests */}
                     <motion.div className="rounded-2xl border border-gray-100 p-4 sm:p-5 space-y-4" style={{ boxShadow: "0 2px 12px 0 rgba(63,184,255,0.04)" }} {...fadeUp} transition={{ delay: 0.25 }}>
                       <h2 className="font-bold text-sm flex items-center gap-2 text-gray-800">
-                        <MessageSquare className="size-4" style={{ color: "#3FB8FF" }} /> Special Requests
+                        <MessageSquare className="size-4" style={{ color: "#0E40C7" }} /> Special Requests
                       </h2>
-                      <textarea value={form.specialRequests} onChange={e => update("specialRequests", e.target.value)} placeholder="Any dietary requirements, accessibility needs..." rows={3} className={`${inputClass} resize-none`} style={{ "--tw-ring-color": "#3FB8FF33" } as React.CSSProperties} />
+                      <textarea value={form.specialRequests} onChange={e => update("specialRequests", e.target.value)} placeholder="Any dietary requirements, accessibility needs..." rows={3} className={`${inputClass} resize-none`} style={{ "--tw-ring-color": "#0E40C733" } as React.CSSProperties} />
                     </motion.div>
 
                     {/* Submit — mobile */}
                     <motion.div className="lg:hidden" {...fadeUp} transition={{ delay: 0.3 }}>
-                      <motion.button type="submit" className="w-full text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer" style={{ background: "#3FB8FF" }} whileHover={{ scale: 1.02, boxShadow: "0 6px 20px 0 rgba(63,184,255,0.35)" }} whileTap={{ scale: 0.98 }}>
+                      <motion.button type="submit" className="w-full text-white font-bold py-3.5 rounded-xl text-sm cursor-pointer" style={{ background: "#0E40C7" }} whileHover={{ scale: 1.02, boxShadow: "0 6px 20px 0 rgba(63,184,255,0.35)" }} whileTap={{ scale: 0.98 }}>
                         Confirm Booking — ₹{totalPrice.toLocaleString()}
                       </motion.button>
                     </motion.div>
@@ -303,7 +303,7 @@ export function BookingForm({ pkg }: BookingFormProps) {
                               <motion.span
                                 key={totalPrice}
                                 className="text-2xl font-extrabold whitespace-nowrap"
-                                style={{ color: "#3FB8FF" }}
+                                style={{ color: "#0E40C7" }}
                                 initial={{ y: 24, opacity: 0, scale: 0.9 }}
                                 animate={{ y: 0, opacity: 1, scale: 1 }}
                                 exit={{ y: -24, opacity: 0, scale: 0.9 }}
@@ -317,17 +317,17 @@ export function BookingForm({ pkg }: BookingFormProps) {
                         <AnimatedValue value={`${form.people} person${form.people > 1 ? "s" : ""}`} className="text-[10px] text-gray-400" />
                       </div>
 
-                      <motion.button type="submit" onClick={handleSubmit} className="hidden lg:block w-full text-white font-bold py-3 rounded-xl text-sm cursor-pointer" style={{ background: "#3FB8FF" }} whileHover={{ scale: 1.02, boxShadow: "0 6px 20px 0 rgba(63,184,255,0.35)" }} whileTap={{ scale: 0.98 }}>
+                      <motion.button type="submit" onClick={handleSubmit} className="hidden lg:block w-full text-white font-bold py-3 rounded-xl text-sm cursor-pointer" style={{ background: "#0E40C7" }} whileHover={{ scale: 1.02, boxShadow: "0 6px 20px 0 rgba(63,184,255,0.35)" }} whileTap={{ scale: 0.98 }}>
                         Confirm Booking
                       </motion.button>
 
                       <div className="flex items-center justify-center gap-3 pt-1">
-                        <span className="flex items-center gap-1 text-[10px] text-gray-400"><Shield className="size-3" style={{ color: "#3FB8FF" }} /> Secure Payment</span>
+                        <span className="flex items-center gap-1 text-[10px] text-gray-400"><Shield className="size-3" style={{ color: "#0E40C7" }} /> Secure Payment</span>
                         <span className="size-0.5 rounded-full bg-gray-300" />
                         <span className="text-[10px] text-gray-400">Free Cancellation</span>
                       </div>
 
-                      <Link href={detailHref} className="block text-center text-xs text-gray-400 transition-colors hover:text-[#3FB8FF]">← Back to tour details</Link>
+                      <Link href={detailHref} className="block text-center text-xs text-gray-400 transition-colors hover:text-[#0E40C7]">← Back to tour details</Link>
                     </motion.div>
                   </div>
                 </div>
@@ -349,8 +349,8 @@ function SuccessView({ tour, detailHref, totalPrice, form }: {
 }) {
   return (
     <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: "easeOut" }} className="max-w-lg mx-auto py-12 sm:py-20 text-center space-y-6">
-      <motion.div className="mx-auto size-20 rounded-full flex items-center justify-center" style={{ background: "#3FB8FF15" }} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }}>
-        <CheckCircle2 className="size-10" style={{ color: "#3FB8FF" }} />
+      <motion.div className="mx-auto size-20 rounded-full flex items-center justify-center" style={{ background: "#0E40C715" }} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }}>
+        <CheckCircle2 className="size-10" style={{ color: "#0E40C7" }} />
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <h2 className="text-2xl font-extrabold text-gray-800">Booking Confirmed!</h2>
@@ -362,12 +362,12 @@ function SuccessView({ tour, detailHref, totalPrice, form }: {
           <div className="flex justify-between"><span>Travellers</span><span className="font-semibold text-gray-800">{form.people} person{form.people > 1 ? "s" : ""}</span></div>
           <div className="flex justify-between"><span>Confirmation sent to</span><span className="font-semibold text-gray-800 truncate max-w-[180px]">{form.email}</span></div>
           <div className="h-px bg-gray-100" />
-          <div className="flex justify-between items-center"><span className="font-bold text-gray-800">Total Paid</span><span className="text-lg font-extrabold" style={{ color: "#3FB8FF" }}>₹{totalPrice.toLocaleString()}</span></div>
+          <div className="flex justify-between items-center"><span className="font-bold text-gray-800">Total Paid</span><span className="text-lg font-extrabold" style={{ color: "#0E40C7" }}>₹{totalPrice.toLocaleString()}</span></div>
         </div>
       </motion.div>
       <motion.div className="flex flex-col sm:flex-row gap-3 justify-center pt-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
         <Link href={detailHref} className="px-5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-colors">View Tour</Link>
-        <Link href="/itinerary/packages" className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-colors" style={{ background: "#3FB8FF" }}>Explore More Tours</Link>
+        <Link href="/itinerary/packages" className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-colors" style={{ background: "#0E40C7" }}>Explore More Tours</Link>
       </motion.div>
     </motion.div>
   )
