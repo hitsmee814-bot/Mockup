@@ -1,3 +1,5 @@
+// src/app/components/Agent/AgentCustomers/AgentCreateGroup.tsx
+
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -11,21 +13,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { AlertCircle, Plus, X, Users } from "lucide-react";
+import { AlertCircle, Users, X } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { groupService, AgentGroup } from "@/services/agent/groupService";
-import { customerService } from "@/services/agent/customerService";
 import { cn } from "@/lib/utils";
 
-export function AgentAddCustomer() {
+export function AgentCreateGroup() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [groupName, setGroupName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<AgentGroup[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isNewGroupName, setIsNewGroupName] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,6 +38,7 @@ export function AgentAddCustomer() {
     if (!query || query.trim().length === 0) {
       setSearchResults([]);
       setShowSuggestions(false);
+      setIsNewGroupName(false);
       return;
     }
 
@@ -43,10 +47,17 @@ export function AgentAddCustomer() {
       const results = await groupService.searchGroups(query.trim(), 10);
       setSearchResults(results);
       setShowSuggestions(results.length > 0);
+      
+      // Check if the entered name is new (not in search results)
+      const exactMatch = results.some(
+        (g) => g.group_name.toLowerCase() === query.trim().toLowerCase()
+      );
+      setIsNewGroupName(!exactMatch && query.trim().length > 0);
     } catch (err) {
       console.error("Failed to search groups:", err);
       setSearchResults([]);
       setShowSuggestions(false);
+      setIsNewGroupName(false);
     } finally {
       setIsSearching(false);
     }
@@ -55,6 +66,7 @@ export function AgentAddCustomer() {
   const handleGroupNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setGroupName(value);
+    setError(null);
 
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -69,6 +81,7 @@ export function AgentAddCustomer() {
     setGroupName(group.group_name);
     setShowSuggestions(false);
     setSearchResults([]);
+    setIsNewGroupName(false);
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -98,17 +111,22 @@ export function AgentAddCustomer() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    
-    const nameInput = form.querySelector('[name="customerName"]') as HTMLInputElement;
-    const phoneInput = form.querySelector('[name="phone"]') as HTMLInputElement;
-    const emailInput = form.querySelector('[name="email"]') as HTMLInputElement;
-    const companyInput = form.querySelector('[name="company"]') as HTMLInputElement;
 
-    // Validate only name is required
-    if (!nameInput.value || nameInput.value.trim() === "") {
-      setError("Customer Name is required");
-      nameInput.classList.add("border-red-500");
+    if (!groupName.trim()) {
+      setError("Group name is required");
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      return;
+    }
+
+    // Check if group name already exists in search results
+    const exists = searchResults.some(
+      (g) => g.group_name.toLowerCase() === groupName.trim().toLowerCase()
+    );
+
+    if (exists) {
+      setError("This Group Name already exists. Please use another Group Name.");
       if (scrollContainerRef.current) {
         scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -119,35 +137,28 @@ export function AgentAddCustomer() {
     setError(null);
 
     try {
-      // Build payload - only include fields that have values
-      const payload: any = {
-        name: nameInput.value.trim(),
-      };
+      await groupService.createGroup({
+        group_name: groupName.trim(),
+        description: description.trim() || undefined,
+      });
 
-      // Add optional fields only if they have values
-      if (phoneInput.value.trim()) {
-        payload.phone = phoneInput.value.trim();
-      }
-      if (emailInput.value.trim()) {
-        payload.email = emailInput.value.trim();
-      }
-      if (companyInput?.value?.trim()) {
-        payload.company_name = companyInput.value.trim();
-      }
-      if (groupName.trim()) {
-        payload.group_name = groupName.trim();
-      }
-
-      await customerService.createCustomer(payload);
-
-      toast.success("Customer added successfully!");
+      toast.success("Group created successfully!");
       setOpen(false);
       setGroupName("");
+      setDescription("");
       setSearchResults([]);
       setShowSuggestions(false);
+      setIsNewGroupName(false);
     } catch (err: any) {
-      console.error("Failed to create customer:", err);
-      setError(err?.message || "Failed to add customer. Please try again.");
+      console.error("Failed to create group:", err);
+      
+      const errorMsg = err?.message || "Failed to create group. Please try again.";
+      if (errorMsg.includes("already exists") || errorMsg.includes("another Group Name")) {
+        setError("This Group Name already exists. Please use another Group Name.");
+      } else {
+        setError(errorMsg);
+      }
+      
       if (scrollContainerRef.current) {
         scrollContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -156,27 +167,21 @@ export function AgentAddCustomer() {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    if (e.target.value) {
-      e.target.classList.remove("border-red-500");
-    }
-  };
-
   const handleCancel = () => {
     setOpen(false);
     setError(null);
     setGroupName("");
+    setDescription("");
     setSearchResults([]);
     setShowSuggestions(false);
+    setIsNewGroupName(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> Add Customer
+        <Button size="sm" className="gap-1.5 bg-blue-500 text-white hover:bg-blue-600">
+          <Users className="h-4 w-4" /> Create Group
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -185,7 +190,7 @@ export function AgentAddCustomer() {
         showCloseButton={false}
       >
         <div className="px-6 pt-6 pb-2 flex-shrink-0">
-          <DialogTitle>Add New Customer</DialogTitle>
+          <DialogTitle>Create New Group</DialogTitle>
         </div>
 
         <div
@@ -215,60 +220,16 @@ export function AgentAddCustomer() {
                   className="grid gap-4"
                   noValidate
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="customerName">
-                        Customer Name <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="customerName"
-                        name="customerName"
-                        placeholder="Full name"
-                        required
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        placeholder="+91 XXXXX XXXXX"
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="email@example.com"
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="company">Company Name</Label>
-                      <Input
-                        id="company"
-                        name="company"
-                        placeholder="Company name"
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
                   <div className="space-y-1.5 group-suggestions-container relative">
-                    <Label htmlFor="groupName">Group Name</Label>
+                    <Label htmlFor="groupName">
+                      Group Name <span className="text-red-500">*</span>
+                    </Label>
                     <div className="relative">
                       <Input
                         ref={inputRef}
                         id="groupName"
                         name="groupName"
-                        placeholder="Assign to a group (optional)"
+                        placeholder="Enter group name (e.g., Family Trip 2025)"
                         value={groupName}
                         onChange={handleGroupNameChange}
                         onFocus={() => {
@@ -276,7 +237,10 @@ export function AgentAddCustomer() {
                             setShowSuggestions(true);
                           }
                         }}
-                        className="pr-8"
+                        className={cn(
+                          "pr-8",
+                          error && !groupName.trim() ? "border-red-500" : ""
+                        )}
                         autoComplete="off"
                       />
                       {groupName && (
@@ -286,6 +250,7 @@ export function AgentAddCustomer() {
                             setGroupName("");
                             setShowSuggestions(false);
                             setSearchResults([]);
+                            setIsNewGroupName(false);
                             if (inputRef.current) {
                               inputRef.current.focus();
                             }
@@ -327,30 +292,23 @@ export function AgentAddCustomer() {
                       )}
                     </AnimatePresence>
 
-                    {!showSuggestions && groupName.trim().length > 0 && searchResults.length === 0 && !isSearching && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        No existing groups found. A new group will be created with this name.
+                    {/* Blue message for NEW group name only */}
+                    {isNewGroupName && !showSuggestions && groupName.trim().length > 0 && (
+                      <p className="text-xs text-blue-500 mt-1">
+                        This is a new group name. Click "Create Group" to create it.
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      name="address"
-                      placeholder="Street address, city, state, pincode"
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="description">Description</Label>
                     <textarea
-                      id="notes"
-                      name="notes"
-                      placeholder="Any additional notes about the customer..."
+                      id="description"
+                      name="description"
+                      placeholder="Any additional details about this group..."
                       rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
                       className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] max-h-[150px]"
                       style={{
                         resize: "vertical",
@@ -360,7 +318,6 @@ export function AgentAddCustomer() {
                         wordBreak: "break-word",
                         overflowY: "auto",
                       }}
-                      onChange={handleInputChange}
                     />
                   </div>
                 </form>
@@ -390,7 +347,7 @@ export function AgentAddCustomer() {
                 }
               }}
             >
-              {isLoading ? "Adding..." : "Add Customer"}
+              {isLoading ? "Creating..." : "Create Group"}
             </Button>
           </div>
         </div>

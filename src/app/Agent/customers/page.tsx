@@ -6,6 +6,8 @@ import {
   AgentCustomerTable,
   AgentAddCustomer,
 } from "@/app/components/Agent/AgentCustomers";
+import { AgentCreateGroup } from "@/app/components/Agent/AgentCustomers/AgentCreateGroup";
+import { AgentGroupMembers } from "@/app/components/Agent/AgentCustomers/AgentGroupMembers";
 
 export default function AgentCustomersPage() {
   return (
@@ -24,7 +26,11 @@ export default function AgentCustomersPage() {
             Manage all your customers and their details
           </p>
         </div>
-        <AgentAddCustomer />
+        <div className="flex items-center gap-2 flex-wrap">
+          <AgentGroupMembers />
+          <AgentCreateGroup />
+          <AgentAddCustomer />
+        </div>
       </motion.div>
 
       <AgentCustomerStats />
