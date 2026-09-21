@@ -34,7 +34,7 @@ export function HotelBooking() {
   return (
     <div className="force-light">
       {/* <Header title="Hotel" /> */}
-      <div className="min-h-screen bg-white text-gray-800 p-4 md:p-8">
+      <div className="min-h-screen bg-none text-gray-800 p-4 md:p-8">
         <AnimatePresence>
           {searching && (
             <motion.div

@@ -56,6 +56,143 @@ const formatDateTime = (date: string) =>
     minute: "2-digit",
   });
 
+  const formatLabel = (value?: string | null) => {
+  if (!value) return "";
+
+  return value
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+};
+
+const getServiceTitle = (d: ServiceRequestListItem) => {
+  switch (d.service_type.toLowerCase()) {
+    case "hotel":
+      return [
+        d.hotel_star_rating || d.hotel_type,
+        d.hotel_room_type
+      ]
+        .filter(Boolean)
+        .join(" • ") || "Hotel Booking";
+
+    case "transfer":
+      return d.transfer_route || "Transfer";
+
+    case "activity":
+      return d.activity_name || "Activity";
+
+    default:
+      return formatLabel(d.service_type);
+  }
+};
+
+const ServiceSummary = ({
+  d,
+}: {
+  d: ServiceRequestListItem;
+}) => {
+  switch (d.service_type.toLowerCase()) {
+    case "hotel":
+      return (
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-600">
+          {d.hotel_meal_plan && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Meal Plan:
+              </span>{" "}
+              {formatLabel(d.hotel_meal_plan)}
+            </span>
+          )}
+
+          {d.hotel_stay_duration && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Stay:
+              </span>{" "}
+              {d.hotel_stay_duration}
+            </span>
+          )}
+
+          {d.hotel_view && (
+            <span>
+              <span className="font-medium text-gray-700">
+                View:
+              </span>{" "}
+              {formatLabel(d.hotel_view)}
+            </span>
+          )}
+        </div>
+      );
+
+    case "transfer":
+      return (
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-600">
+          {d.transfer_vehicle_type && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Vehicle:
+              </span>{" "}
+              {formatLabel(d.transfer_vehicle_type)}
+            </span>
+          )}
+
+          {d.transfer_trip_type && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Trip Type:
+              </span>{" "}
+              {formatLabel(d.transfer_trip_type)}
+            </span>
+          )}
+
+          {d.transfer_luggage_count != null && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Luggage:
+              </span>{" "}
+              {d.transfer_luggage_count}
+            </span>
+          )}
+        </div>
+      );
+
+    case "activity":
+      return (
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-600">
+          {d.activity_type && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Type:
+              </span>{" "}
+              {formatLabel(d.activity_type)}
+            </span>
+          )}
+
+          {d.activity_time_slot && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Time:
+              </span>{" "}
+              {formatLabel(d.activity_time_slot)}
+            </span>
+          )}
+
+          {d.activity_duration && (
+            <span>
+              <span className="font-medium text-gray-700">
+                Duration:
+              </span>{" "}
+              {d.activity_duration}
+            </span>
+          )}
+        </div>
+      );
+
+    default:
+      return null;
+  }
+};
+
 /* Service badge colors (same as your service page) */
 const serviceStyles: Record<string, string> = {
   Package: "bg-emerald-100 text-emerald-700",
@@ -183,28 +320,43 @@ setBidSummaries(Object.fromEntries(summaries));
               <div className="flex flex-col lg:flex-row justify-between gap-4">
                 {/* Left */}
                 <div className="space-y-3 flex-1">
-                  <div className="flex gap-2 items-center">
-                    <span className="text-xs text-muted-foreground">
-                      {d.demand_request_no}
-                    </span>
+                <div className="flex flex-wrap items-center gap-2">
 
-                   <Badge
+                <span className="text-sm font-semibold text-[#00AFEF]">
+                 {d.service_request_no}
+                </span>
+
+                {/* Service Type */}
+                <Badge
+                  className={`text-xs px-2 py-0.5 ${
+                    serviceStyles[d.service_type] ??
+                    "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {formatLabel(d.service_type)}
+                </Badge>
+
+                {/* Status */}
+                <Badge
                   className={`text-xs px-2 py-0.5 ${
                     statusStyles[d.status as keyof typeof statusStyles]
                   }`}
                 >
-                  {d.status
-                    .replaceAll("_", " ")
-                    .toLowerCase()
-                    .replace(/\b\w/g, c => c.toUpperCase())}
+                  {formatLabel(d.status)}
                 </Badge>
-                  </div>
 
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">{d.destination}</span>
-                    
-                  </div>
+              </div>
+
+               <div className="space-y-2">
+                <div className="text-base text-gray-700">
+                {getServiceTitle(d)}
+              </div>
+
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  <span>{d.destination}</span>
+                </div>
+              </div>
 
                     <div className="space-y-1 text-sm text-gray-600">
 
@@ -295,17 +447,7 @@ setBidSummaries(Object.fromEntries(summaries));
                   {/* Service badges */}
                 <div className="flex flex-wrap gap-2">
            <div className="flex items-center gap-3 mt-3">
-              <Badge
-                className={`text-xs px-2 py-0.5 ${
-                  serviceStyles[d.service_type] ??
-                  "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {d.service_type
-                  .replaceAll("_", " ")
-                  .toLowerCase()
-                  .replace(/\b\w/g, c => c.toUpperCase())}
-              </Badge>
+           
 
               <Button
               variant="link"

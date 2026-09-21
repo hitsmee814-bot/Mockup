@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-
+import { useRef } from "react"
+import { useAuth } from "@/app/context/AuthContext"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-
+import { toast } from "sonner"
 import {
   SupplierEnquiryFollowups,
   type SupplierEnquiryFollowupItem,
@@ -35,10 +37,12 @@ export function SupplierEnquiryDetailsDialog({
   const [followups, setFollowups] = useState<
     SupplierEnquiryFollowupItem[]
   >([])
-
+const router = useRouter()
+const { logout } = useAuth()
+const sessionHandled = useRef(false)
   const [loadingFollowups, setLoadingFollowups] =
     useState(false)
-
+const [followupsError, setFollowupsError] = useState("")
   const formatDate = (date?: string | null) => {
     if (!date) return "-"
 
@@ -64,17 +68,32 @@ export function SupplierEnquiryDetailsDialog({
   useEffect(() => {
     const fetchFollowups = async () => {
       if (!open || !enquiry?.id) return
-
+      setFollowupsError("")
       try {
         setLoadingFollowups(true)
 
         const token = localStorage.getItem("access_token")
 
         if (!token) {
-          setFollowups([])
-          return
-        }
+  if (!sessionHandled.current) {
+    sessionHandled.current = true
 
+    logout()
+
+    toast.error(
+      "Your session has expired. Please log in again.",
+      {
+        position: "top-right",
+        duration: 3000,
+      }
+    )
+
+    router.replace("/auth")
+  }
+
+  return
+}
+        
         const response =
           await SupplierEnquiryFollowups.getFollowups(
             enquiry.id,
@@ -84,14 +103,42 @@ export function SupplierEnquiryDetailsDialog({
         setFollowups(
           Array.isArray(response) ? response : []
         )
-      } catch (error) {
-        console.error(
-          "Failed to load follow-up history:",
-          error
-        )
+      } catch (error: any) {
+  console.error(
+    "Failed to load supplier enquiry follow-up history:",
+    error
+  )
 
-        setFollowups([])
-      } finally {
+  if (
+    error?.message
+      ?.toLowerCase()
+      .includes("session expired")
+  ) {
+    if (!sessionHandled.current) {
+      sessionHandled.current = true
+
+      logout()
+
+      toast.error(
+        "Your session has expired. Please log in again.",
+        {
+          position: "top-right",
+          duration: 3000,
+        }
+      )
+
+      router.replace("/auth")
+    }
+
+    return
+  }
+
+  setFollowups([])
+  setFollowupsError(
+    error?.message ||
+      "Failed to load follow-up history. Please try again."
+  )
+} finally {
         setLoadingFollowups(false)
       }
     }
@@ -314,15 +361,21 @@ export function SupplierEnquiryDetailsDialog({
                   Loading follow-up history...
                 </p>
               )}
-
-              {!loadingFollowups &&
-                followups.length === 0 && (
-                  <div className="rounded-md border border-dashed border-slate-300 py-8 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    No follow-ups yet.
-                  </p>
-                </div>
-                )}{!loadingFollowups &&
+              {!loadingFollowups && followupsError && (
+                <p className="text-sm text-red-500">
+                  {followupsError}
+                </p>
+              )}
+          {!loadingFollowups &&
+            !followupsError &&
+            followups.length === 0 && (
+              <div className="rounded-md border border-dashed border-slate-300 py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  No follow-ups yet.
+                </p>
+              </div>
+          )}
+    {!loadingFollowups &&
   followups.map((item) => (
     <div
       key={item.id}

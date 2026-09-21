@@ -28,7 +28,7 @@ export const tourService = {
     // Fetch single tour by ID
     getById: async (id: string | number): Promise<TourPackage | null> => {
         try {
-            const data = await apiClient(`/itinerary/${id}`, {
+            const data = await apiClient(`/itinerary/tourid/${id}`, {
                 method: "GET",
             });
 

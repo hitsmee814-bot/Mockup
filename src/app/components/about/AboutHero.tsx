@@ -1,338 +1,177 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { ArrowDown, ArrowLeft } from "lucide-react"
+import { motion, type Variants } from "framer-motion"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { useEffect, useState } from "react"
+import logoPrimary from "../../assets/images/final logo Bonhomiee in yellow without.png"
 
-const fadeUp = {
-    hidden: {
-        opacity: 0,
-        y: 28,
-    },
+const fadeUp: Variants = {
+    hidden: { opacity: 0, y: 24 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: {
-            duration: 0.8,
-            ease: [0.16, 1, 0.3, 1] as const,
-        },
+        transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
     },
 }
 
 export default function AboutHero() {
-        const router = useRouter()
+    const router = useRouter()
+    const [showHeader, setShowHeader] = useState(true)
+
+    useEffect(() => {
+        let lastScrollY = window.scrollY
+
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY
+
+            if (currentScrollY <= 20) {
+                setShowHeader(true)
+            } else if (currentScrollY > lastScrollY + 2) {
+                setShowHeader(false)
+            } else if (currentScrollY < lastScrollY - 2) {
+                setShowHeader(true)
+            }
+
+            lastScrollY = currentScrollY
+        }
+
+        window.addEventListener("scroll", handleScroll, { passive: true })
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll)
+        }
+    }, [])
 
     return (
-        <section className="relative min-h-[100svh] overflow-hidden bg-white">
-<motion.button
-    initial={{ opacity: 0, x: -10 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.5, delay: 0.2 }}
-    onClick={() => router.back()}
-    className="
-        absolute
-        left-6
-        top-7
-        z-30
-        flex
-        items-center
-        gap-2
-        text-sm
-        font-medium
-        text-black/40
-        transition-colors
-        duration-300
-        hover:text-[#0E40C7]
-        sm:left-8
-        lg:left-10
-    "
->
-    <ArrowLeft
-        className="h-4 w-4"
-        strokeWidth={1.7}
-    />
+        <section className="relative overflow-hidden text-[#1B120B]">
 
-    <span>Back</span>
-</motion.button>
-            <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
+            {/* Smart Header */}
+            <motion.header
+                animate={{ y: showHeader ? 0 : "-100%" }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-50"
+            >
+                <div className="mx-auto flex max-w-7xl items-center px-5 py-5 sm:px-10 sm:py-6 lg:px-16 lg:py-7">
+                    <motion.button
+                        type="button"
+                        onClick={() => router.back()}
+                        aria-label="Go back"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="cursor-pointer"
+                    >
+                        <Image
+                            src={logoPrimary}
+                            alt="Bonhomiee"
+                            width={300}
+                            height={90}
+                            className="h-auto w-[150px] object-contain sm:w-[175px] lg:w-[190px]"
+                            priority
+                        />
+                    </motion.button>
+                </div>
+            </motion.header>
 
-                <div
-                    className="
-                        grid
-                        min-h-[100svh]
-                        grid-cols-1
-                        items-center
-                        gap-12
-                        py-28
-                        lg:grid-cols-[1.05fr_0.95fr]
-                        lg:gap-20
-                        lg:py-20
-                    "
-                >
+            {/* Main Content */}
+            <div className="mx-auto max-w-7xl px-5 sm:px-10 lg:px-16">
+                <div className="grid items-start gap-8 pb-14 sm:gap-10 sm:pb-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
 
+                    {/* Left Content */}
                     <motion.div
                         initial="hidden"
                         animate="visible"
                         variants={fadeUp}
                         className="max-w-2xl"
                     >
-                        <p
-                            className="
-                                mb-6
-                                text-xs
-                                font-semibold
-                                uppercase
-                                tracking-[0.24em]
-                                text-[#0E40C7]
-                            "
-                        >
-                            About Bonhomiee
-                        </p>
+                        {/* Label */}
+                        <div className="mb-6 inline-flex flex-col items-start">
+                            <span className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0E40C7] sm:text-base">
+                                About Bonhomiee
+                            </span>
 
+                            <span className="mt-2 h-[2px] w-12 rounded-full bg-[#FBAB18]" />
+                        </div>
 
-
-                        <h1
-                            className="
-                                text-5xl
-                                font-semibold
-                                leading-[0.96]
-                                tracking-[-0.045em]
-                                text-black
-                                sm:text-6xl
-                                lg:text-7xl
-                                xl:text-[82px]
-                            "
-                        >
-                            We begin with
+                        {/* Heading */}
+<h1 className="max-w-lg text-3xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[2rem] lg:text-[3rem]">
+                                We begin with
                             <br />
-                            a conversation.
+                            a{" "}
+                            <span className="text-[#FBAB18]">
+                                conversation.
+                            </span>
                         </h1>
 
-
-                        {/* Opening copy */}
-
-                        <div
-                            className="
-                                mt-9
-                                space-y-5
-                                text-base
-                                leading-[1.8]
-                                text-black/55
-                                sm:text-lg
-                            "
-                        >
-
+                        {/* Intro */}
+                        <div className="mt-7 max-w-xl space-y-4 text-base leading-7 text-[#1B120B]/70 sm:mt-8 sm:text-lg sm:leading-8">
                             <p>
                                 Most travel companies begin with a destination.
-                                We don&apos;t.
+                                <span className="font-semibold text-[#1B120B]">
+                                    {" "}We don't.
+                                </span>
                             </p>
 
                             <p>
-                                The most meaningful journeys aren&apos;t defined
-                                by where you go, but by why you&apos;re going —
-                                a celebration, a pause, a reunion, a fresh start,
-                                a long-promised adventure.
+                                Every trip carries a reason before it carries a
+                                route — a celebration, a pause, a reunion, a
+                                long-promised adventure.
                             </p>
 
                             <p>
-                                Every trip carries a story before it begins.
+                                So our first question is never{" "}
+                                <span className="font-semibold text-[#1B120B]">
+                                    "where."
+                                </span>{" "}
+                                It’s{" "}
+                                <span className="font-semibold text-[#0E40C7]">
+                                    "tell us about this trip."
+                                </span>
                             </p>
-
                         </div>
-                        <motion.div
-                            variants={fadeUp}
-                            className="
-                                mt-9
-                                border-l-2
-                                border-[#0E40C7]
-                                pl-5
-                                sm:pl-6
-                            "
-                        >
 
-                            <p
-                                className="
-                                    text-xs
-                                    font-medium
-                                    uppercase
-                                    tracking-[0.18em]
-                                    text-black/35
-                                "
-                            >
-                                So our first question is never
+                        {/* Closing Statement */}
+                        <div className="mt-7 border-l-2 border-[#0E40C7] pl-5 sm:mt-8 sm:pl-6">
+                            <p className="max-w-xl text-lg font-medium leading-8 text-[#1B120B] sm:text-xl sm:leading-9">
+                                “From there, we build the journey around who you
+                                are and what you need this one to become.”
                             </p>
-
-                            <p
-                                className="
-                                    mt-2
-                                    text-base
-                                    text-black/45
-                                    line-through
-                                    decoration-black/20
-                                    sm:text-lg
-                                "
-                            >
-                                &quot;Where would you like to go?&quot;
-                            </p>
-
-                            <p
-                                className="
-                                    mt-4
-                                    text-2xl
-                                    font-medium
-                                    tracking-tight
-                                    text-black
-                                    sm:text-3xl
-                                "
-                            >
-                                &quot;Tell us about this trip.&quot;
-                            </p>
-
-                        </motion.div>
-
-                        <p
-                            className="
-                                mt-8
-                                max-w-xl
-                                text-sm
-                                leading-relaxed
-                                text-black/45
-                                sm:text-base
-                            "
-                        >
-                            From there we design a journey around who you are,
-                            what you love, and what you need this experience to
-                            become — every stay, every recommendation, every
-                            detail chosen with intent.
-                        </p>
-
+                        </div>
                     </motion.div>
 
-
+                    {/* Right Image - Desktop Only */}
                     <motion.div
-                        initial={{
-                            opacity: 0,
-                            x: 35,
-                            scale: 0.98,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            x: 0,
-                            scale: 1,
-                        }}
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{
-                            duration: 1,
+                            duration: 0.9,
                             delay: 0.15,
                             ease: [0.16, 1, 0.3, 1],
                         }}
-                        className="
-                            relative
-                            h-[55vh]
-                            min-h-[430px]
-                            overflow-hidden
-                            rounded-[2rem]
-                            lg:h-[72vh]
-                        "
+                        className="relative hidden h-[52vh] w-[30vw] min-h-[380px] overflow-hidden rounded-[1.75rem] lg:block"
                     >
-
-                        <img
+                        <Image
                             src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1400&q=85"
-                            alt="A journey beginning"
-                            className="
-                                absolute
-                                inset-0
-                                h-full
-                                w-full
-                                object-cover
-                            "
+                            alt="A peaceful travel landscape"
+                            fill
+                            sizes="42vw"
+                            className="object-cover transition-transform duration-1000 hover:scale-[1.025]"
+                            priority
                         />
 
+                        {/* Bottom Gradient */}
+                        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/35 to-transparent" />
 
-                        <div
-                            className="
-                                pointer-events-none
-                                absolute
-                                inset-0
-                                bg-gradient-to-t
-                                from-black/20
-                                via-transparent
-                                to-transparent
-                            "
-                        />
-
-
-                        <div
-                            className="
-                                absolute
-                                bottom-6
-                                left-6
-                                right-6
-                                sm:bottom-8
-                                sm:left-8
-                                sm:right-8
-                            "
-                        >
-                            <p
-                                className="
-                                    max-w-xs
-                                    text-sm
-                                    leading-relaxed
-                                    text-white/80
-                                "
-                            >
-                                Every trip carries a story
-                                before it begins.
+                        {/* Caption */}
+                        <div className="absolute bottom-6 left-6 right-6">
+                            <p className="text-sm font-medium tracking-wide text-white/90 sm:text-base">
+                                Every journey starts with understanding.
                             </p>
                         </div>
-
                     </motion.div>
 
                 </div>
-
             </div>
-
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                className="
-                    absolute
-                    bottom-7
-                    left-1/2
-                    flex
-                    -translate-x-1/2
-                    flex-col
-                    items-center
-                    gap-2
-                    text-black/30
-                "
-            >
-
-                <span
-                    className="
-                        text-[10px]
-                        uppercase
-                        tracking-[0.25em]
-                    "
-                >
-                    Discover
-                </span>
-
-                <motion.div
-                    animate={{
-                        y: [0, 5, 0],
-                    }}
-                    transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                    }}
-                >
-                    <ArrowDown className="h-4 w-4" />
-                </motion.div>
-
-            </motion.div>
-
         </section>
     )
 }

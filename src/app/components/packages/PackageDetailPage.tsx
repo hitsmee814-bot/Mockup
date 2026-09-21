@@ -19,14 +19,14 @@ function AccommodationAccordion({ acc, index }: { acc: Accommodation; index: num
   const [open, setOpen] = useState(false);
   return (
     <motion.div
-      className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-[#3FB8FF40] shadow-md" : "border-gray-200"}`}
+      className={`rounded-xl border overflow-hidden transition-colors ${open ? "border-[#0E40C740] shadow-md" : "border-gray-200"}`}
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: 0.08 + index * 0.08 }}
     >
       <button onClick={() => setOpen((o) => !o)} className="w-full flex items-center gap-3 px-4 py-3.5 bg-white cursor-pointer text-left">
-        <div className={`size-9 rounded-lg flex items-center justify-center shrink-0 ${open ? "bg-[#3FB8FF] text-white" : "bg-[#3FB8FF15] text-[#3FB8FF]"}`}>
+        <div className={`size-9 rounded-lg flex items-center justify-center shrink-0 ${open ? "bg-[#0E40C7] text-white" : "bg-[#0E40C715] text-[#0E40C7]"}`}>
           <Hotel className="size-4" />
         </div>
         <div className="flex-1 min-w-0">
@@ -36,7 +36,7 @@ function AccommodationAccordion({ acc, index }: { acc: Accommodation; index: num
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-3 text-[11px] text-gray-400 shrink-0 mr-2">
-          <span className="flex items-center gap-1"><Clock className="size-3 text-[#3FB8FF]" /> {acc.nights}N</span>
+          <span className="flex items-center gap-1"><Clock className="size-3 text-[#0E40C7]" /> {acc.nights}N</span>
           <span className="flex items-center gap-1"><Utensils className="size-3 text-[#FBAB18]" /> {acc.meal_plan}</span>
         </div>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }} className="shrink-0">
@@ -49,7 +49,7 @@ function AccommodationAccordion({ acc, index }: { acc: Accommodation; index: num
             <div className="px-4 pb-4 pt-1 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { icon: MapPin, label: "Location", value: acc.location, color: "#ef4444" },
-                { icon: Hotel, label: "Hotel", value: acc.hotel_name, color: "#3FB8FF" },
+                { icon: Hotel, label: "Hotel", value: acc.hotel_name, color: "#0E40C7" },
                 { icon: Clock, label: "Nights", value: `${acc.nights} Night${acc.nights > 1 ? "s" : ""}`, color: "#8b5cf6" },
                 { icon: Utensils, label: "Meals", value: acc.meal_plan, color: "#FBAB18" },
               ].map((item) => (
@@ -101,11 +101,11 @@ export function PackageDetailPage({ pkg }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-none">
       {/* Breadcrumb */}
       <div className="max-w-6xl mx-auto px-4 pt-4 sm:pt-6 pb-2">
         <nav className="flex items-center gap-1.5 text-xs text-gray-400">
-          <Link href="/itinerary/packages" className="hover:text-[#3FB8FF] transition-colors">Tours</Link>
+          <Link href="/itinerary/packages" className="hover:text-[#0E40C7] transition-colors">Tours</Link>
           <ChevronRight className="size-3 shrink-0" />
           <span className="text-gray-800 font-semibold truncate">{tour.title}</span>
         </nav>
@@ -156,7 +156,7 @@ export function PackageDetailPage({ pkg }: Props) {
         >
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-2xl font-extrabold" style={{ color: "#3FB8FF" }}>₹{tour.base_price.toLocaleString()}</p>
+              <p className="text-2xl font-extrabold" style={{ color: "#0E40C7" }}>₹{tour.base_price.toLocaleString()}</p>
               <p className="text-[11px] text-gray-400">per person</p>
             </div>
             <div className="text-right text-[11px] text-gray-400 space-y-0.5">
@@ -165,8 +165,8 @@ export function PackageDetailPage({ pkg }: Props) {
             </div>
           </div>
           <div className="flex gap-2">
-            <motion.button onClick={() => router.push(bookingHref)} className="flex-1 text-white font-bold py-3 rounded-xl text-sm cursor-pointer" style={{ background: "#3FB8FF" }} whileTap={{ scale: 0.98 }}>Book Now</motion.button>
-            <motion.button onClick={() => setEnquiryOpen(true)} className="flex-1 font-bold py-3 rounded-xl text-sm cursor-pointer border-2 border-[#3FB8FF] text-[#3FB8FF]" whileTap={{ scale: 0.98 }}>Enquire</motion.button>
+            <motion.button onClick={() => router.push(bookingHref)} className="flex-1 text-white font-bold py-3 rounded-xl text-sm cursor-pointer" style={{ background: "#0E40C7" }} whileTap={{ scale: 0.98 }}>Book Now</motion.button>
+            <motion.button onClick={() => setEnquiryOpen(true)} className="flex-1 font-bold py-3 rounded-xl text-sm cursor-pointer border-2 border-[#0E40C7] text-[#0E40C7]" whileTap={{ scale: 0.98 }}>Enquire</motion.button>
           </div>
         </motion.div>
 
@@ -177,12 +177,12 @@ export function PackageDetailPage({ pkg }: Props) {
             {/* Tour at a Glance */}
             <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
               <h2 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2 text-gray-800">
-                <Compass className="size-5 text-[#3FB8FF]" /> Tour at a Glance
+                <Compass className="size-5 text-[#0E40C7]" /> Tour at a Glance
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
                   { icon: MapPin, label: "Destination", value: tour.destination, color: "#ef4444" },
-                  { icon: Clock, label: "Duration", value: duration, color: "#3FB8FF" },
+                  { icon: Clock, label: "Duration", value: duration, color: "#0E40C7" },
                   { icon: Users, label: "Max Guests", value: `${tour.max_guests} people`, color: "#22c55e" },
                   { icon: Calendar, label: "Start Date", value: new Date(tour.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }), color: "#8b5cf6" },
                   { icon: MapPin, label: "Origin", value: tour.origin_city, color: "#FBAB18" },
@@ -203,7 +203,7 @@ export function PackageDetailPage({ pkg }: Props) {
             {tour.description && (
               <motion.div {...fadeUp} transition={{ delay: 0.15 }}>
                 <h2 className="font-bold text-base sm:text-lg mb-3 flex items-center gap-2 text-gray-800">
-                  <MessageCircle className="size-5 text-[#3FB8FF]" /> About This Tour
+                  <MessageCircle className="size-5 text-[#0E40C7]" /> About This Tour
                 </h2>
                 <div
                   className="prose prose-sm max-w-none text-gray-600 leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2"
@@ -215,7 +215,7 @@ export function PackageDetailPage({ pkg }: Props) {
             {/* Itinerary */}
             <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
               <h2 className="font-bold text-base sm:text-lg mb-5 flex items-center gap-2 text-gray-800">
-                <Calendar className="size-5 text-[#3FB8FF]" /> Day-by-Day Itinerary
+                <Calendar className="size-5 text-[#0E40C7]" /> Day-by-Day Itinerary
               </h2>
               <ItineraryStepper itinerary={itinerary_days} tourId={tour.id} />
             </motion.div>
@@ -224,7 +224,7 @@ export function PackageDetailPage({ pkg }: Props) {
             {accommodations.length > 0 && (
               <motion.div {...fadeUp} transition={{ delay: 0.25 }}>
                 <h2 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2 text-gray-800">
-                  <Hotel className="size-5 text-[#3FB8FF]" /> Accommodation
+                  <Hotel className="size-5 text-[#0E40C7]" /> Accommodation
                 </h2>
                 <div className="space-y-2">
                   {accommodations.map((acc, i) => (
@@ -271,7 +271,7 @@ export function PackageDetailPage({ pkg }: Props) {
             {availability.length > 0 && (
               <motion.div {...fadeUp} transition={{ delay: 0.35 }}>
                 <h2 className="font-bold text-base sm:text-lg mb-4 flex items-center gap-2 text-gray-800">
-                  <Calendar className="size-5 text-[#3FB8FF]" /> Available Dates
+                  <Calendar className="size-5 text-[#0E40C7]" /> Available Dates
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {availability.map((slot) => (
@@ -282,7 +282,7 @@ export function PackageDetailPage({ pkg }: Props) {
                         </p>
                         <p className="text-[11px] text-gray-400 mt-0.5">{slot.available_slots}/{slot.total_slots} slots available</p>
                       </div>
-                      <p className="text-sm font-extrabold" style={{ color: "#3FB8FF" }}>₹{slot.price.toLocaleString()}</p>
+                      <p className="text-sm font-extrabold" style={{ color: "#0E40C7" }}>₹{slot.price.toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
@@ -300,7 +300,7 @@ export function PackageDetailPage({ pkg }: Props) {
               transition={{ delay: 0.35, duration: 0.5 }}
             >
               <div>
-                <p className="text-3xl font-extrabold" style={{ color: "#3FB8FF" }}>₹{tour.base_price.toLocaleString()}</p>
+                <p className="text-3xl font-extrabold" style={{ color: "#0E40C7" }}>₹{tour.base_price.toLocaleString()}</p>
                 <p className="text-xs text-gray-400">per person</p>
               </div>
 
@@ -318,7 +318,7 @@ export function PackageDetailPage({ pkg }: Props) {
               <motion.button
                 onClick={() => router.push(bookingHref)}
                 className="w-full text-white font-bold py-3 rounded-xl text-sm cursor-pointer"
-                style={{ background: "#3FB8FF" }}
+                style={{ background: "#0E40C7" }}
                 whileHover={{ scale: 1.02, boxShadow: "0 6px 24px 0 rgba(63,184,255,0.3)" }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -327,7 +327,7 @@ export function PackageDetailPage({ pkg }: Props) {
 
               <motion.button
                 onClick={() => setEnquiryOpen(true)}
-                className="w-full font-bold py-3 rounded-xl text-sm cursor-pointer border-2 border-[#3FB8FF] text-[#3FB8FF]"
+                className="w-full font-bold py-3 rounded-xl text-sm cursor-pointer border-2 border-[#0E40C7] text-[#0E40C7]"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -344,12 +344,12 @@ export function PackageDetailPage({ pkg }: Props) {
               </div>
 
               <div className="flex items-center justify-center gap-3 pt-1">
-                <span className="flex items-center gap-1 text-[10px] text-gray-400"><Shield className="size-3 text-[#3FB8FF]" /> Secure Booking</span>
+                <span className="flex items-center gap-1 text-[10px] text-gray-400"><Shield className="size-3 text-[#0E40C7]" /> Secure Booking</span>
                 <span className="size-0.5 rounded-full bg-gray-300" />
                 <span className="text-[10px] text-gray-400">Free Cancellation</span>
               </div>
 
-              <Link href="/itinerary/packages" className="block text-center text-xs text-gray-400 hover:text-[#3FB8FF] transition-colors">
+              <Link href="/itinerary/packages" className="block text-center text-xs text-gray-400 hover:text-[#0E40C7] transition-colors">
                 ← Back to tours
               </Link>
             </motion.div>

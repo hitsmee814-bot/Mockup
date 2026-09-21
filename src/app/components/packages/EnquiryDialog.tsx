@@ -149,7 +149,7 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                             value={form[f.key]}
                             onChange={e => update(f.key, e.target.value)}
                             placeholder={f.placeholder}
-                            className={`w-full pl-9 ${errors[f.key] ? "pr-9" : "pr-3"} py-2.5 rounded-xl border text-xs text-foreground placeholder:text-muted-foreground bg-muted focus:outline-none focus:ring-1 transition-all ${
+                            className={`w-full pl-9 ${errors[f.key] ? "pr-9" : "pr-3"} py-2.5 rounded-xl border text-xs text-foreground placeholder:text-muted-foreground bg-white focus:outline-none focus:ring-1 transition-all ${
                               errors[f.key] ? "border-red-400 focus:ring-red-400 focus:border-red-400" : "border-border focus:ring-primary focus:border-primary"
                             }`}
                           />
@@ -181,7 +181,7 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                           type="button"
                           className={`w-full flex items-center gap-2 pl-3 pr-3 py-2.5 rounded-xl border text-xs text-left cursor-pointer transition-all ${
                             calendarOpen ? "border-primary ring-1 ring-primary" : "border-border"
-                          } bg-muted`}
+                          } bg-white`}
                         >
                           <Calendar className="size-3.5 text-muted-foreground shrink-0" />
                           <span className={travelDate ? "text-foreground" : "text-muted-foreground"}>
@@ -217,7 +217,7 @@ export function EnquiryDialog({ open, onOpenChange, packageName }: EnquiryDialog
                       onChange={e => update("message", e.target.value)}
                       placeholder="I'd like to know more about..."
                       rows={3}
-                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs text-foreground placeholder:text-muted-foreground bg-muted focus:outline-none focus:ring-1 transition-all resize-none ${
+                      className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs text-foreground placeholder:text-muted-foreground bg-white focus:outline-none focus:ring-1 transition-all resize-none ${
                         errors.message ? "border-red-400 focus:ring-red-400 focus:border-red-400" : "border-border focus:ring-primary focus:border-primary"
                       }`}
                     />

@@ -3,11 +3,12 @@
 
 
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useAuth } from "@/app/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { toast } from "sonner"
-
+import { ErrorMessage } from "../../signup/supplier/SupplierUtils"
 import { Calendar } from "@/components/ui/calendar"
 
 import {
@@ -43,7 +44,8 @@ export function SupplierEnquiryFollowupDialog({
   onSuccess,
 }: SupplierEnquiryFollowupDialogProps) {
   const router = useRouter()
-
+  
+const { logout } = useAuth()
  const [message, setMessage] = useState("")
 
 const [selectedDate, setSelectedDate] =
@@ -51,7 +53,8 @@ const [selectedDate, setSelectedDate] =
 const [messageError, setMessageError] = useState("")
 const [dateError, setDateError] = useState("")
 const [loading, setLoading] = useState(false)
-
+const [calendarOpen, setCalendarOpen] = useState(false)
+const sessionHandled = useRef(false)
  const resetForm = () => {
   setMessage("")
   setSelectedDate(undefined)
@@ -74,10 +77,18 @@ const [loading, setLoading] = useState(false)
   setMessageError("")
   setDateError("")
 
-  if (!message.trim()) {
-    setMessageError("Remarks are required")
-    return
-  }
+ if (!message.trim()) {
+  setMessageError("Remarks are required")
+  
+  return
+}
+
+if (message.trim().length < 5) {
+  setMessageError(
+    "Please enter more details for the follow-up"
+  )
+  return
+}
 
   if (!selectedDate) {
     setDateError("Next follow-up date is required")
@@ -98,18 +109,16 @@ const [loading, setLoading] = useState(false)
     const token = localStorage.getItem("access_token")
 
     if (!token) {
-      toast.error("Session expired. Please login again.", {
-        position: "top-right",
-        duration: 3000,
-      })
+  logout()
 
-      localStorage.removeItem("access_token")
-      localStorage.removeItem("refresh_token")
+  toast.error("Your session has expired. Please log in again.", {
+    position: "top-right",
+    duration: 3000,
+  })
 
-      router.push("/login")
-      return
-    }
-
+  router.replace("/auth")
+  return
+}
     // Use current time automatically
     const now = new Date()
 
@@ -160,20 +169,44 @@ const [loading, setLoading] = useState(false)
     onSuccess?.()
 
   } catch (error: any) {
-    console.error(
-      "Failed to submit supplier enquiry follow-up:",
-      error
-    )
+  console.error(
+    "Failed to submit supplier enquiry follow-up:",
+    error
+  )
 
-    toast.error(
-      error?.message ||
-        "Failed to save follow-up. Please try again.",
-      {
-        position: "top-right",
-        duration: 3000,
-      }
-    )
-  } finally {
+  if (
+    error?.message
+      ?.toLowerCase()
+      .includes("session expired")
+  ) {
+    if (!sessionHandled.current) {
+      sessionHandled.current = true
+
+      logout()
+
+      toast.error(
+        "Your session has expired. Please log in again.",
+        {
+          position: "top-right",
+          duration: 3000,
+        }
+      )
+
+      router.replace("/auth")
+    }
+
+    return
+  }
+
+  toast.error(
+    error?.message ||
+      "Failed to save follow-up. Please try again.",
+    {
+      position: "top-right",
+      duration: 3000,
+    }
+  )
+} finally {
     setLoading(false)
   }
 }
@@ -231,11 +264,7 @@ const [loading, setLoading] = useState(false)
             "
           />
 
-          {messageError && (
-            <p className="mt-1 text-xs text-red-500">
-              {messageError}
-            </p>
-          )}
+          <ErrorMessage message={messageError} />
         </div>
 
         {/* Next Follow-up Date */}
@@ -246,7 +275,10 @@ const [loading, setLoading] = useState(false)
     <span className="text-red-500">*</span>
   </label>
 
-  <Popover>
+ <Popover
+  open={calendarOpen}
+  onOpenChange={setCalendarOpen}
+>
     <PopoverTrigger asChild>
       <Button
         type="button"
@@ -291,21 +323,19 @@ const [loading, setLoading] = useState(false)
       align="start"
     >
       <Calendar
-        mode="single"
-        selected={selectedDate}
-        onSelect={(date) => {
-          setSelectedDate(date)
-          setDateError("")
-        }}
-      />
+  mode="single"
+  selected={selectedDate}
+  disabled={{ before: new Date() }}
+  onSelect={(date) => {
+  setSelectedDate(date)
+  setDateError("")
+  setCalendarOpen(false)
+}}
+/>
     </PopoverContent>
   </Popover>
 
-  {dateError && (
-    <p className="mt-1 text-xs text-red-500">
-      {dateError}
-    </p>
-  )}
+  <ErrorMessage message={dateError} />
 </div>
 
       </div>

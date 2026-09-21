@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-
+import { useAuth } from "@/app/context/AuthContext"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -36,9 +37,12 @@ export function SupplierServiceRequestDetailsDialog({
 }: SupplierServiceRequestDetailsProps) {
   const [details, setDetails] =
     useState<ServiceRequestDetails | null>(null)
-
+const [detailsError, setDetailsError] = useState("")
   const [loading, setLoading] = useState(false)
-
+  const router = useRouter()
+const { logout } = useAuth()
+const sessionHandled = useRef(false)
+const [followupsError, setFollowupsError] = useState("")
   const [followups, setFollowups] = useState<
   ServiceRequestFollowupHistoryItem[]
 >([])
@@ -47,67 +51,120 @@ const [loadingFollowups, setLoadingFollowups] =
   useState(false)
 
   useEffect(() => {
-  if (!open || !serviceRequestId) {
-    setDetails(null)
-    setFollowups([])
-    return
-  }
+ if (!open || !serviceRequestId) {
+  setDetails(null)
+  setFollowups([])
+  setDetailsError("")
+  setFollowupsError("")
+  sessionHandled.current = false
+  return
+}
 
   fetchServiceRequestDetails()
   fetchFollowupHistory()
 }, [open, serviceRequestId])
 
-  const fetchServiceRequestDetails = async () => {
-    try {
-      setLoading(true)
-
-      const token = localStorage.getItem("access_token")
-
-      if (!token) {
-        toast.error("Session expired. Please login again.", {
-          position: "top-right",
-          duration: 3000,
-        })
-        return
-      }
-
-      const response =
-        await SupplierServiceRequestDetails.getServiceRequestDetails(
-          token,
-          serviceRequestId!
-        )
-
-      setDetails(response)
-    } catch (error: any) {
-      console.error(
-        "Failed to load service request details:",
-        error
-      )
-
-      toast.error(
-        error?.message ||
-          "Failed to load service request details.",
-        {
-          position: "top-right",
-          duration: 3000,
-        }
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchFollowupHistory = async () => {
+ const fetchServiceRequestDetails = async () => {
   try {
-    setLoadingFollowups(true)
+    setLoading(true)
+    setDetailsError("")
 
     const token = localStorage.getItem("access_token")
 
     if (!token) {
-      toast.error("Session expired. Please login again.", {
-        position: "top-right",
-        duration: 3000,
-      })
+      if (!sessionHandled.current) {
+        sessionHandled.current = true
+
+        logout()
+
+        toast.error(
+          "Your session has expired. Please log in again.",
+          {
+            position: "top-right",
+            duration: 3000,
+          }
+        )
+
+        router.replace("/auth")
+      }
+
+      return
+    }
+
+    const response =
+      await SupplierServiceRequestDetails.getServiceRequestDetails(
+        token,
+        serviceRequestId!
+      )
+
+    setDetails(response)
+
+  } catch (error: any) {
+    console.error(
+      "Failed to load service request details:",
+      error
+    )
+
+    if (
+      error?.message
+        ?.toLowerCase()
+        .includes("session expired")
+    ) {
+      if (!sessionHandled.current) {
+        sessionHandled.current = true
+
+        logout()
+
+        toast.error(
+          "Your session has expired. Please log in again.",
+          {
+            position: "top-right",
+            duration: 3000,
+          }
+        )
+
+        router.replace("/auth")
+      }
+
+      return
+    }
+
+    setDetails(null)
+
+    setDetailsError(
+      error?.message ||
+        "Failed to load service request details. Please try again."
+    )
+
+  } finally {
+    setLoading(false)
+  }
+}
+
+const fetchFollowupHistory = async () => {
+  try {
+    setLoadingFollowups(true)
+    setFollowupsError("")
+
+    const token = localStorage.getItem("access_token")
+
+    if (!token) {
+      if (!sessionHandled.current) {
+        sessionHandled.current = true
+
+        logout()
+
+        toast.error(
+          "Your session has expired. Please log in again.",
+          {
+            position: "top-right",
+            duration: 3000,
+          }
+        )
+
+        router.replace("/auth")
+      }
+
       return
     }
 
@@ -117,21 +174,47 @@ const [loadingFollowups, setLoadingFollowups] =
         serviceRequestId!
       )
 
-    setFollowups(response)
+    setFollowups(
+      Array.isArray(response) ? response : []
+    )
+
   } catch (error: any) {
     console.error(
       "Failed to load follow-up history:",
       error
     )
 
-    toast.error(
-      error?.message ||
-        "Failed to load follow-up history.",
-      {
-        position: "top-right",
-        duration: 3000,
+    if (
+      error?.message
+        ?.toLowerCase()
+        .includes("session expired")
+    ) {
+      if (!sessionHandled.current) {
+        sessionHandled.current = true
+
+        logout()
+
+        toast.error(
+          "Your session has expired. Please log in again.",
+          {
+            position: "top-right",
+            duration: 3000,
+          }
+        )
+
+        router.replace("/auth")
       }
+
+      return
+    }
+
+    setFollowups([])
+
+    setFollowupsError(
+      error?.message ||
+        "Failed to load follow-up history. Please try again."
     )
+
   } finally {
     setLoadingFollowups(false)
   }
@@ -736,19 +819,31 @@ const DetailItem = ({
     )}
   </div>
 
-  {loadingFollowups ? (
-    <div className="rounded-md border border-slate-200 py-8 text-center">
-      <p className="text-sm text-muted-foreground">
-        Loading follow-up history...
-      </p>
-    </div>
-  ) : followups.length === 0 ? (
-    <div className="rounded-md border border-dashed border-slate-300 py-8 text-center">
-      <p className="text-sm text-muted-foreground">
-        No follow-ups yet.
-      </p>
-    </div>
-  ) : (
+{loadingFollowups ? (
+
+  <div className="rounded-md border border-slate-200 py-8 text-center">
+    <p className="text-sm text-muted-foreground">
+      Loading follow-up history...
+    </p>
+  </div>
+
+) : followupsError ? (
+
+  <div className="rounded-md border border-red-200 bg-red-50 py-8 text-center">
+    <p className="text-sm text-red-500">
+      {followupsError}
+    </p>
+  </div>
+
+) : followups.length === 0 ? (
+
+  <div className="rounded-md border border-dashed border-slate-300 py-8 text-center">
+    <p className="text-sm text-muted-foreground">
+      No follow-ups yet.
+    </p>
+  </div>
+
+) : (
     <div className="space-y-3">
       {followups.map((followup) => (
         <div
@@ -756,15 +851,15 @@ const DetailItem = ({
           className="rounded-md border border-slate-200 bg-slate-50 p-4"
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex-1">
-              <p className="text-xs font-medium text-slate-500">
-                Follow-up Date
-              </p>
+            <div>
+            <p className="text-xs font-medium text-slate-500">
+              Follow-up Date
+            </p>
 
-              <p className="mt-1 text-sm font-semibold text-slate-800">
-                {formatDateTime(followup.created_at)}
-              </p>
-            </div>
+            <p className="mt-1 text-sm font-semibold text-slate-800">
+              {formatDateTime(followup.followup_date)}
+            </p>
+          </div>
 
             <div>
               <p className="text-xs font-medium text-slate-500">
@@ -797,11 +892,17 @@ const DetailItem = ({
             </div>
           )}
 
-          {!loading && !details && (
-            <div className="py-10 text-center text-sm text-muted-foreground">
-              No service request details available.
-            </div>
-          )}
+         {!loading && detailsError && (
+  <div className="py-10 text-center text-sm text-red-500">
+    Unable to load service request details. Please try again.
+  </div>
+)}
+
+{!loading && !details && !detailsError && (
+  <div className="py-10 text-center text-sm text-muted-foreground">
+    No service request details available.
+  </div>
+)}
         </div>
 
         {/* Footer */}

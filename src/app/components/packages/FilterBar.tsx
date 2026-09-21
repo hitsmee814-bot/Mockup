@@ -36,8 +36,8 @@ export function FilterBar({
                         value={search}
                         onChange={(e) => onSearch(e.target.value)}
                         placeholder="Search tours, destinations..."
-                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-2xl border border-gray-200 bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-[#3FB8FF] placeholder:text-gray-400 transition-all shadow-sm text-gray-700"
-                        style={{ "--tw-ring-color": "#3FB8FF33" } as React.CSSProperties}
+                        className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-2xl border border-gray-200 bg-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:border-[#0E40C7] placeholder:text-gray-400 transition-all shadow-sm text-gray-700"
+                        style={{ "--tw-ring-color": "#0E40C733" } as React.CSSProperties}
                     />
                 </div>
 
@@ -45,8 +45,8 @@ export function FilterBar({
                     onClick={onOpenFilters}
                     className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl border border-gray-200 bg-white text-xs font-semibold text-gray-500 shrink-0 shadow-sm cursor-pointer"
                     style={{
-                        borderColor: hasActiveFilters ? "#3FB8FF" : undefined,
-                        color: hasActiveFilters ? "#3FB8FF" : undefined,
+                        borderColor: hasActiveFilters ? "#0E40C7" : undefined,
+                        color: hasActiveFilters ? "#0E40C7" : undefined,
                     }}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
@@ -57,7 +57,7 @@ export function FilterBar({
             </div>
 
             {/* PILLS */}
-            <div className="flex overflow-x-auto sm:flex-wrap sm:justify-center gap-2 pb-1 sm:pb-0 no-scrollbar">
+            <div className="flex overflow-x-auto sm:flex-wrap sm:justify-center gap-2 pb-1 sm:pb-4 no-scrollbar">
                 {pills.map((dest) => {
                     const normalizedDest = dest === "All" ? "All" : dest.trim();
                     const isActive = activeDestination === dest;
@@ -70,9 +70,9 @@ export function FilterBar({
                             style={
                                 isActive
                                     ? {
-                                        background: "#3FB8FF",
+                                        background: "#0E40C7",
                                         color: "#fff",
-                                        borderColor: "#3FB8FF",
+                                        borderColor: "#0E40C7",
                                     }
                                     : {
                                         background: "#fff",

@@ -1,339 +1,684 @@
-// "use client";
-
-// import {
-//   motion,
-//   useAnimationFrame,
-//   useMotionValue,
-// } from "framer-motion";
-// import { useRef } from "react";
-// import { useMemo } from "react";
-
-// interface Testimonial {
-//   name: string;
-//   role: string;
-//   text: string;
-//   rating?: number;
-// }
-
-// interface RowProps {
-//   items: Testimonial[];
-//   speed: number;
-//   direction: "left" | "right";
-// }
-
-// function ScrollingRow({ items, speed, direction }: RowProps) {
-//   const duplicated = [...items, ...items];
-//   const x = useMotionValue(0);
-//   const containerRef = useRef<HTMLDivElement>(null);
-
-//   useAnimationFrame((_, delta) => {
-//     const moveBy = (speed * delta) / 1000;
-
-//     if (direction === "left") {
-//       x.set(x.get() - moveBy);
-//     } else {
-//       x.set(x.get() + moveBy);
-//     }
-
-//     const container = containerRef.current;
-//     if (container) {
-//       const width = container.scrollWidth / 2;
-
-//       if (direction === "left" && Math.abs(x.get()) >= width) {
-//         x.set(0);
-//       }
-
-//       if (direction === "right" && x.get() >= 0) {
-//         x.set(-width);
-//       }
-//     }
-//   });
-
-//   return (
-//     <div
-//       className="w-[1000px] max-w-full overflow-hidden"
-//       style={{
-//         maskImage:
-//           "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-//         WebkitMaskImage:
-//           "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-//         paddingBottom: "3px",
-//       }}
-//     >
-//       <motion.div
-//         ref={containerRef}
-//         style={{ x }}
-//         className="flex gap-6"
-//       >
-//         {duplicated.map((item, i) => (
-//           <div
-//             key={i}
-//             className="w-72 p-6 bg-white rounded-2xl shadow-lg flex-shrink-0 hover:shadow-2xl transition-shadow duration-300"
-//           >
-//             <div className="flex items-center gap-3 mb-3">
-//               <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
-//                 {item.name.charAt(0)}
-//               </div>
-//               <div>
-//                 <p className="font-semibold text-sm">{item.name}</p>
-//                 <p className="text-xs text-gray-500">{item.role}</p>
-//               </div>
-//             </div>
-
-//             <p className="text-sm text-gray-600 mb-4">{item.text}</p>
-
-//             <div className="flex gap-1">
-//               {Array.from({ length: 5 }).map((_, idx) => (
-//                 <svg
-//                   key={idx}
-//                   className={`w-4 h-4 ${idx < (item.rating ?? 5)
-//                     ? "text-yellow-400"
-//                     : "text-gray-300"
-//                     }`}
-//                   fill="currentColor"
-//                   viewBox="0 0 20 20"
-//                 >
-//                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.286-3.957a1 1 0 00-.364-1.118L2.037 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.286-3.958z" />
-//                 </svg>
-//               ))}
-//             </div>
-//           </div>
-//         ))}
-//       </motion.div>
-//     </div>
-//   );
-// }
-
-// export default function TestimonialsCarousel() {
-
-//   const testimonials: Testimonial[] = Array.from(
-//     { length: 10 },
-//     (_, i) => ({
-//       name: `Customer ${i + 1}`,
-//       role: "Product Manager",
-//       text:
-//         "This product completely transformed our workflow and improved team efficiency.",
-//       rating: 4 + (i % 2),
-//     })
-//   );
-
-//   return (
-//     <section id="testimonials">
-//       <div className="flex flex-col items-center gap-10 py-16">
-//         <motion.div
-//           initial={{ opacity: 0, y: 40 }}
-//           whileInView={{ opacity: 1, y: 0 }}
-//           transition={{ duration: 0.8 }}
-//           viewport={{ once: true }}
-//           className="text-center mb-10 mt-10"
-//         >
-//           <h2 className="text-4xl md:text-5xl font-bold text-[#1B120B]"
-//           >
-//             Hear From Our Travellers
-//           </h2>
-
-//           <p className="mt-5 text-gray-500 max-w-2xl mx-auto text-lg">
-//             Discover the experiences and stories of our travellers who explored the world with us. Their journeys inspire, delight, and showcase the memories we help create.
-//           </p>
-//         </motion.div>
-
-//         <ScrollingRow
-//           items={testimonials}
-//           speed={80}
-//           direction="left"
-//         />
-
-//         <ScrollingRow
-//           items={testimonials}
-//           speed={80}
-//           direction="right"
-//         />
-//       </div>
-//     </section>
-
-//   );
-// }
-
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import useEmblaCarousel from "embla-carousel-react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronLeft, ChevronRight, MessageSquareQuote, Mic, Quote, Sparkles, Speaker, Star } from "lucide-react"
+import { ArrowUp, ArrowDown, MapPin, RotateCcw } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+// Temporary fallback image. Replace this with the real testimonial images later.
+const DUMMY_TESTIMONIAL_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1000' viewBox='0 0 800 1000'%3E%3Crect width='800' height='1000' fill='%23F5F6F8'/%3E%3Ccircle cx='400' cy='390' r='125' fill='%23DDE2E9'/%3E%3Cpath d='M170 820c35-170 125-245 230-245s195 75 230 245' fill='%23DDE2E9'/%3E%3C/svg%3E"
 
-const testimonials = [
+type Testimonial = {
+  name: string
+  descriptor: string
+  hook: string
+  review: string
+  quote?: string
+  whatWeDid: string
+  source: string
+  location: string
+  image?: any
+}
+
+import pkJhaImage from "../assets/images/testimonials/PK Jha/PK Jha 2.jpeg"
+import aniruddhaImage from "../assets/images/testimonials/Aniruddha Roy/Aniruddha.jpeg"
+import rahulKarImage from "../assets/images/testimonials/Rahul Kar/Rahul Kar.jpeg"
+import joydeepImage from "../assets/images/testimonials/Joydeep/Joydeep.jpeg"
+import shankerImage from "../assets/images/testimonials/Shankar/LS Shankar.jpeg"
+import ananyaImage from "../assets/images/testimonials/Ananya/Ananya.jpeg"
+
+const testimonials: Testimonial[] = [
   {
-    name: "Sarah Mitchell",
-    role: "Product Designer",
-    company: "Stripe",
-    avatar: "SM",
-    rating: 5,
-    text: "This platform completely transformed how our team collaborates. The intuitive design and seamless integrations saved us countless hours every week.",
+    name: "Dr. P.K. Jha",
+    descriptor: "Senior Consultant, Cardiology, at a leading Kolkata hospital",
+    hook: "He mentioned a name once, in passing. We found the man and arranged for them to meet in London.",
+    review:
+      "I had burnt my fingers many times in the past with other tour organizers. He took the charge of my whole trip upon himself with a positive attitude. Icing on the cake was the Loire Valley trip which I had no clue about beforehand.",
+    quote: "Sudip babu, only you could do this.",
+    whatWeDid:
+      "What we added: a meeting with the scientist who invented a medical device he had used for thirty-five years. And a day in the Loire Valley he never asked for.",
+    source: "Unsolicited written testimonial · Paris & London, 2025",
+    location: "Paris & London",
+    image: pkJhaImage,
   },
   {
-    name: "James Rodriguez",
-    role: "Engineering Lead",
-    company: "Vercel",
-    avatar: "JR",
-    rating: 5,
-    text: "I've tried dozens of tools over the years, but nothing comes close. The performance is incredible and the support team is world-class.",
+    name: "Aniruddha Ghosh Roy",
+    descriptor:
+      "Zonal Business Head, Indian pharmaceutical company · First-time Europe traveller, with his wife · 16 days, five cities, July 2026",
+    hook: "I was blindfolded the whole trip. I just followed you.",
+    review:
+      "We are first-time travellers, but the way you guided us from time to time and did the follow-up, we had no issues at all. All arrangements were flawless. We enjoyed every bit of it.",
+    whatWeDid:
+      "What we solved: five countries and every rail connection — Basel to Vienna via Zurich, Salzburg, Hallstatt, Rome — timed and re-checked from Kolkata, for two people who had never travelled abroad.",
+    source: "Bonhomiee Travel Circle · July 2026",
+    location: "Europe",
+    image: aniruddhaImage,
   },
   {
-    name: "Emily Chen",
-    role: "CEO",
-    company: "Acme Corp",
-    avatar: "EC",
-    rating: 5,
-    text: "From onboarding to daily use, everything feels polished. It's rare to find a product that delivers on every promise — this one does.",
+    name: "Rahul Kar",
+    descriptor:
+      "National Business Head, Mining at a global industrial company · Leadership offsite, Mussoorie, March 2026",
+    hook: "Understanding the unique needs first. Then flawless execution, down to the smallest detail.",
+    review:
+      "The offsite at Mussoorie coordinated by Bonhomiee was one of the most memorable and cherished experiences for the team. Starting from understanding the unique needs, to coordinating activities with flawless execution with attention to the minutest details — from logistics, to choosing the right accommodation, to planning the sightseeing and the bonfire evening — it made for one of the most fun-filled and energising offsites. What stood out was the untiring effort from the Bonhomiee team to create lifetime memories.",
+    whatWeDid:
+      "What we solved: the hotel refused us a restaurant for the team lunch. We found Neelam, the oldest in Mussoorie, met the owner, built a menu around the team, and printed a card for the table. The refusal became the day everyone remembers",
+    source: "",
+    location: "Mussoorie",
+    image: rahulKarImage,
   },
   {
-    name: "David Park",
-    role: "Full Stack Developer",
-    company: "Shopify",
-    avatar: "DP",
-    rating: 4,
-    text: "The developer experience is top-notch. Clean APIs, great docs, and a community that actually helps. Highly recommend for any serious project.",
+    name: "Joydeep Moitra",
+    descriptor:
+      "Retired Army veteran, and Ex-COO – NISA (East)  · Thailand, August 2025 — and Kumaon again, January 2026",
+    hook: "Meticulous planning, local support always in touch, value for money. He travelled with us again five months later.",
+    review:
+      "Just wished to express my gratitude to Bonhomiee for organising an unforgettable experience at Pattaya and Bangkok. The planning was meticulous and the events organised with optimum utilisation of available time. The local support group was constantly in touch. The tour was affordable and, in the end, value for money.”",
+    quote: "Thanks for the wonderful time, Sudip. Would cherish it.",
+    whatWeDid:
+      "What we did: built the days around the time actually available rather than the itinerary we could fit — and kept a local team reachable throughout, so nothing needed chasing from India.",
+    source: "Bonhomiee Travel Circle · 19 August 2025",
+    location: "Thailand",
+    image: joydeepImage,
   },
   {
-    name: "Olivia Turner",
-    role: "Marketing Director",
-    company: "HubSpot",
-    avatar: "OT",
-    rating: 5,
-    text: "We saw a 40% increase in engagement within the first month. The analytics dashboard alone is worth the investment.",
+    name: "Mr. L.S. Shankar",
+    descriptor: "Retired PSU director",
+    hook: "Now, as the heat hits us, we can chill with the thoughts of Arunachal!",
+    review: `Arunachal  - Luxurious Nature Trail.
+
+Happy to experience a curated and cool escape, courtesy Bonhomiee, to West Arunachal during beginning of May. 
+The common challenges on these trips are scarcity of luxury accommodation and the rigorous road journey. We are indebted to Team Bonhomiee that we could avail the best available luxury accommodation at Tezpur, Dirang and Tawang. The support of two well maintained Innova Crysta, with experienced tour driver partners, for six of us totally cut out the travel stress.
+Our last stop Shergaon is an upcoming tourist hot spot. The topography and breathtaking natural beauty provides the ideal spot for adventure activities. Thanks to the contacts provided by Bonhomiee, we could locally organize &  experience a guided trek, river side picnic and a walk through wide spread orchards. The last night ended with warm bonfire and a platter of fresh Trout. 
+Now as the heat hits us we can chill with the thoughts of Arunachal.
+`,
+    whatWeDid: "",
+    source: "Said to Sudip in person · Confirm before publishing",
+    location: "Arunachal Pradesh",
+    image: shankerImage,
+  },
+  {
+    name: "Ananya Choudhury & Ayan Choudhury",
+    descriptor: "Senior executives at a large global IT company",
+    hook: "A group departure that didn't feel like one.",
+    review:
+      "It was a wonderful trip, no doubt. Very good hotels, very good food, extremely good sightseeing, and very comfortable bus journeys. And very thought-through planning. Felt like personalised. — Ananya    ·    It was all the effort from Sudip to make our experience a memorable one. — Ayan",
+    quote:
+      "It was all the effort from Sudip to make our experience a memorable one.",
+    whatWeDid:
+      "What we did: Designed the group journey with personalised planning across hotels, food, sightseeing and transfers.",
+    source: "Bonhomiee Travel Circle and the Vietnam group",
+    location: "Vietnam",
+    image: ananyaImage,
   },
 ]
 
 export default function Testimonials() {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center" })
-  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [active, setActive] = useState(0)
+  const [direction, setDirection] = useState(1)
+  const [isPaused, setIsPaused] = useState(false)
+  const [isFlipped, setIsFlipped] = useState(false)
 
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return
-    setSelectedIndex(emblaApi.selectedScrollSnap())
-  }, [emblaApi])
+  const total = testimonials.length
+  const current = testimonials[active]
+
+  const hasPrevious = active > 0
+  const hasNext = active < total - 1
+
+  const previousCard = hasPrevious ? testimonials[active - 1] : null
+  const nextCard = hasNext ? testimonials[active + 1] : null
+
+  const next = () => {
+    if (!hasNext) return
+
+    setDirection(1)
+    setIsFlipped(false)
+    setActive((prev) => prev + 1)
+  }
+
+  const previous = () => {
+    if (!hasPrevious) return
+
+    setDirection(-1)
+    setIsFlipped(false)
+    setActive((prev) => prev - 1)
+  }
 
   useEffect(() => {
-    if (!emblaApi) return
-    onSelect()
-    emblaApi.on("select", onSelect)
-    return () => { emblaApi.off("select", onSelect) }
-  }, [emblaApi, onSelect])
+    if (isPaused || total <= 1) return
 
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
-  const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi])
+    const timer = window.setInterval(() => {
+      setDirection(1)
+      setIsFlipped(false)
+      setActive((prev) => (prev < total - 1 ? prev + 1 : 0))
+    }, 7500)
+
+    return () => window.clearInterval(timer)
+  }, [isPaused, total])
 
   return (
-    <section className="relative py-16 sm:py-24 px-4 overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[120px]" />
-      </div>
-
-      <div className="relative max-w-6xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+    <section
+      className="relative overflow-hidden py-14 sm:py-18 lg:pt-0"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onFocusCapture={() => setIsPaused(true)}
+      onBlurCapture={() => setIsPaused(false)}
+    >
+<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* HEADER */}
+        <motion.h2
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12 sm:mb-16"
+          transition={{ duration: 0.45 }}
+          className="text-center text-3xl font-bold tracking-tight text-[#10213F] sm:text-4xl lg:text-5xl"
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-5"
+          In their <span className="text-[#FBAB18]">own words.</span>
+        </motion.h2>
+
+        {/* ========================================================= */}
+        {/* MOBILE */}
+        {/* ========================================================= */}
+
+        <div
+          className="mx-auto mt-8 block max-w-md sm:mt-10 lg:hidden"
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+        >
+
+          {/* MOBILE CARD STACK */}
+          <div
+            className="relative h-[455px] w-full [perspective:1200px]"
+            onClick={() => setIsFlipped((prev) => !prev)}
           >
-            <MessageSquareQuote className="h-3 w-3" />
-            Testimonials
-          </motion.div>          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
-            Loved by <span className="text-primary">thousands</span>
-          </h2>
-          <p className="text-muted-foreground mt-3 max-w-md mx-auto text-sm sm:text-base">
-            See what our customers have to say about their experience.
-          </p>
-        </motion.div>
 
-        {/* Carousel */}
-        <div className="relative">
-          {/* Nav buttons */}
-          <button
-            onClick={scrollPrev}
-            className="absolute left-0 sm:-left-4 top-1/2 -translate-y-1/2 z-10 size-10 sm:size-12 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            onClick={scrollNext}
-            className="absolute right-0 sm:-right-4 top-1/2 -translate-y-1/2 z-10 size-10 sm:size-12 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
-          >
-            <ChevronRight className="size-5" />
-          </button>
+            {/* PREVIOUS PEEK */}
+            {previousCard && (
+              <div className="absolute left-1/2 top-0 h-[48px] w-[calc(100%-24px)] -translate-x-1/2 overflow-hidden rounded-[18px] border border-[#E5E8ED] bg-[#F5F6F8] opacity-35">
+                {previousCard && (
+                  <>
+                    <Image
+                      src={previousCard.image || DUMMY_TESTIMONIAL_IMAGE}
+                      alt=""
+                      fill
+                      sizes="100vw"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-white/65" />
+                  </>
+                )}
+              </div>
+            )}
 
-          <div className="overflow-hidden mx-10 sm:mx-14" ref={emblaRef}>
-            <div className="flex">
-              {testimonials.map((t, i) => (
-                <div key={i} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] px-3 py-6">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      animate={
-                        selectedIndex === i
-                          ? { y: -12, scale: 1.03, opacity: 1 }
-                          : { y: 0, scale: 0.97, opacity: 0.7 }
-                      }
-                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      className={`relative h-full rounded-2xl border p-6 sm:p-8 transition-colors duration-300 ${
-                        selectedIndex === i
-                          ? "bg-card border-primary/40 shadow-xl shadow-primary/5"
-                          : "bg-card/60 border-border shadow-md"
-                      }`}
-                    >
-                      <Quote className="size-8 text-primary/20 absolute top-5 right-5" />
+            {/* NEXT PEEK */}
+            {nextCard && (
+              <div className="absolute bottom-0 left-1/2 h-[48px] w-[calc(100%-24px)] -translate-x-1/2 overflow-hidden rounded-[18px] border border-[#E5E8ED] bg-[#F5F6F8] opacity-35">
+                {nextCard && (
+                  <>
+                    <Image
+                      src={nextCard.image || DUMMY_TESTIMONIAL_IMAGE}
+                      alt=""
+                      fill
+                      sizes="100vw"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-white/65" />
+                  </>
+                )}
+              </div>
+            )}
 
-                      {/* Stars */}
-                      <div className="flex gap-0.5 mb-4">
-                        {Array.from({ length: t.rating }).map((_, j) => (
-                          <Star key={j} className="size-4 fill-secondary text-secondary" />
-                        ))}
-                      </div>
+            {/* FLIP WRAPPER */}
+            <motion.div
+              className="absolute inset-x-0 top-[20px] z-10 h-[415px] cursor-pointer [transform-style:preserve-3d]"
+              animate={{ rotateY: isFlipped ? 180 : 0 }}
+              transition={{
+                duration: 0.4,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            >
 
-                      {/* Quote */}
-                      <p className="text-foreground/80 text-sm sm:text-base leading-relaxed mb-6 line-clamp-4">
-                        &ldquo;{t.text}&rdquo;
-                      </p>
+              {/* ================= FRONT ================= */}
+              <div
+                className="absolute inset-0 overflow-hidden rounded-[22px] border border-[#E5E8ED] bg-white shadow-[0_15px_40px_rgba(16,33,63,0.10)] [backface-visibility:hidden]"
+              >
+                {(current.image || DUMMY_TESTIMONIAL_IMAGE) ? (
+                  <>
+                    <Image
+                      src={current.image || DUMMY_TESTIMONIAL_IMAGE}
+                      alt={current.name}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 500px"
+                      className="object-cover"
+                      priority
+                    />
 
-                      {/* Author */}
-                      <div className="flex items-center gap-3 mt-auto">
-                        <div className="size-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold shrink-0">
-                          {t.avatar}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm text-foreground">{t.name}</p>
-                          <p className="text-xs text-muted-foreground">{t.role} · {t.company}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                  </>
+                ) : (
+                  <div className="absolute inset-0 bg-[#F5F6F8]" />
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 p-6">
+
+                  <div className="mb-2 flex items-center gap-1.5 text-[10px] text-white/75">
+                    <MapPin size={11} />
+                    {current.location}
+                  </div>
+
+                  <h3 className="text-xl font-semibold leading-tight text-white">
+                    {current.name}
+                  </h3>
+
+                  <p className="mt-1 text-[11px] leading-5 text-white/65">
+                    {current.descriptor}
+                  </p>
+
+                  <div className="mt-5 border-t border-white/20 pt-4">
+                    <p className="line-clamp-3 text-lg font-semibold leading-[1.25] text-[#FBAB18]">
+                      {current.hook}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.16em] text-white/55">
+                    <RotateCcw size={12} />
+                    Tap to read
+                  </div>
+
                 </div>
-              ))}
-            </div>
+              </div>
+
+              {/* ================= BACK ================= */}
+              <div
+                className="absolute inset-0 overflow-y-auto rounded-[22px] border border-[#E5E8ED] bg-white p-6 shadow-[0_15px_40px_rgba(16,33,63,0.10)] [backface-visibility:hidden] [transform:rotateY(180deg)]"
+              >
+
+                <div className="flex min-h-full flex-col">
+
+                  <div className="mb-5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FBAB18]">
+                      {current.location}
+                    </p>
+
+                    <h3 className="mt-2 text-xl font-bold leading-tight text-[#10213F]">
+                      {current.name}
+                    </h3>
+
+                    <p className="mt-1 text-xs leading-5 text-[#7A8494]">
+                      {current.descriptor}
+                    </p>
+                  </div>
+
+                  {/* HOOK */}
+                  <h4 className="text-xl font-semibold leading-[1.2] text-[#FBAB18]">
+                    {current.hook}
+                  </h4>
+
+                  {/* REVIEW */}
+                  {current.review && (
+                    <p className="mt-5 text-sm italic leading-6 text-[#344054]">
+                      “{current.review}”
+                    </p>
+                  )}
+
+                  {/* QUOTE */}
+                  {current.quote && (
+                    <p className="mt-4 text-sm font-medium italic leading-6 text-[#0E40C7]">
+                      “{current.quote}”
+                    </p>
+                  )}
+
+                  {/* WHAT WE DID */}
+                  {current.whatWeDid && (
+                    <div className="mt-5 border-t border-[#E5E8ED] pt-4">
+                      <p className="text-xs font-medium leading-5 text-[#306F7D]">
+                        {current.whatWeDid}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* SOURCE */}
+                  {/* {current.source && (
+                    <p className="mt-4 text-[10px] leading-5 text-[#9AA2AE]">
+                      Source: {current.source}
+                    </p>
+                  )} */}
+
+                  <div className="mt-auto pt-5 text-center">
+                    <span className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.16em] text-[#7A8494]">
+                      <RotateCcw size={12} />
+                      Tap to close
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+            </motion.div>
+          </div>
+
+          {/* MOBILE CONTROLS */}
+          <div className="mt-5 flex items-center justify-center gap-4">
+
+            <button
+              type="button"
+              onClick={previous}
+              disabled={!hasPrevious}
+              aria-label="Previous testimonial"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#DDE2E9] bg-[#F7F8FA] text-[#10213F] shadow-sm transition-all duration-200 hover:border-[#FBAB18] hover:bg-[#FBAB18] disabled:pointer-events-none disabled:opacity-30"
+            >
+              <ArrowUp size={17} strokeWidth={1.8} />
+            </button>
+
+            <span className="min-w-[50px] text-center text-[11px] font-medium tracking-wide text-[#7A8494]">
+              {active + 1} of {total}
+            </span>
+
+            <button
+              type="button"
+              onClick={next}
+              disabled={!hasNext}
+              aria-label="Next testimonial"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0E40C7] text-white shadow-sm transition-all duration-200 hover:bg-[#0b36a8] disabled:pointer-events-none disabled:opacity-30"
+            >
+              <ArrowDown size={17} strokeWidth={1.8} />
+            </button>
+
+          </div>
+
+          {/* MOBILE READ MORE */}
+          <div className="mt-3 flex justify-end">
+            <Link
+              href="/testimonials"
+              className="group flex items-center gap-1.5 text-xs font-semibold text-[#10213F] transition-colors duration-200 hover:text-[#0E40C7]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              Read More
+              <span className="transition-transform duration-200 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
           </div>
         </div>
 
-        {/* Dots */}
-        <div className="flex justify-center gap-2 mt-8">
-          {testimonials.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => scrollTo(i)}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                selectedIndex === i ? "w-8 bg-primary" : "w-2 bg-border hover:bg-muted-foreground"
-              }`}
-            />
+        {/* ========================================================= */}
+        {/* DESKTOP */}
+        {/* ========================================================= */}
+
+        <div
+          className="mx-auto mt-9 hidden max-w-5xl sm:mt-11 lg:mt-12 lg:block"
+        >
+          <div className="grid items-start gap-10 lg:grid-cols-[56px_420px_1fr]">
+
+            {/* CONTROLS */}
+            <div className="flex h-[520px] flex-col items-center justify-center gap-3">
+
+              <button
+                type="button"
+                onClick={previous}
+                disabled={!hasPrevious}
+                aria-label="Previous testimonial"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#DDE2E9] bg-[#F7F8FA] text-[#10213F] shadow-sm transition-all duration-200 hover:border-[#FBAB18] hover:bg-[#FBAB18] disabled:pointer-events-none disabled:opacity-30"
+              >
+                <ArrowUp size={18} strokeWidth={1.8} />
+              </button>
+
+              <span className="min-w-[48px] py-1 text-center text-[11px] font-medium tracking-wide text-[#7A8494]">
+                {active + 1} of {total}
+              </span>
+
+              <button
+                type="button"
+                onClick={next}
+                disabled={!hasNext}
+                aria-label="Next testimonial"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0E40C7] text-white shadow-sm transition-all duration-200 hover:bg-[#0b36a8] disabled:pointer-events-none disabled:opacity-30"
+              >
+                <ArrowDown size={18} strokeWidth={1.8} />
+              </button>
+
+            </div>
+
+            {/* IMAGE STACK */}
+<div className="relative h-[570px]">
+              {/* PREVIOUS PEEK */}
+              {previousCard && (
+                <motion.div
+                  key={`previous-${previousCard.name}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.28 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute left-1/2 top-0 z-0 h-[70px] w-[calc(100%-20px)] -translate-x-1/2 overflow-hidden rounded-[20px] border border-[#E5E8ED] bg-[#F5F6F8]"
+                >
+                  {previousCard && (
+                    <>
+                      <Image
+                        src={previousCard.image || DUMMY_TESTIMONIAL_IMAGE}
+                        alt=""
+                        fill
+                        sizes="370px"
+                        className="object-cover"
+                      />
+
+                      <div className="absolute inset-0 bg-white/55" />
+                    </>
+                  )}
+                </motion.div>
+              )}
+
+              {/* NEXT PEEK */}
+              {nextCard && (
+                <motion.div
+                  key={`next-${nextCard.name}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.28 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute bottom-0 left-1/2 z-0 h-[70px] w-[calc(100%-20px)] -translate-x-1/2 overflow-hidden rounded-[20px] border border-[#E5E8ED] bg-[#F5F6F8]"
+                >
+                  {nextCard && (
+                    <>
+                      <Image
+                        src={nextCard.image || DUMMY_TESTIMONIAL_IMAGE}
+                        alt=""
+                        fill
+                        sizes="370px"
+                        className="object-cover"
+                      />
+
+                      <div className="absolute inset-0 bg-white/55" />
+                    </>
+                  )}
+                </motion.div>
+              )}
+
+              {/* ACTIVE IMAGE */}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={current.name}
+                  initial={{
+                    opacity: 0,
+                    y: direction > 0 ? 14 : -14,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: direction > 0 ? -14 : 14,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+className="absolute inset-x-0 top-[28px] z-10 h-[510px] overflow-hidden rounded-[22px] border border-[#E5E8ED] bg-[#F5F6F8] shadow-[0_15px_40px_rgba(16,33,63,0.10)]"                >
+                  {(current.image || DUMMY_TESTIMONIAL_IMAGE) ? (
+                    <>
+                      <Image
+                        src={current.image || DUMMY_TESTIMONIAL_IMAGE}
+                        alt={current.name}
+                        fill
+                        sizes="370px"
+                        className="object-cover"
+                        priority
+                      />
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 bg-[#F5F6F8]" />
+                  )}
+
+                  <div className="absolute bottom-6 left-6 right-6">
+
+                    <div className="mb-2 flex items-center gap-1.5 text-[10px] text-white/75">
+                      <MapPin size={11} />
+                      {current.location}
+                    </div>
+
+                    <h3 className="text-xl font-semibold leading-tight text-white sm:text-2xl">
+                      {current.name}
+                    </h3>
+
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* DESKTOP REVIEW */}
+            <div className="min-w-0 lg:pl-1">
+
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.article
+                  key={current.name}
+                  initial={{
+                    opacity: 0,
+                    x: direction > 0 ? 12 : -12,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    x: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    x: direction > 0 ? -12 : 12,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                >
+
+                  {/* LABEL */}
+                  <div className="mb-4 flex items-center gap-3">
+                    <span className="h-[2px] w-8 bg-[#FBAB18]" />
+
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FBAB18]">
+                      From our travellers
+                    </span>
+                  </div>
+
+                  {/* HOOK */}
+                  <h3 className="max-w-2xl text-2xl font-semibold leading-[1.18] tracking-tight text-[#10213F] sm:text-3xl lg:text-[34px]">
+                    {current.hook}
+                  </h3>
+
+                  {/* PERSON */}
+                  <div className="mt-5 border-l-2 border-[#0E40C7] pl-4">
+
+                    <p className="text-sm font-semibold text-[#10213F]">
+                      {current.name}
+                    </p>
+
+                    <p className="mt-1 max-w-xl text-xs leading-5 text-[#7A8494]">
+                      {current.descriptor}
+                    </p>
+
+                  </div>
+
+                  {/* REVIEW */}
+                  <div className="mt-6 max-w-2xl">
+
+                    {current.review && (
+                      <p className="text-sm italic leading-7 text-[#344054] sm:text-[15px]">
+                        “{current.review}”
+                      </p>
+                    )}
+
+                    {current.quote && (
+                      <p className="mt-4 text-sm font-medium italic leading-6 text-[#0E40C7]">
+                        “{current.quote}”
+                      </p>
+                    )}
+
+                    {/* WHAT WE DID */}
+                    {current.whatWeDid && (
+                      <div className="mt-5 border-t border-[#E5E8ED] pt-4">
+                        <p className="text-xs font-medium leading-5 text-[#306F7D] sm:text-[13px]">
+                          {current.whatWeDid}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* SOURCE */}
+                    {/* {current.source && (
+                      <p className="mt-3 text-[10px] leading-5 text-[#9AA2AE]">
+                        Source: {current.source}
+                      </p>
+                    )} */}
+
+                  </div>
+
+                </motion.article>
+              </AnimatePresence>
+
+            </div>
+
+          </div>
+
+          {/* DESKTOP READ MORE */}
+          <div className="mt-1 flex justify-end pr-1">
+            <Link
+              href="/testimonials"
+              className="group flex items-center gap-1.5 text-xs font-semibold text-[#10213F] transition-colors duration-200 hover:text-[#0E40C7]"
+            >
+              Read More
+
+              <span className="transition-transform duration-200 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+          </div>
+
+        </div>
+
+        {/* ========================================================= */}
+        {/* SEO CONTENT */}
+        {/* ========================================================= */}
+
+        <div className="sr-only">
+          {testimonials.map((testimonial) => (
+            <article key={`seo-${testimonial.name}`}>
+              <h3>{testimonial.name}</h3>
+              <p>{testimonial.descriptor}</p>
+              <p>{testimonial.hook}</p>
+              <p>{testimonial.review}</p>
+
+              {testimonial.quote && (
+                <p>{testimonial.quote}</p>
+              )}
+
+              {testimonial.whatWeDid && (
+                <p>{testimonial.whatWeDid}</p>
+              )}
+
+              {/* <p>{testimonial.source}</p> */}
+              <p>{testimonial.location}</p>
+            </article>
           ))}
         </div>
+
       </div>
     </section>
   )

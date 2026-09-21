@@ -9,8 +9,16 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Pencil, Trash2 } from "lucide-react"
+import { Info, Pencil, Trash2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
+import { supplierDeleteRateService } from "@/services/SupplierPortalServices/SupplierDeleteRate"
+import { SupplierUpdateCatalogService } from "@/services/SupplierPortalServices/SupplierUpdateCatalogService"
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 import { ErrorMessage } from "../../signup/supplier/SupplierUtils"
 import {
@@ -46,10 +54,12 @@ const thClass =
 
 interface EditCatalogAndRateDetailsProps {
   catalogId: number
+  onUpdated?: () => void
 }
 
 export function EditCatalogAndRateDetails({
   catalogId,
+  onUpdated,
 }: EditCatalogAndRateDetailsProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -157,10 +167,10 @@ const [rateFactorSelections, setRateFactorSelections] =
       const token = localStorage.getItem("access_token")
 
       if (!token) {
-        toast.error("Session expired. Please login again.", {
-          position: "top-right",
-          duration: 3000,
-        })
+        // toast.error("Session expired. Please login again.", {
+        //   position: "top-right",
+        //   duration: 3000,
+        // })
         localStorage.removeItem("access_token")
         localStorage.removeItem("refresh_token")
 
@@ -168,20 +178,27 @@ const [rateFactorSelections, setRateFactorSelections] =
         return
       }
 
-      const payload = {
-        supplier_service_id: serviceType,
-        service_name: serviceName,
-        description,
-        city,
-        country,
-        currency,
-        status,
-        valid_from: validFrom,
-        valid_to: validTo,
-      }
+      const payload = { 
+  service_name: serviceName, 
+  description, 
+  city, 
+  country, 
+  currency, 
+  status, 
+  valid_from: validFrom, 
+  valid_to: validTo, 
+} 
 
-      console.log("Update payload:", payload)
-      setShowSuccessAlert(true)
+console.log("Update payload:", payload)
+
+await SupplierUpdateCatalogService.updateCatalog(
+  Number(catalogId),
+  payload,
+  token
+)
+onUpdated?.()
+
+setShowSuccessAlert(true)
 
       setServiceType("")
       setServiceName("")
@@ -259,18 +276,33 @@ const [rateFactorSelections, setRateFactorSelections] =
 
       const token = localStorage.getItem("access_token")
       if (!token) {
-        toast.error("Session expired. Please login again.")
+        
         return
       }
 
       const response = await SupplierServiceTypes.getAll(token)
       setServiceTypes(response || [])
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch service types:", error)
-      toast.error("Failed to load service types", {
-        position: "top-right",
-        duration: 3000,
-      })
+
+      
+     if (
+        error?.message
+          ?.toLowerCase()
+          .includes("session expired")
+      ) {
+        return
+      }
+
+  toast.error(
+    "Failed to load service types",
+    {
+      position: "top-right",
+      duration: 3000,
+    }
+  )
+
+
     } finally {
       setServiceTypeLoading(false)
     }
@@ -389,7 +421,7 @@ const getRateCardFieldName = (subcategoryName: string) => {
       console.log("EDIT CATALOG RESPONSE:", response)
       const catalog = response.catalog
 
-     setServiceType(catalog.service_type || "")
+     setServiceType(catalog.supplier_service_id?.toString() || "")
       setServiceName(catalog.service_name || "")
       setDescription(catalog.description || "")
       setCity(catalog.city || "")
@@ -631,9 +663,12 @@ const updateRateField = (
                           </SelectTrigger>
                           <SelectContent>
                             {serviceTypes.map((item: any) => (
-                              <SelectItem key={item.id ?? item} value={item.service_type ?? item}>
-                                {item.service_type ?? item}
-                              </SelectItem>
+                              <SelectItem
+                            key={item.id ?? item}
+                            value={item.id?.toString() ?? item}
+                          >
+                            {item.service_type ?? item}
+                          </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -732,15 +767,53 @@ const updateRateField = (
                 </p>
                     <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
   <div>
+  <div className="mb-3 flex items-center justify-between">
     <h4 className="text-base font-semibold text-slate-800">
       Pricing Factors
     </h4>
 
-    <p className="mt-1 text-sm text-slate-500">
-      Select the factors that affect the price of this service.
-    </p>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-1 text-sm text-sky-600 hover:text-sky-700 hover:underline"
+        >
+          <span>Learn more</span>
+          <Info className="h-4 w-4" />
+        </button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className="w-96"
+        align="start"
+      >
+        <div className="space-y-3">
+          <h4 className="font-semibold text-gray-900">
+            How to Choose Pricing Factors
+          </h4>
+
+          <div className="text-sm space-y-2">
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                Select a factor if changing its value changes the price.
+              </li>
+              <li>
+                Leave a factor unselected if it does not affect the price.
+              </li>
+              <li>
+                Once the first rate is added, these pricing factors are locked. Delete all rates to modify selected pricing factors.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   </div>
 
+  <p className="mt-1 text-sm text-slate-500">
+    Select the factors that affect the price of this service.
+  </p>
+</div>
   {subcategoryLoading ? (
     <p className="text-sm text-slate-500">
       Loading pricing factors...
@@ -752,18 +825,19 @@ const updateRateField = (
           key={item.id}
           className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 cursor-pointer"
         >
-          <input
-            type="checkbox"
-            checked={selectedSubcategories.includes(item.id)}
-            onChange={() => {
-              setSelectedSubcategories((prev) =>
-                prev.includes(item.id)
-                  ? prev.filter((id) => id !== item.id)
-                  : [...prev, item.id]
-              )
-            }}
-            className="h-4 w-4 accent-[#00AFEF]"
-          />
+       <input
+  type="checkbox"
+  checked={selectedSubcategories.includes(item.id)}
+  disabled={rates.length > 0}
+  onChange={() => {
+    setSelectedSubcategories((prev) =>
+      prev.includes(item.id)
+        ? prev.filter((id) => id !== item.id)
+        : [...prev, item.id]
+    )
+  }}
+  className="h-4 w-4 accent-[#00AFEF] disabled:cursor-not-allowed disabled:opacity-50"
+/>
 
           <span className="text-sm">
             {item.subcategory_name}
@@ -773,9 +847,60 @@ const updateRateField = (
     </div>
   )}
 </div>
+
+<div className="space-y-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-8 shadow-sm">
+  <h3 className="text-lg font-semibold">
+    Rate Configuration
+  </h3>
+
+  <p className="text-sm text-slate-500">
+    Enter values for the selected rate attributes.
+  </p>
+
+  {selectedSubcategories.map((subcategoryId) => {
+    const subcategory = subcategories.find(
+      (s: any) => s.id === subcategoryId
+    )
+
+    return (
+      <div key={subcategoryId} className="mb-6">
+        <Label className={labelClass}>
+          {subcategory?.subcategory_name}
+        </Label>
+
+        <Select
+          value={selectedParameters[subcategoryId] || ""}
+          onValueChange={(value) =>
+            setSelectedParameters((prev) => ({
+              ...prev,
+              [subcategoryId]: value,
+            }))
+          }
+        >
+          <SelectTrigger className={inputClass}>
+            <SelectValue placeholder="Select value" />
+          </SelectTrigger>
+
+          <SelectContent>
+            {(parameterOptions[subcategoryId] || []).map(
+              (item: any) => (
+                <SelectItem
+                  key={item.id}
+                  value={item.id.toString()}
+                >
+                  {item.parameter_name}
+                </SelectItem>
+              )
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+    )
+  })}
+</div>
  
                     {rates.length > 0 && (
-                      <div className="mt-4 rounded-lg border border-slate-200 overflow-hidden bg-white">
+                      <div className="mt-4 rounded-lg border border-slate-200 overflow-x-auto bg-white">
                         <div className="px-4 py-3 border-b bg-slate-50 font-medium">Added Rates ({rates.length})</div>
                        <table className="w-full text-sm">
   <thead className="bg-slate-100">
@@ -884,19 +1009,7 @@ const updateRateField = (
                                 {/* Actions */}
  <td className={tdClass}>
   <div className="flex items-center gap-2">
-    <Button
-      type="button"
-      size="icon"
-      variant="outline"
-      title="Edit rate"
-      onClick={() => {
-        setEditingRateId(rateId)
-      }}
-      className="text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:bg-blue-50"
-    >
-      <Pencil className="h-4 w-4" />
-    </Button>
-
+    
     <Button
       type="button"
       size="icon"
@@ -911,7 +1024,8 @@ const updateRateField = (
       <Trash2 className="h-4 w-4" />
     </Button>
   </div>
-</td>                                        </tr>
+</td>                                        
+</tr>
                             )
                           })}
                         </tbody>
@@ -1251,20 +1365,53 @@ const updateRateField = (
           Cancel
         </Button>
 
-        <Button
-          type="button"
-          className="bg-red-600 hover:bg-red-700 text-white"
-          onClick={() => {
-            console.log(
-              "DELETE RATE REQUESTED:",
-              deletingRateId
-            )
+    <Button
+  type="button"
+  className="bg-red-600 hover:bg-red-700 text-white"
+  onClick={async () => {
+    if (deletingRateId === null) return
 
-            setShowDeleteRateConfirm(false)
-          }}
-        >
-          Delete
-        </Button>
+    try {
+      const token = localStorage.getItem("access_token")
+
+      if (!token) {
+        localStorage.removeItem("access_token")
+        localStorage.removeItem("refresh_token")
+        router.push("/login")
+        return
+      }
+
+      await supplierDeleteRateService.deleteRate(
+        deletingRateId,
+        token
+      )
+
+      setRates((prev) =>
+        prev.filter((rate) => Number(rate.id) !== deletingRateId)
+      )
+
+      toast.success("Rate deleted successfully", {
+        position: "top-right",
+        duration: 3000,
+      })
+
+      setShowDeleteRateConfirm(false)
+      setDeletingRateId(null)
+    } catch (error: any) {
+      console.error("Failed to delete rate:", error)
+
+      toast.error(
+        error?.message || "Failed to delete rate",
+        {
+          position: "top-right",
+          duration: 3000,
+        }
+      )
+    }
+  }}
+>
+  Delete
+</Button> 
       </div>
     </div>
   </div>

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useAuth } from "@/app/context/AuthContext"
 import { ServiceTypes } from  "@/services/serviceTypesService"
 import { useRouter } from 'next/navigation'
 import { supplierCreateEnquiryService } from "@/services/SupplierPortalServices/SupplierCreateEnquiry"
@@ -35,8 +36,13 @@ const inputClass =
 const textareaClass =
   "min-h-[220px] max-h-[220px] overflow-y-auto bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-[#3FB8FF] focus:ring-1 focus:ring-[#3FB8FF] resize-none"
   
-export function RaiseEnquiry() {
+export function RaiseEnquiry({
+  onEnquiryCreated,
+}: {
+  onEnquiryCreated?: () => void
+}) {
    const router = useRouter()
+const { logout } = useAuth()
   const [open, setOpen] = useState(false)
   const [subject, setSubject] = useState("")
   const [serviceType, setServiceType] = useState("")
@@ -49,11 +55,17 @@ const [submittedEnquiryNo, setSubmittedEnquiryNo] = useState("")
 const [subjectError, setSubjectError] = useState("")
 const [serviceTypeError, setServiceTypeError] = useState("")
 const [detailsError, setDetailsError] = useState("")
+const sessionHandled = useRef(false)
+
 useEffect(() => {
   if (open) {
     setSubject("")
     setServiceType("")
     setDetails("")
+
+    setSubjectError("")
+    setServiceTypeError("")
+    setDetailsError("")
   }
 }, [open])
 
@@ -71,6 +83,9 @@ setDetailsError("")
 if (!subject.trim()) {
   setSubjectError("Subject is required")
   hasError = true
+} else if (subject.trim().length < 3) {
+  setSubjectError("Please enter a more meaningful subject")
+  hasError = true
 }
 
 if (!serviceType) {
@@ -81,6 +96,9 @@ if (!serviceType) {
 if (!details.trim()) {
   setDetailsError("Message is required")
   hasError = true
+} else if (details.trim().length < 5) {
+  setDetailsError("Please provide more details for your enquiry")
+  hasError = true
 }
 
 if (hasError) return
@@ -90,17 +108,18 @@ if (hasError) return
 
     const token = localStorage.getItem("access_token")
 
-    if (!token) {
-     toast.error("Session expired. Please login again.",{
-      position: "top-right",
-     duration: 3000,})
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
+  if (!token) {
+  logout()
 
-  router.push("/login");
+  toast.error("Your session has expired. Please log in again.", {
+    position: "top-right",
+    duration: 3000,
+  })
 
-  return;
-    }
+  router.replace("/auth")
+
+  return
+}
 const supplierId = Number(localStorage.getItem("userId"));
     const payload = {
   supplier_id: supplierId,
@@ -127,16 +146,34 @@ const supplierId = Number(localStorage.getItem("userId"));
     setServiceType("")
     setDetails("")
     
-  } catch (error: any) {
-    console.error("Failed to create enquiry:", error)
-    toast.error(
-  error?.message || "Failed to raise enquiry. Please try again.",
-  {
-    position: "top-right",
-    duration: 3000,
+ } catch (error: any) {
+  console.error("Failed to create enquiry:", error)
+
+  if (error?.message?.toLowerCase().includes("session expired")) {
+    if (!sessionHandled.current) {
+      sessionHandled.current = true
+
+      logout()
+
+      toast.error("Your session has expired. Please log in again.", {
+        position: "top-right",
+        duration: 3000,
+      })
+
+      router.replace("/auth")
+    }
+
+    return
   }
-)
-  } finally {
+
+  toast.error(
+    error?.message || "Failed to raise enquiry. Please try again.",
+    {
+      position: "top-right",
+      duration: 3000,
+    }
+  )
+} finally {
     setLoading(false)
   }
 }
@@ -228,9 +265,11 @@ const fetchServiceTypes = async () => {
                 type="button"
                 className="mt-5 w-full bg-[#00AFEF] hover:bg-[#0098d6]"
                 onClick={() => {
-                  setShowSuccessAlert(false)
-                  setOpen(false)
-                }}
+                setShowSuccessAlert(false)
+                setOpen(false)
+
+                onEnquiryCreated?.()
+              }}
               >
                 OK
               </Button>

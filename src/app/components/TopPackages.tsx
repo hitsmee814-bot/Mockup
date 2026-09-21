@@ -1,91 +1,66 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
-import useEmblaCarousel from "embla-carousel-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Star, ArrowRight, Clock, MapPin, ChevronLeft, ChevronRight, Sparkles, Plane } from "lucide-react"
+import { useEffect, useState } from "react"
+import { motion, AnimatePresence, PanInfo } from "framer-motion"
+import { ArrowUpRight, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { tourService } from "@/services/ItineraryService"
 
 interface Pkg {
   id: string
   name: string
   location: string
   image: string
-  price: string
-  originalPrice: string
+  price: number
   duration: string
-  rating: number
-  tag?: string
 }
 
-const data: Record<"domestic" | "international", Pkg[]> = {
-  domestic: [
-    { id: "3", name: "Golden Triangle", location: "Delhi · Agra · Jaipur", image: "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80", price: "₹25,000", originalPrice: "₹32,000", duration: "4D / 3N", rating: 4.6, tag: "Bestseller" },
-    { id: "5", name: "Kerala Backwaters", location: "Alleppey, India", image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&q=80", price: "₹30,000", originalPrice: "₹38,000", duration: "4D / 3N", rating: 4.8, tag: "Honeymoon" },
-    { id: "9", name: "Ladakh Adventure", location: "Leh · Nubra Valley", image: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&q=80", price: "₹42,000", originalPrice: "₹50,000", duration: "6D / 5N", rating: 4.9 },
-    { id: "4", name: "Goa Beach Weekend", location: "Goa, India", image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=80", price: "₹12,000", originalPrice: "₹16,000", duration: "3D / 2N", rating: 4.4 },
-    { id: "7", name: "Varanasi Spiritual", location: "Varanasi, India", image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=800&q=80", price: "₹15,000", originalPrice: "₹19,000", duration: "3D / 2N", rating: 4.5 },
-    { id: "11", name: "Rajasthan Heritage", location: "Jaipur · Udaipur", image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800&q=80", price: "₹35,000", originalPrice: "₹42,000", duration: "5D / 4N", rating: 4.7 },
-    { id: "12", name: "Andaman Islands", location: "Port Blair, India", image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80", price: "₹48,000", originalPrice: "₹55,000", duration: "5D / 4N", rating: 4.8, tag: "Trending" },
-    { id: "13", name: "Kashmir Valley", location: "Srinagar · Gulmarg", image: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800&q=80", price: "₹32,000", originalPrice: "₹40,000", duration: "5D / 4N", rating: 4.9 },
-    { id: "14", name: "Coorg Coffee Trail", location: "Coorg, Karnataka", image: "https://images.unsplash.com/photo-1596895111956-bf1cf0599ce5?w=800&q=80", price: "₹18,000", originalPrice: "₹22,000", duration: "3D / 2N", rating: 4.6 },
-    { id: "15", name: "Himachal Escape", location: "Manali · Shimla", image: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=800&q=80", price: "₹22,000", originalPrice: "₹28,000", duration: "4D / 3N", rating: 4.7 },
-  ],
-  international: [
-    { id: "1", name: "Romantic Bali Escape", location: "Bali, Indonesia", image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80", price: "₹65,000", originalPrice: "₹80,000", duration: "5D / 4N", rating: 4.7, tag: "Trending" },
-    { id: "2", name: "Swiss Alps Adventure", location: "Interlaken, Switzerland", image: "https://images.unsplash.com/photo-1527004013197-933c4bb611b3?w=800&q=80", price: "₹1,80,000", originalPrice: "₹2,10,000", duration: "7D / 6N", rating: 4.9, tag: "Luxury" },
-    { id: "6", name: "Dubai Luxury Holiday", location: "Dubai, UAE", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80", price: "₹90,000", originalPrice: "₹1,10,000", duration: "5D / 4N", rating: 4.7 },
-    { id: "10", name: "Paris Romantic Getaway", location: "Paris, France", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80", price: "₹2,00,000", originalPrice: "₹2,30,000", duration: "6D / 5N", rating: 4.8, tag: "Popular" },
-    { id: "8", name: "Thailand Explorer", location: "Bangkok · Pattaya", image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=800&q=80", price: "₹45,000", originalPrice: "₹60,000", duration: "5D / 4N", rating: 4.6 },
-    { id: "16", name: "Maldives Luxury", location: "Malé, Maldives", image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=800&q=80", price: "₹1,20,000", originalPrice: "₹1,50,000", duration: "5D / 4N", rating: 4.9 },
-    { id: "17", name: "Greece Islands", location: "Santorini, Greece", image: "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=800&q=80", price: "₹1,40,000", originalPrice: "₹1,70,000", duration: "6D / 5N", rating: 4.8 },
-    { id: "18", name: "Singapore Modern", location: "Singapore", image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800&q=80", price: "₹75,000", originalPrice: "₹90,000", duration: "4D / 3N", rating: 4.7 },
-    { id: "19", name: "Turkey Heritage", location: "Istanbul, Turkey", image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&q=80", price: "₹85,000", originalPrice: "₹1,05,000", duration: "6D / 5N", rating: 4.6 },
-    { id: "20", name: "Iceland Adventure", location: "Reykjavik, Iceland", image: "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=800&q=80", price: "₹1,60,000", originalPrice: "₹1,90,000", duration: "7D / 6N", rating: 4.9 },
-  ],
+const FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1548013146-72479768bada?w=1000&q=85",
+  "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1000&q=85",
+  "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1000&q=85",
+]
+
+function formatPrice(price: number) {
+  return `₹${price.toLocaleString("en-IN")}`
 }
 
-const tabs = ["domestic", "international"] as const
+function getDuration(days: number, nights: number) {
+  if (days && nights) return `${days}D / ${nights}N`
+  if (days) return `${days}D`
+  if (nights) return `${nights}N`
+  return "Flexible duration"
+}
 
-function PackageCard({ pkg }: { pkg: Pkg }) {
+function PackageCard({ pkg, className = "" }: { pkg: Pkg; className?: string }) {
   return (
-    <Link href={`/itinerary/packages/${pkg.id}`} className="group block">
-      <div className="relative h-[300px] w-[220px] sm:h-[340px] sm:w-[260px] md:h-[360px] md:w-[280px] rounded-2xl overflow-hidden">
-        <img
-          src={pkg.image}
-          alt={pkg.name}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+    <Link href={`/itinerary/packages/${pkg.id}`} className={`group relative block overflow-hidden rounded-2xl ${className}`}>
+      <img src={pkg.image} alt={pkg.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
 
-        <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
-          {pkg.tag ? (
-            <span className="px-2.5 py-1 text-[10px] font-semibold tracking-wider uppercase bg-white/15 backdrop-blur-md text-white rounded-full border border-white/10">
-              {pkg.tag}
-            </span>
-          ) : <span />}
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/25 backdrop-blur-md text-white text-[11px] font-medium">
-            <Star className="w-3 h-3 fill-secondary text-secondary" />
-            {pkg.rating}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/0" />
+
+      <span className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white text-black shadow-sm transition-transform duration-300 group-hover:rotate-45">
+        <ArrowUpRight className="h-4 w-4" />
+      </span>
+
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+        <p className="mb-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-white/70">
+          <MapPin className="h-3 w-3" />
+          {pkg.location}
+        </p>
+
+        <h3 className="text-xl font-semibold leading-tight sm:text-2xl">
+          {pkg.name}
+        </h3>
+
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <span className="text-xs text-white/70">
+            {pkg.duration}
           </span>
-        </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <p className="flex items-center gap-1 text-white/50 text-[11px] tracking-wide uppercase mb-1">
-            <MapPin className="w-3 h-3" />
-            {pkg.location}
-          </p>
-          <h3 className="text-white font-semibold text-base sm:text-lg leading-tight">{pkg.name}</h3>
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.08]">
-            <span className="flex items-center gap-1 text-white/40 text-xs">
-              <Clock className="w-3 h-3" />
-              {pkg.duration}
-            </span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-white/30 text-[11px] line-through">{pkg.originalPrice}</span>
-              <span className="font-bold text-white">{pkg.price}</span>
-            </div>
-          </div>
+          <span className="text-sm font-bold">
+            {formatPrice(pkg.price)}
+          </span>
         </div>
       </div>
     </Link>
@@ -93,134 +68,210 @@ function PackageCard({ pkg }: { pkg: Pkg }) {
 }
 
 export default function TopPackages() {
-  const [active, setActive] = useState<"domestic" | "international">("domestic")
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true, align: "start" })
-  const [canPrev, setCanPrev] = useState(false)
-  const [canNext, setCanNext] = useState(true)
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return
-    setCanPrev(emblaApi.canScrollPrev())
-    setCanNext(emblaApi.canScrollNext())
-  }, [emblaApi])
+  const [packages, setPackages] = useState<Pkg[]>([])
+  const [activePackage, setActivePackage] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!emblaApi) return
-    emblaApi.reInit()
-    onSelect()
-    emblaApi.on("select", onSelect)
-    emblaApi.on("reInit", onSelect)
-  }, [emblaApi, onSelect, active])
+    let mounted = true
+    const imageUrls: string[] = []
+
+    const loadPackages = async () => {
+      try {
+        const tours = await tourService.getAll()
+
+        if (!mounted || !tours.length) {
+          setLoading(false)
+          return
+        }
+
+const mapped: Pkg[] = []
+
+for (let i = 0; i < tours.length; i++) {
+  const tourData = tours[i] as any
+  const tour = tourData.tour
+  const availability = tourData.availability ?? []
+  const images = tourData.images ?? []
+
+  if (!tour) continue
+
+  const coverImage = images.find((image: any) => image.is_cover === true)
+
+  let image = ""
+
+  if (coverImage?.image_url) {
+    image = await tourService.getImageBlob(coverImage.image_url)
+
+    if (image) {
+      imageUrls.push(image)
+    }
+  }
+
+  mapped.push({
+    id: String(tour.id),
+    name: tour.title,
+    location: tour.destination || tour.origin_city || "India",
+    image: image || FALLBACK_IMAGES[i % FALLBACK_IMAGES.length],
+    price: availability[0]?.price ?? tour.base_price ?? 0,
+    duration: getDuration(tour.duration_days, tour.duration_nights),
+  })
+}
+
+        if (!mounted) return
+
+        // Backend currently returns 3 packages.
+        // Duplicate the first 2 to create a 5-card layout.
+        const displayPackages = [...mapped]
+
+        if (mapped.length > 0 && displayPackages.length < 5) {
+          let duplicateIndex = 0
+
+          while (displayPackages.length < 5) {
+            const source = mapped[duplicateIndex % mapped.length]
+
+            displayPackages.push({
+              ...source,
+              id: `${source.id}-duplicate-${displayPackages.length}`,
+            })
+
+            duplicateIndex++
+          }
+        }
+
+        setPackages(displayPackages.slice(0, 5))
+      } catch (error) {
+        console.error("Failed to load top packages:", error)
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadPackages()
+
+    return () => {
+      mounted = false
+      imageUrls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [])
+
+  const nextPackage = () => {
+    setActivePackage((prev) => (prev + 1) % packages.length)
+  }
+
+  const previousPackage = () => {
+    setActivePackage((prev) => (prev - 1 + packages.length) % packages.length)
+  }
+
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const swipeThreshold = 50
+
+    if (info.offset.x < -swipeThreshold) {
+      nextPackage()
+    } else if (info.offset.x > swipeThreshold) {
+      previousPackage()
+    }
+  }
+
+  if (loading) {
+    return (
+      <section id="toppackages" className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto h-10 w-64 animate-pulse rounded-lg bg-muted" />
+          <div className="mx-auto mt-8 h-5 max-w-xl animate-pulse rounded bg-muted" />
+
+          <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="h-[300px] animate-pulse rounded-2xl bg-muted lg:h-[330px]" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (!packages.length) {
+    return null
+  }
 
   return (
-    <section className="py-12 sm:py-16 md:py-24" id="toppackages">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-6 sm:mb-10"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-5"
-          >
-            <Plane className="h-3 w-3" />
-            Popular Destinations
-          </motion.div>
-          <h2 className="text-2xl sm:text-3xl md:text-[40px] font-bold tracking-tight leading-tight">
-            Top <span className="text-primary">Packages</span>
-          </h2>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-2 max-w-md mx-auto">
-            Handpicked trips loved by thousands of travelers
-          </p>
+    <section id="toppackages" className="relative overflow-hidden py-16 sm:py-20 lg:pt-0">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="relative z-10 mx-auto text-center">
+          <div className="relative mx-auto w-fit">
+            <h2 className="relative z-10 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              Featured{" "}
+              <span className="text-[#FBAB18]">
+                Destinations.
+              </span>
+            </h2>
+          </div>
         </motion.div>
 
-        {/* Switcher + Nav buttons */}
-        <div className="flex items-center justify-between mb-6 sm:mb-10">
-          <div className="inline-flex rounded-full bg-muted p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActive(tab)}
-                className="relative px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium capitalize rounded-full transition-colors"
-              >
-                {active === tab && (
-                  <motion.div
-                    layoutId="pkg-pill"
-                    className="absolute inset-0 bg-background rounded-full shadow-sm"
-                    transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                  />
-                )}
-                <span className={`relative z-10 ${active === tab ? "text-foreground" : "text-muted-foreground"}`}>
-                  {tab}
-                </span>
+        <motion.p initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }} className="mx-auto mb-10 mt-8 max-w-xl text-center text-sm leading-relaxed text-muted-foreground sm:mb-12 sm:mt-12 sm:text-base">
+          Handpicked travel experiences across India. Discover unforgettable places, curated packages, and journeys made for your next getaway.
+        </motion.p>
+
+        {/* MOBILE CAROUSEL */}
+        <div className="md:hidden">
+          <motion.div initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="relative">
+            <div className="relative overflow-hidden rounded-2xl">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div key={activePackage} drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.12} onDragEnd={handleDragEnd} initial={{ opacity: 0, x: 70 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -70 }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }} className="cursor-grab active:cursor-grabbing">
+                  <PackageCard pkg={packages[activePackage]} className="h-[390px] w-full sm:h-[440px]" />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <button onClick={previousPackage} aria-label="Previous destination" className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#0E40C7] shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-white">
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+
+            <button onClick={nextPackage} aria-label="Next destination" className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#0E40C7] shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-white">
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </motion.div>
+
+          <div className="mt-5 flex items-center justify-center gap-2">
+            {packages.map((pkg, index) => (
+              <button key={`${pkg.id}-${index}`} onClick={() => setActivePackage(index)} aria-label={`Go to ${pkg.name}`} className="flex h-5 items-center justify-center">
+                <span className={`h-1.5 rounded-full transition-all duration-300 ${index === activePackage ? "w-7 bg-[#FBAB18]" : "w-1.5 bg-[#0E40C7]/20"}`} />
               </button>
             ))}
           </div>
 
-          <div className="hidden sm:flex gap-2">
-            <button
-              onClick={() => emblaApi?.scrollPrev()}
-              disabled={!canPrev}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full border flex items-center justify-center disabled:opacity-30 hover:bg-muted transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-            <button
-              onClick={() => emblaApi?.scrollNext()}
-              disabled={!canNext}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full border flex items-center justify-center disabled:opacity-30 hover:bg-muted transition-colors"
-            >
-              <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-            </button>
-          </div>
+          <p className="mt-2 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Swipe to explore
+          </p>
         </div>
-      </div>
 
-      {/* Carousel */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={active}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
-              <div className="flex gap-3 sm:gap-4">
-                {data[active].map((pkg) => (
-                  <div key={pkg.id} className="shrink-0">
-                    <PackageCard pkg={pkg} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+        {/* DESKTOP / TABLET DESTINATION GRID */}
+        <motion.div initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="hidden grid-cols-1 gap-3 sm:grid sm:grid-cols-2 md:grid lg:grid-cols-3">
+          <div className="grid grid-rows-2 gap-3 lg:h-[680px]">
+            <PackageCard pkg={packages[0]} className="h-[300px] sm:h-[340px] lg:h-full" />
+            <PackageCard pkg={packages[1]} className="h-[300px] sm:h-[340px] lg:h-full" />
+          </div>
 
-      {/* CTA */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3 }}
-        className="mt-8 sm:mt-12 text-center"
-      >
-        <Link
-          href="/packages"
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
-        >
-          Explore more destinations
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </Link>
-      </motion.div>
+          <div className="grid gap-3 lg:h-[680px] lg:grid-rows-[450px_218px]">
+            <PackageCard pkg={packages[2 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
+            <PackageCard pkg={packages[3 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
+          </div>
+
+          <div className="grid grid-rows-2 gap-3 lg:h-[680px]">
+            <PackageCard pkg={packages[4 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
+            <PackageCard pkg={packages[1 % packages.length]} className="h-[300px] sm:h-[340px] lg:h-full" />
+          </div>
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="mt-10 flex justify-center sm:mt-12">
+          <Link href="/itinerary/packages" className="group inline-flex items-center gap-2 rounded-full border border-border bg-background px-5 py-2.5 text-sm font-medium transition-colors hover:border-[#0E40C7] hover:text-[#0E40C7]">
+            Explore all packages
+            <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
+        </motion.div>
+      </div>
     </section>
   )
 }
