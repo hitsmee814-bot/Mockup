@@ -14,7 +14,7 @@ const fadeUp: Variants = {
 
 export default function FounderNote() {
     return (
-        <section className="bg-white py-14 text-[#1B120B] sm:py-16 lg:py-18">
+        <section className="py-14 text-[#1B120B] sm:py-16 lg:py-18">
             <div className="mx-auto max-w-7xl px-5 sm:px-10 lg:px-16">
                 <div className="grid items-start gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
 

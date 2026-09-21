@@ -15,7 +15,7 @@ const stagger: Variants = {
 
 export default function AboutVision() {
     return (
-        <section className="bg-white py-0 text-[#1B120B] sm:py-0 lg:py-0">
+        <section className="py-0 text-[#1B120B] sm:py-0 lg:py-0">
             <div className="mx-auto max-w-7xl px-5 sm:px-10 lg:px-16">
                     <motion.div variants={fadeUp} className="mt-0 sm:mt-8 sm:pt-0">
                         <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">

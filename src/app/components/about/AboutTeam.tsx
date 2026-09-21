@@ -57,7 +57,7 @@ export default function AboutTeam() {
     const [activeCard, setActiveCard] = useState<number | null>(null)
 
     return (
-        <section className="bg-white pt-14 text-[#1B120B] sm:pt-16 lg:pt-18">
+        <section className="pt-14 text-[#1B120B] sm:pt-16 lg:pt-18">
             <div className="mx-auto max-w-7xl px-5 sm:px-10 lg:px-16">
 
                 {/* Intro */}

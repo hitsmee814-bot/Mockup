@@ -44,7 +44,7 @@ export default function AboutHero() {
     }, [])
 
     return (
-        <section className="relative overflow-hidden bg-white text-[#1B120B]">
+        <section className="relative overflow-hidden text-[#1B120B]">
 
             {/* Smart Header */}
             <motion.header

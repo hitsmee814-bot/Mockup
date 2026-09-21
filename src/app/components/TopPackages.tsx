@@ -196,7 +196,7 @@ for (let i = 0; i < tours.length; i++) {
   }
 
   return (
-    <section id="toppackages" className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
+    <section id="toppackages" className="relative overflow-hidden py-16 sm:py-20 lg:pt-0">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="relative z-10 mx-auto text-center">
           <div className="relative mx-auto w-fit">
@@ -271,8 +271,6 @@ for (let i = 0; i < tours.length; i++) {
             <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </motion.div>
-
-        <motion.div initial={{ opacity: 0, scaleX: 0 }} whileInView={{ opacity: 1, scaleX: 1 }} viewport={{ once: true }} transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }} className="mx-auto mt-16 h-px max-w-xs origin-center bg-gradient-to-r from-transparent via-[#0E40C7]/20 to-transparent" />
       </div>
     </section>
   )

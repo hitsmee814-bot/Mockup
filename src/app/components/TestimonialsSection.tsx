@@ -159,14 +159,13 @@ export default function Testimonials() {
 
   return (
     <section
-      className="relative overflow-hidden bg-white py-14 sm:py-18 lg:py-24"
+      className="relative overflow-hidden py-14 sm:py-18 lg:pt-0"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
       onBlurCapture={() => setIsPaused(false)}
     >
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-
+<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* HEADER */}
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -410,7 +409,7 @@ export default function Testimonials() {
         <div
           className="mx-auto mt-9 hidden max-w-5xl sm:mt-11 lg:mt-12 lg:block"
         >
-          <div className="grid items-start gap-9 lg:grid-cols-[56px_370px_1fr]">
+          <div className="grid items-start gap-10 lg:grid-cols-[56px_420px_1fr]">
 
             {/* CONTROLS */}
             <div className="flex h-[520px] flex-col items-center justify-center gap-3">
@@ -442,8 +441,7 @@ export default function Testimonials() {
             </div>
 
             {/* IMAGE STACK */}
-            <div className="relative h-[520px]">
-
+<div className="relative h-[570px]">
               {/* PREVIOUS PEEK */}
               {previousCard && (
                 <motion.div
@@ -514,8 +512,7 @@ export default function Testimonials() {
                     duration: 0.4,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="absolute inset-x-0 top-[28px] z-10 h-[450px] overflow-hidden rounded-[22px] border border-[#E5E8ED] bg-[#F5F6F8] shadow-[0_15px_40px_rgba(16,33,63,0.10)]"
-                >
+className="absolute inset-x-0 top-[28px] z-10 h-[510px] overflow-hidden rounded-[22px] border border-[#E5E8ED] bg-[#F5F6F8] shadow-[0_15px_40px_rgba(16,33,63,0.10)]"                >
                   {(current.image || DUMMY_TESTIMONIAL_IMAGE) ? (
                     <>
                       <Image

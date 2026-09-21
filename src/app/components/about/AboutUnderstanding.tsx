@@ -17,7 +17,7 @@ const fadeUp: Variants = {
 
 export default function AboutUnderstanding() {
     return (
-        <section className="bg-white py-14 text-[#1B120B] sm:py-16 lg:py-18">
+        <section className=" py-14 text-[#1B120B] sm:py-16 lg:py-18">
 
             <div className="mx-auto max-w-7xl px-5 sm:px-10 lg:px-16">
 

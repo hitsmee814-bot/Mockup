@@ -231,7 +231,7 @@ export default function FAQ() {
   }
 
   return (
-    <section id="faq" className="relative overflow-hidden bg-white px-6 py-12 sm:px-8 lg:px-12 lg:py-16">
+    <section id="faq" className="relative overflow-hidden px-6 py-12 sm:px-8 lg:px-12 lg:pt-0">
       <div className="mx-auto max-w-6xl">
 
         {/* Heading */}

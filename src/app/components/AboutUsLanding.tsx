@@ -43,7 +43,7 @@ export function AboutUs() {
     const router = useRouter()
 
     return (
-        <section id="aboutus" className="relative overflow-hidden bg-none py-16 sm:py-20 lg:py-24">
+        <section id="aboutus" className="relative overflow-hidden bg-none py-16 sm:py-20 lg:pt-0">
             {/* Background decoration */}
             <div className="pointer-events-none absolute inset-0">
                 <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#479EA8]/[0.05] blur-3xl" />
@@ -173,7 +173,7 @@ export function AboutUs() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    className="mx-auto mt-10 max-w-3xl border-t border-[#10213F]/10 pt-8 text-center sm:mt-12 sm:pt-10"
+                    className="mx-auto mt-10 max-w-3xl pt-2 text-center sm:mt-6 sm:pt-5"
                 >
                     <p className="text-base leading-relaxed text-[#536174] sm:text-xl">
                         Because the best journeys aren't the ones with the most
@@ -184,15 +184,6 @@ export function AboutUs() {
                         They're the ones that feel like they were made for you.
                     </p>
                 </motion.div>
-
-                {/* Bottom Divider */}
-                <motion.div
-                    initial={{ opacity: 0, scaleX: 0 }}
-                    whileInView={{ opacity: 1, scaleX: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="mx-auto mt-12 h-px max-w-xs origin-center bg-gradient-to-r from-transparent via-[#0E40C7]/20 to-transparent sm:mt-16"
-                />
             </div>
         </section>
     )
