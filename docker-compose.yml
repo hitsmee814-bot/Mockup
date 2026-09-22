@@ -1,0 +1,17 @@
+services:
+  mockup:
+    image: ${IMAGE_NAME:?IMAGE_NAME must be set in .env}:${IMAGE_VERSION:?IMAGE_VERSION must be set in .env}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        IMAGE_NAME: ${IMAGE_NAME:?IMAGE_NAME must be set in .env}
+        IMAGE_VERSION: ${IMAGE_VERSION:?IMAGE_VERSION must be set in .env}
+    ports:
+      - "${MOCKUP_PORT:-8080}:80"
+    restart: unless-stopped
+    networks:
+      - ascendus_net  
+networks:
+  ascendus_net:
+    external: true    
